@@ -7,8 +7,8 @@ from alembic import context
 
 # importation de la base de donee 10h36 modification a 10h42
 
-from config import settings
-from table_models import Base
+from app.config import settings
+from app.table_models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
