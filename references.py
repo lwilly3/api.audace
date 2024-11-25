@@ -53,6 +53,30 @@ from psycopg2.extras import RealDictCursor
 
 
 
+# 11h21 config gethub
+# le fichier .gitignore permet de definire ce que lon ne veux pas publier sur github
+# pip freeze > requirements.txt      vas cree le fichier requirements.txt et y inscrire toutes nos dependence
+# pour reinstaller par la suite les dependences pip install -r requirements.txt
+
+# …or create a new repository on the command line
+# echo "# api.audace" >> README.md
+# git init
+# git add README.md      
+# git commit -m "first commit"      
+# git branch -M main
+# git remote add origin https://github.com/lwilly3/api.audace.git
+# git push -u origin main
 
 
+# git init
+# git add --all
+# git commit -m "publication initial"  
+
+
+
+
+# …or push an existing repository from the command line
+# git remote add origin https://github.com/lwilly3/api.audace.git
+# git branch -M main
+# git push -u origin main
 
