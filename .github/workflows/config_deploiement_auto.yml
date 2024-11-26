@@ -1,0 +1,13 @@
+name: construction du code d'automatisation de deployement sur github et le serveur de production
+
+on:[push, pull_request]
+
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: pulling git rep
+        uses: actions/checkout@v2
+      - name: say hi to happi
+        run: echo "bonjour willy"

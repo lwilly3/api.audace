@@ -19,21 +19,21 @@ router=APIRouter(
 # sur la solution au on accede par user_credentials.email ..  pour la deuxieme solution il retourne un dict avec username et password
 # la cle du dict username retourner peux soscker nimporte quoi email, id... en fonction de cequi a ete envoye par lutilisateur
 # les info ne seront plus en voye en json par le body clien mais en form-date 7h12
-def login(user_credentials: OAuth2PasswordRequestForm=Depends(), db: Session = Depends(database.get_db)): 
+def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Session = Depends(database.get_db)): 
 # username contien le mail
-   user_to_log= db.query(table_models.User).filter(table_models.User.email== user_credentials.username).first() 
+   user_to_log_on_db= db.query(table_models.User).filter(table_models.User.email== user_credentials_receved.username).first() 
 
-   if not user_to_log:
+   if not user_to_log_on_db:
       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"authentification invalide")
    
 #    virification si le pass hacher et sauver en base de donnee est similaire a la version hash de celui fourni par lutilisateur
-   if not utils.verify(user_credentials.password, user_to_log.password ):
+   if not utils.verify(user_credentials_receved.password, user_to_log_on_db.password ):
       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"authentification invalide")
  
     
 # creation du token
 #    le data contien ce que je veux inclure dans le  payloard
 #    le token peut etre visualiser dans https://jwt.io/  9h09
-   access_token= oauth2.create_acces_token(data={'user_id':user_to_log.id})
+   access_token= oauth2.create_acces_token(data={'user_id':user_to_log_on_db.id})
    
    return{"access_token" :access_token, "token_type":"bearer"}
