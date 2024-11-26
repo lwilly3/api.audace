@@ -14,7 +14,46 @@ router=APIRouter(
     prefix="/posts",
     tags=['POST']
 )
+# ////////////////////////////
 
+
+@router.get("/all",  response_model= List[schemas.PostAvecVote])
+def get_posts(db: Session = Depends(get_db), limit: int=100, skip: int=0, search: Optional[str] =""):
+  
+
+    posts_and_counts = db.query(table_models.Posts, func.count(table_models.Posts.id).label("votes")).join(table_models.Votes, table_models.Votes.post_id == table_models.Posts.id, isouter=True).group_by(table_models.Posts.id).all()
+   
+# Sérialiser chaque résultat
+    serialized_results = []
+    for post_and_count in posts_and_counts:
+        post = post_and_count.Posts
+        votes_count = post_and_count.votes
+        # Créer un dictionnaire pour chaque résultat
+        serialized_post = {
+            "post": {
+                "id": post.id,
+                "title": post.title,
+                "content": post.content,
+                "published": post.published,
+                "created_at": post.created_at,
+                'owner_id':post.owner_id,
+                "owner": {
+                    "id": post.owner.id,
+                    "email":post.owner.email,
+                    "created_at": post.owner.created_at,  # ou tout autre attribut de l'utilisateur
+                    # Ajoutez d'autres attributs de l'utilisateur si nécessaire
+                },
+            },
+            "votes": votes_count
+        }
+        serialized_results.append(serialized_post)
+
+
+    return serialized_results
+
+
+
+# /////////////////////////////////////
 
 # 8h30 pour retourner les poste d'un utilisateur en particulier (le proprietaire) le lien a ete a jouter par moi
 @router.get("/owne",  response_model= List[schemas.Post])
@@ -31,14 +70,7 @@ def get_Owner_posts(db: Session = Depends(get_db),current_user: int= Depends(oau
     return posts
 
 
-@router.get("/all",  response_model= List[schemas.PostAvecVote])
-def get_post_all( db: Session = Depends(get_db),):
-   
-    result_post= db.query(table_models.Posts).all()
-    if not result_post :
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"le post avec l'indexe No {id} n'existe pas")
-    
-    return result_post
+
 
 # 8h40 ajour des query parameter (parametre de requettes) qui permettent d'envoyer par lien des filtres suplementaires
 # le parametre .ofset(int) permetra de faire la pagination
