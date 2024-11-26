@@ -26,10 +26,23 @@ jobs:
     runs-on: ubuntu-latest
     needs:
          - Test-process
+    environment:
+      nsme: production
 
     steps:
+       - name: pulling git rep
+         uses: actions/checkout@v2
        - name: deployement sur serveur ubuntu
-         run: echo "deployenment en cours"
+         uses: appleboy/ssh-action@master
+         with:
+            host: ${{secrets.PROD_AUDACE_HOST}}
+            username: ${{secrets.PROD_AUDACE_USERNAME}}
+            password: ${{secrets.PROD_AUDACE_PASSWORD}}
+            script: |
+              cd app/src
+              git pull
+              sudo systemctrl restart api
+
 
 
 
