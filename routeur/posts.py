@@ -113,6 +113,23 @@ def get_post_by_id(id: int, db: Session = Depends(get_db),  response_model= sche
     return result_post
 
 
+
+
+
+@router.get("/all",  response_model= List[schemas.PostAvecVote])
+def get_post_all( db: Session = Depends(get_db),):
+   
+    result_post= db.query(table_models.Posts).all()
+    if not result_post :
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"le post avec l'indexe No {id} n'existe pas")
+    
+    return result_post
+
+
+
+
+
+
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def suprimer_post(id: int, db: Session = Depends(get_db),current_user: int= Depends(oauth2.get_current_user)):
     # cursor.execute(''' DELETE FROM posts WHERE id=%s RETURNING *''',(str(id),))
