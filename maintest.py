@@ -52,4 +52,4 @@ app.include_router(votes.router)
 
 @app.get("/")
 def par_defaut():
-    return {"BIEBVENUE":"HAPSON API   !!!!!!!!!"}
+    return {"BIEBVENUE":"HAPSON API   222!!!!!!!!!"}
