@@ -1,7 +1,8 @@
-name: construction du code d'automatisation de deployement sur github et le serveur de production
+name: construction du code d'automatisation de déploiement sur github et le serveur de production
 
-on:[push, pull_request]
-
+on:
+  - push
+  - pull_request
 
 jobs:
   job1:
