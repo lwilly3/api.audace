@@ -30,6 +30,16 @@ def get_Owner_posts(db: Session = Depends(get_db),current_user: int= Depends(oau
 #  bien que la bariable  soit un dictionnaire python, en faisant return FastAPI va le serialiser en Json avant de retourner 5h40 de la video
     return posts
 
+
+@router.get("/all",  response_model= List[schemas.PostAvecVote])
+def get_post_all( db: Session = Depends(get_db),):
+   
+    result_post= db.query(table_models.Posts).all()
+    if not result_post :
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"le post avec l'indexe No {id} n'existe pas")
+    
+    return result_post
+
 # 8h40 ajour des query parameter (parametre de requettes) qui permettent d'envoyer par lien des filtres suplementaires
 # le parametre .ofset(int) permetra de faire la pagination
 # current_user: int bien que cela soit definit comme int cela n'afecte pas le fait que current_user est un dictionaire 8h29
@@ -116,14 +126,6 @@ def get_post_by_id(id: int, db: Session = Depends(get_db),  response_model= sche
 
 
 
-@router.get("/all",  response_model= List[schemas.PostAvecVote])
-def get_post_all( db: Session = Depends(get_db),):
-   
-    result_post= db.query(table_models.Posts).all()
-    if not result_post :
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"le post avec l'indexe No {id} n'existe pas")
-    
-    return result_post
 
 
 
