@@ -1,52 +1,53 @@
-name: construction du code d'automatisation de déploiement sur github et le serveur de production
+name: Construction du code d'automatisation de déploiement sur GitHub et le serveur de production
 
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   Test-process:
     runs-on: ubuntu-latest
     steps:
-      - name: pulling git rep
+      - name: Pull Git Repository
         uses: actions/checkout@v2
-      - name: say hi to happi
-        run: echo "bonjour willy"
-      - name: Install python version 3.9
+
+      - name: Say Hi to Happi
+        run: echo "Bonjour Willy"
+
+      - name: Install Python Version 3.9
         uses: actions/setup-python@v2
         with:
           python-version: "3.9"
-      - name: update pip
-        run: python -m pip install --upgrade pip
-      - name: installe all dependencies
-        run: pip install -r requirements.txt
-      
 
-  processus_de_Deployement:
+      - name: Update pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install All Dependencies
+        run: pip install -r requirements.txt
+
+  processus_de_deploiement:
     runs-on: ubuntu-latest
     needs:
-         - Test-process
+      - Test-process
     environment:
-      nsme: production
+      name: production
 
     steps:
-       - name: pulling git rep
-         uses: actions/checkout@v2
-       - name: deployement sur serveur ubuntu
-         uses: appleboy/ssh-action@master
-         with:
-            host: ${{secrets.PROD_AUDACE_HOST}}
-            username: ${{secrets.PROD_AUDACE_USERNAME}}
-            password: ${{secrets.PROD_AUDACE_PASSWORD}}
-            script: |
-              cd app/src
-              git pull
-              sudo systemctrl restart api
+      - name: Pull Git Repository
+        uses: actions/checkout@v2
 
+      - name: Deploy to Ubuntu Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_AUDACE_HOST }}
+          username: ${{ secrets.PROD_AUDACE_USERNAME }}
+          password: ${{ secrets.PROD_AUDACE_PASSWORD }}
+          script: |
+            cd app/src
+            git pull
+            sudo systemctl restart api
 
-
-
-
-          
-       
-        
+      # - name: Check API Status
+      #   run: curl -f http://${{ secrets.PROD_AUDACE_HOST }}/health || exit 1
