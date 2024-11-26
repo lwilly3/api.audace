@@ -31,10 +31,9 @@ app = FastAPI()
 # 11h22 implementation du midelware pour permetre au domaines exterieur d'acceder a notre API
 # on peu faire le test sur consol dans inspection de google.com avec la commande fetch("http://localhost:8000/").then(res=>res.json()).then(console.log)
 # https://fastapi.tiangolo.com/tutorial/cors/ pour la Doc
-origins = [
-     "https://www.google.com",
-
-]
+# origins = [ "https://www.google.com" ]    si je veux limiter mon appi accecible a google uniquement
+# en utilisant * en argument j'autorise nimporte quelle application web a acceder a mon api
+origins = ["*"]
 
 
 app.add_middleware(

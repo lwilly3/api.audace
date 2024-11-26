@@ -1,0 +1,14 @@
+[Unit]
+Description=instance gunicorn pour le serveur api
+After=network.target
+
+[Service]
+User=audace
+Group=audace
+WorkingDirectory=/home/audace/app/src/
+Environement="PATH=/home/audace/app/venv/bin"
+EnvironementFile=/home/audace/.venv
+ExecStart=/home/audace/app/venv/bin/gunicorn -w 2 -k uvicorn.workers.UvicornWorker maintest:app --bind 0.0.0.0:8002
+
+[Install]
+WantedBy=multi-user.target
