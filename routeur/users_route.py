@@ -107,7 +107,7 @@ def get_user(id: int, db: Session = Depends(get_db)):
 
 @router.post("/users", response_model=UserBase)
 
-def create_new_user(user_to_create: UserCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def create_new_user(user_to_create: UserCreate, db: Session = Depends(get_db)):
     # hachage du mot de passe
     hashed_password=utils.hash(user_to_create.password)
     user_to_create.password=hashed_password
