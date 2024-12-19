@@ -1,6 +1,6 @@
-import app.schemas as schemas, app.table_models as table_models, app.oauth2 as oauth2
+import app.schemas.schemas as schemas, app.models.table_models as table_models, core.auth.oauth2 as oauth2
 from fastapi import  HTTPException, Response, status, Depends, APIRouter
-from app.database import get_db
+from app.db.database import get_db
 from sqlalchemy.orm import Session
 from typing import Union, List, Optional
 from sqlalchemy import func #10h19
@@ -133,10 +133,10 @@ def create_post(post:schemas.PostCreate, db: Session = Depends(get_db),current_u
     # new_post=cursor.fetchone()
     # connexion.commit()
     # new_to_post=table_models.Posts(title=post.title, content=post.content, published=post.published)
-    # print(**post.dict()) 5h14min de la video
+    # print(**post.model_dump()) 5h14min de la video
 
     # dans le but deviter a lutilisater de fournir son id lors de la creation de post on la recupere dans le token et lajoute a la requete 8h20
-    new_to_post=table_models.Posts(owner_id=current_user.id, **post.dict())
+    new_to_post=table_models.Posts(owner_id=current_user.id, **post.model_dump())
 
     db.add(new_to_post)
     db.commit()
@@ -206,6 +206,6 @@ def modifier_post(id:int, post:schemas.PostCreate, db: Session = Depends(get_db)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Vous n'ete pas proprietaire de ce post") #8h22
     
     # requete_modif.update({'title':"titre de mise a jour", "content":"contenue de mise a jour"}, synchronize_session=False)
-    requete_modif_post.update(post.dict(), synchronize_session=False)
+    requete_modif_post.update(post.model_dump(), synchronize_session=False)
     db.commit()
     return  requete_modif_post.first()

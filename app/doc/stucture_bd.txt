@@ -1,0 +1,167 @@
+
+# -------------------------
+# BaseModel pour Soft Delete
+# -------------------------
+class BaseModel(Base):
+    """Classe de base avec suppression douce (soft delete)"""
+    __abstract__ = True  # Indique que cette classe ne sera pas une table directe
+    is_deleted = Column(Boolean, default=False)  # Marque la ligne comme supprimée
+    deleted_at = Column(DateTime, nullable=True)  # Enregistre la date de suppression
+
+
+# -------------------------
+# Modèle pour les Présentateurs (avec Soft Delete)
+# -------------------------
+class Presenter(Base):
+    __tablename__ = "presenters"  # Table des présentateurs
+    id = Column(Integer, primary_key=True)  # Identifiant du présentateur
+    name = Column(String, nullable=False)  # Nom du présentateur
+    biography = Column(Text, nullable=True)  # Biographie du présentateur (optionnelle)
+
+# -------------------------
+# Archivage des Logs d'Audit
+# -------------------------
+class ArchivedAuditLog(Base):
+    __tablename__ = "archived_audit_logs"  # Table pour l'archivage des logs d'audit
+    id = Column(Integer, primary_key=True)  # Identifiant du log archivé
+    user_id = Column(Integer, ForeignKey('users.id'))  # Référence à l'utilisateur
+    action = Column(String, nullable=False)  # Action effectuée
+    table_name = Column(String, nullable=False)  # Table concernée
+    record_id = Column(Integer, nullable=False)  # Identifiant de l'enregistrement concerné
+    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)  # Date et heure de l'action
+
+    # Relation vers l'utilisateur
+    user = relationship("User")
+
+# -------------------------
+# Logs d'Audit (Actions des utilisateurs)
+# -------------------------
+class AuditLog(Base):
+    __tablename__ = "audit_logs"  # Table des logs d'audit
+
+    id = Column(Integer, primary_key=True)  # Identifiant du log
+    user_id = Column(Integer, ForeignKey('users.id'))  # Référence à l'utilisateur ayant effectué l'action
+    action = Column(String, nullable=False)  # Action effectuée (par exemple : "create", "update", "delete")
+    table_name = Column(String, nullable=False)  # Nom de la table concernée
+    record_id = Column(Integer, nullable=False)  # Identifiant de l'enregistrement concerné
+    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)  # Date et heure de l'action
+
+    # Relation vers l'utilisateur
+    user = relationship("User", back_populates="audit_logs")
+
+
+
+# -------------------------
+# Modèle pour les Invités (avec Soft Delete)
+# -------------------------
+class Guest(Base):
+    __tablename__ = "guests"  # Table des invités
+    id = Column(Integer, primary_key=True)  # Identifiant de l'invité
+    name = Column(String, nullable=False)  # Nom de l'invité
+    biography = Column(Text, nullable=True)  # Biographie de l'invité (optionnelle)
+
+# -------------------------
+# Historique des Connexions
+# -------------------------
+class LoginHistory(Base):
+    __tablename__ = "login_history"  # Table pour l'historique des connexions
+
+    id = Column(Integer, primary_key=True)  # Identifiant de la connexion
+    user_id = Column(Integer, ForeignKey('users.id'))  # Référence à l'utilisateur
+    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)  # Date et heure de la connexion
+    ip_address = Column(String, nullable=True)  # Adresse IP de la connexion (optionnel)
+
+    # Relation vers l'utilisateur
+    user = relationship("User", back_populates="logins")
+
+# -------------------------
+# Notifications (Messages envoyés aux utilisateurs)
+# -------------------------
+class Notification(Base):
+    __tablename__ = "notifications"  # Table des notifications
+
+    id = Column(Integer, primary_key=True)  # Identifiant de la notification
+    user_id = Column(Integer, ForeignKey('users.id'))  # Référence à l'utilisateur
+    message = Column(Text, nullable=False)  # Contenu du message
+    read = Column(Boolean, default=False)  # Statut de lecture de la notification
+    timestamp = Column(DateTime, nullable=False, default=datetime.utcnow)  # Date et heure de la notification
+
+    # Relation vers l'utilisateur
+    user = relationship("User", back_populates="notifications")
+
+
+
+# -------------------------
+# Table pour les Permissions
+# -------------------------
+class Permission(Base):
+    __tablename__ = "permissions"  # Nom de la table
+
+    id = Column(Integer, primary_key=True)  # Identifiant de la permission
+    name = Column(String, nullable=False, unique=True)  # Nom unique de la permission (ex : "read", "write")
+
+
+
+
+# -------------------------
+# Historique des Modifications d'un Présentateur
+# -------------------------
+class PresenterHistory(Base):
+    __tablename__ = "presenter_history"  # Historique des modifications d'un présentateur
+    id = Column(Integer, primary_key=True)  # Identifiant de l'historique
+    presenter_id = Column(Integer, ForeignKey('presenters.id'))  # Référence au présentateur
+    name = Column(String)  # Nom du présentateur au moment de la modification
+    biography = Column(Text)  # Biographie du présentateur au moment de la modification
+    updated_at = Column(DateTime, default=datetime.utcnow)  # Date et heure de la mise à jour
+    updated_by = Column(Integer, ForeignKey('users.id'))  # Utilisateur ayant effectué la modification
+
+    # Relations vers le présentateur et l'utilisateur
+    presenter = relationship("Presenter")
+    updated_by_user = relationship("User")
+
+# -------------------------
+# Table de liaison entre Rôles et Permissions
+# -------------------------
+class RolePermission(Base):
+    __tablename__ = "role_permissions"  # Table de liaison entre rôles et permissions
+
+    role_id = Column(Integer, ForeignKey('roles.id'), primary_key=True)  # Référence au rôle
+    permission_id = Column(Integer, ForeignKey('permissions.id'), primary_key=True)  # Référence à la permission
+
+    # Relations bidirectionnelles
+    role = relationship("Role", back_populates="permissions")
+    permission = relationship("Permission", back_populates="roles")
+
+# -------------------------
+# Table pour les Rôles
+# -------------------------
+class Role(Base):
+    __tablename__ = "roles"  # Nom de la table des rôles
+
+    id = Column(Integer, primary_key=True)  # Identifiant du rôle
+    name = Column(String, nullable=False, unique=True)  # Nom du rôle (par exemple : "admin", "user")
+
+    # Relation avec les permissions via la table de liaison RolePermission
+    permissions = relationship("RolePermission", back_populates="role")
+
+
+# -------------------------
+# Table des Utilisateurs
+# -------------------------
+class User(Base):
+    __tablename__ = "users"  # Table des utilisateurs
+
+    id = Column(Integer, primary_key=True)  # Identifiant de l'utilisateur
+    username = Column(String, nullable=False, unique=True)  # Nom d'utilisateur unique
+    email = Column(String, nullable=False, unique=True)  # Adresse e-mail unique
+    password_hash = Column(String, nullable=False)  # Hash du mot de passe
+    is_active = Column(Boolean, default=True)  # Indique si l'utilisateur est actif
+
+    # Relation avec l'historique des connexions
+    logins = relationship("LoginHistory", back_populates="user")
+
+    # Relation avec les logs d'audit (actions de l'utilisateur)
+    audit_logs = relationship("AuditLog", back_populates="user")
+
+    # Relation avec les notifications (messages pour l'utilisateur)
+    notifications = relationship("Notification", back_populates="user")

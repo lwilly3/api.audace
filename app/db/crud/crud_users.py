@@ -1,0 +1,372 @@
+
+from datetime import datetime, timezone
+from typing import List
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+from app.models import User, LoginHistory, Notification, AuditLog, Presenter, Guest, ArchivedAuditLog, Role, RolePermission, Permission
+
+# -------------------------
+# Fonction utilitaire pour récupérer un utilisateur ou lever une erreur 404
+# -------------------------
+def get_user_or_404(db: Session, user_id: int) -> User:
+    """
+    Fonction utilitaire pour récupérer un utilisateur ou lever une erreur si l'utilisateur est inactif ou inexistant.
+    """
+    try:
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if not user:
+            return None
+        return user
+    except SQLAlchemyError as e:
+        print(f"Error retrieving user with ID {user_id}: {e}")
+        return None
+
+# -------------------------
+# Récupérer tous les utilisateurs actifs
+# -------------------------
+def get_all_users(db: Session) -> List[User]:
+    """
+    Récupérer tous les utilisateurs actifs dans la base de données.
+    """
+    try:
+        return db.query(User).filter(User.is_active == True).all()
+    except SQLAlchemyError as e:
+        print(f"Error retrieving all users: {e}")
+        return []
+
+# -------------------------
+# Créer un nouvel utilisateur
+# -------------------------
+def create_user(db: Session, user_data: dict) -> User:
+    """
+    Créer un nouvel utilisateur.
+    """
+    try:
+        new_user = User(
+            username=user_data['username'],
+            email=user_data['email'],
+            password=user_data['password'],
+            is_active=True,  # L'utilisateur est actif par défaut
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Error creating user: {e}")
+        return None
+
+# -------------------------
+# Mettre à jour un utilisateur existant
+# -------------------------
+def update_user(db: Session, user_id: int, user_data: dict) -> User:
+    """
+    Mettre à jour un utilisateur existant.
+    """
+    try:
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if user:
+            for key, value in user_data.items():
+                setattr(user, key, value)
+            db.commit()
+            db.refresh(user)
+            return user
+        return None
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Error updating user with ID {user_id}: {e}")
+        return None
+
+# -------------------------
+# Supprimer (soft delete) un utilisateur
+# -------------------------
+def delete_user(db: Session, user_id: int) -> bool:
+    """
+    Marquer un utilisateur comme supprimé (soft delete).
+    """
+    try:
+        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
+        if user:
+            user.is_active = False
+            user.deleted_at = datetime.now(timezone.utc)  # Enregistrer la date de suppression
+            db.commit()
+            db.refresh(user)
+            return True
+        return False
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Error deleting user with ID {user_id}: {e}")
+        return False
+
+# -------------------------
+# Récupérer l'historique des connexions d'un utilisateur
+# -------------------------
+def get_user_logins(db: Session, user_id: int) -> List[LoginHistory]:
+    """
+    Récupérer l'historique des connexions d'un utilisateur.
+    """
+    try:
+        return db.query(LoginHistory).filter(LoginHistory.user_id == user_id).all()
+    except SQLAlchemyError as e:
+        print(f"Error retrieving login history for user with ID {user_id}: {e}")
+        return []
+
+# -------------------------
+# Récupérer les notifications d'un utilisateur
+# -------------------------
+def get_user_notifications(db: Session, user_id: int) -> List[Notification]:
+    """
+    Récupérer les notifications pour un utilisateur.
+    """
+    try:
+        return db.query(Notification).filter(Notification.user_id == user_id).all()
+    except SQLAlchemyError as e:
+        print(f"Error retrieving notifications for user with ID {user_id}: {e}")
+        return []
+
+# -------------------------
+# Récupérer les logs d'audit d'un utilisateur
+# -------------------------
+def get_user_audit_logs(db: Session, user_id: int) -> List[AuditLog]:
+    """
+    Récupérer les logs d'audit pour un utilisateur.
+    """
+    try:
+        return db.query(AuditLog).filter(AuditLog.user_id == user_id).all()
+    except SQLAlchemyError as e:
+        print(f"Error retrieving audit logs for user with ID {user_id}: {e}")
+        return []
+
+# -------------------------
+# Archivage des logs d'audit
+# -------------------------
+def archive_audit_log(db: Session, audit_log: AuditLog) -> ArchivedAuditLog:
+    """
+    Archiver un log d'audit dans la table des logs archivés.
+    """
+    try:
+        archived_log = ArchivedAuditLog(
+            user_id=audit_log.user_id,
+            action=audit_log.action,
+            table_name=audit_log.table_name,
+            record_id=audit_log.record_id,
+            timestamp=audit_log.timestamp,
+        )
+        db.add(archived_log)
+        db.commit()
+        db.refresh(archived_log)
+        return archived_log
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Error archiving audit log: {e}")
+        return None
+
+# -------------------------
+# Ajouter une permission à un rôle
+# -------------------------
+def add_permission_to_role(db: Session, role_id: int, permission_id: int) -> RolePermission:
+    """
+    Ajouter une permission à un rôle.
+    """
+    try:
+        role_permission = RolePermission(role_id=role_id, permission_id=permission_id)
+        db.add(role_permission)
+        db.commit()
+        db.refresh(role_permission)
+        return role_permission
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Error adding permission to role: {e}")
+        return None
+
+# -------------------------
+# Créer un rôle
+# -------------------------
+def create_role(db: Session, role_data: dict) -> Role:
+    """
+    Créer un nouveau rôle.
+    """
+    try:
+        new_role = Role(name=role_data['name'])
+        db.add(new_role)
+        db.commit()
+        db.refresh(new_role)
+        return new_role
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Error creating role: {e}")
+        return None
+
+# -------------------------
+# Créer un invité
+# -------------------------
+def create_guest(db: Session, guest_data: dict) -> Guest:
+    """
+    Créer un nouvel invité.
+    """
+    try:
+        new_guest = Guest(
+            name=guest_data['name'],
+            biography=guest_data.get('biography')
+        )
+        db.add(new_guest)
+        db.commit()
+        db.refresh(new_guest)
+        return new_guest
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Error creating guest: {e}")
+        return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# from datetime import datetime, timezone
+# from typing import List
+# from .models import UserInDB, LoginLog, Notification, AuditLog
+
+# # Base de données simulée
+# users_db = {}  # Dictionnaire pour stocker les utilisateurs actifs/inactifs
+# logins_db = {}  # Dictionnaire pour stocker l'historique des connexions
+# notifications_db = {}  # Dictionnaire pour stocker les notifications
+# audit_logs_db = {}  # Dictionnaire pour stocker les logs d'audit
+
+# def get_user_or_404(user_id: int) -> UserInDB:
+#     """
+#     Fonction utilitaire pour récupérer un utilisateur ou lever une erreur 404
+#     """
+#     if user_id not in users_db or not users_db[user_id].is_active:
+#         return None
+#     return users_db[user_id]
+
+# def get_all_users() -> List[UserInDB]:
+#     """
+#     Récupérer tous les utilisateurs actifs.
+#     """
+#     return [u for u in users_db.values() if u.is_active]
+
+# def create_user(user: UserInDB) -> UserInDB:
+#     """
+#     Créer un nouvel utilisateur.
+#     """
+#     user_id = len(users_db) + 1  # Génération d'un nouvel ID
+#     new_user = UserInDB(
+#         **user.dict(), id=user_id, created_at=datetime.now(timezone.utc)  # Utilisation de timezone-aware datetime
+#     )
+#     users_db[user_id] = new_user
+#     return new_user
+
+# def update_user(id: int, user: UserInDB) -> UserInDB:
+#     """
+#     Mettre à jour un utilisateur existant.
+#     """
+#     existing_user = get_user_or_404(id)
+#     if not existing_user:
+#         return None
+#     updated_user = existing_user.copy(
+#         update={**user.dict(), "updated_at": datetime.now(timezone.utc) }
+#     )
+#     users_db[id] = updated_user
+#     return updated_user
+
+# def delete_user(id: int) -> bool:
+#     """
+#     Supprimer (soft delete) un utilisateur.
+#     """
+#     user = get_user_or_404(id)
+#     if not user:
+#         return False
+#     user.is_active = False
+#     user.updated_at = datetime.now(timezone.utc)  # Utilisation de timezone-aware datetime
+#     users_db[id] = user
+#     return True
+
+# def get_user_logins(id: int) -> List[LoginLog]:
+#     """
+#     Récupérer l'historique des connexions d'un utilisateur.
+#     """
+#     return [log for log in logins_db.values() if log.user_id == id]
+
+# def get_user_notifications(id: int) -> List[Notification]:
+#     """
+#     Récupérer les notifications d'un utilisateur.
+#     """
+#     return [n for n in notifications_db.values() if n.user_id == id]
+
+# def get_user_audit_logs(id: int) -> List[AuditLog]:
+#     """
+#     Récupérer les logs d'audit d'un utilisateur.
+#     """
+#     return [log for log in audit_logs_db.values() if log.user_id == id]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # from sqlalchemy.orm import Session
+# # from app.models import User
+# # from app.schemas.schema_users import UserCreate, UserUpdate
+
+# # def create_user(db: Session, user: UserCreate):
+# #     new_user = User(**user.dict())
+# #     db.add(new_user)
+# #     db.commit()
+# #     db.refresh(new_user)
+# #     return new_user
+
+# # def get_user(db: Session, user_id: int):
+# #     return db.query(User).filter(User.id == user_id).first()
+
+# # def get_users(db: Session, skip: int = 0, limit: int = 10):
+# #     return db.query(User).offset(skip).limit(limit).all()
+
+# # def update_user(db: Session, user_id: int, user_update: UserUpdate):
+# #     user = db.query(User).filter(User.id == user_id).first()
+# #     for key, value in user_update.dict(exclude_unset=True).items():
+# #         setattr(user, key, value)
+# #     db.commit()
+# #     db.refresh(user)
+# #     return user
+
+# # def delete_user(db: Session, user_id: int):
+# #     user = db.query(User).filter(User.id == user_id).first()
+# #     if user:
+# #         db.delete(user)
+# #         db.commit()
+# #     return user

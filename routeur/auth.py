@@ -3,7 +3,12 @@ from sqlalchemy.orm import Session
 # import app.database as database, app.schemas as schemas, app.table_models as table_models, app.utils as utils, app.oauth2 as oauth2
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 
-from app import schemas, table_models,  oauth2, utils,database
+from app.models import table_models
+from app.models import model_user
+from core.auth import oauth2
+from app.db import database
+from app.schemas import schemas
+from app.utils import utils
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -21,7 +26,7 @@ router=APIRouter(
 # les info ne seront plus en voye en json par le body clien mais en form-date 7h12
 def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Session = Depends(database.get_db)): 
 # username contien le mail
-   user_to_log_on_db= db.query(table_models.User).filter(table_models.User.email== user_credentials_receved.username).first() 
+   user_to_log_on_db= db.query(model_user.User).filter(model_user.User.email== user_credentials_receved.username).first() 
 
    if not user_to_log_on_db:
       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"authentification invalide")

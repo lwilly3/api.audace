@@ -1,0 +1,101 @@
+Pour implémenter les routes et les éléments associés à ton application de gestion de la station de radio, nous allons procéder de manière structurée, étape par étape. Voici un plan de travail détaillé :
+
+1. Mise en place de la structure de l'application
+Avant de commencer à implémenter les routes, nous devons nous assurer que la structure de l'application est bien en place. Cela inclut la création du backend avec FastAPI, la configuration de la base de données et la gestion des relations entre les différentes tables.
+
+1.1. Initialisation du backend FastAPI
+Créer un dossier pour l'API (par exemple, app).
+Installer les dépendances nécessaires (FastAPI, SQLAlchemy, Alembic pour les migrations).
+bash
+Copier le code
+pip install fastapi uvicorn sqlalchemy alembic
+1.2. Initialisation de la base de données
+Configurer la connexion à la base de données (PostgreSQL, SQLite ou autre).
+Créer le fichier models.py pour définir toutes les tables (comme celles que tu as déjà fournies).
+Mettre en place les fichiers de migration avec Alembic.
+2. Mise en place des Routes API
+2.1. Définition des routes CRUD de base
+Commence par implémenter les routes CRUD (Create, Read, Update, Delete) pour les entités de base. Voici l'ordre dans lequel il est recommandé de les implémenter :
+
+2.1.1. Routes pour les Présentateurs (/presenters)
+GET /presenters: Récupérer tous les présentateurs.
+GET /presenters/{id}: Récupérer un présentateur par ID.
+POST /presenters: Créer un nouveau présentateur.
+PUT /presenters/{id}: Mettre à jour un présentateur.
+DELETE /presenters/{id}: Supprimer un présentateur (soft delete).
+2.1.2. Routes pour les Invités (/guests)
+GET /guests: Récupérer tous les invités.
+GET /guests/{id}: Récupérer un invité par ID.
+POST /guests: Créer un nouvel invité.
+PUT /guests/{id}: Mettre à jour un invité.
+DELETE /guests/{id}: Supprimer un invité (soft delete).
+2.1.3. Routes pour les Logs d'Audit (/audit_logs)
+GET /audit_logs: Récupérer tous les logs d'audit.
+GET /audit_logs/{id}: Récupérer un log d'audit par ID.
+2.1.4. Routes pour les Rôles et Permissions
+GET /roles: Récupérer tous les rôles.
+GET /roles/{id}: Récupérer un rôle par ID.
+POST /roles: Créer un nouveau rôle.
+GET /permissions: Récupérer toutes les permissions.
+POST /permissions: Créer une nouvelle permission.
+GET /roles/{id}/permissions: Récupérer les permissions d'un rôle spécifique.
+2.1.5. Routes pour les Utilisateurs (/users)
+GET /users: Récupérer tous les utilisateurs.
+GET /users/{id}: Récupérer un utilisateur par ID.
+POST /users: Créer un nouvel utilisateur.
+PUT /users/{id}: Mettre à jour un utilisateur.
+DELETE /users/{id}: Supprimer un utilisateur (soft delete).
+2.1.6. Routes pour les Historique des Connexions (/login_history)
+GET /login_history: Récupérer l'historique des connexions.
+GET /login_history/{id}: Récupérer un historique de connexion par ID.
+2.1.7. Routes pour les Notifications (/notifications)
+GET /notifications: Récupérer toutes les notifications.
+POST /notifications: Créer une nouvelle notification.
+PUT /notifications/{id}: Marquer une notification comme lue.
+2.2. Gestion du Soft Delete
+Pour chaque entité ayant un is_deleted, il faudra gérer la suppression douce. Implémenter des filtres dans les routes GET pour exclure les éléments supprimés :
+
+Exemple pour la route des présentateurs : GET /presenters?exclude_deleted=true.
+2.3. Intégration des Relations
+Assurer la gestion des relations entre les entités, notamment :
+Utiliser relationship pour les entités associées (par exemple, User dans AuditLog, LoginHistory, etc.).
+Assurer la récupération des données associées dans les routes (par exemple, récupérer l'historique des connexions d'un utilisateur).
+3. Authentification et Sécurisation
+3.1. Authentification des utilisateurs
+Mettre en place un système d'authentification avec JWT (JSON Web Tokens) pour sécuriser les routes nécessitant un utilisateur authentifié.
+Installer pyjwt et créer des routes pour l'authentification.
+bash
+Copier le code
+pip install pyjwt
+Implémenter un middleware pour vérifier les tokens JWT sur les routes protégées.
+3.2. Autorisations
+Implémenter un système de permissions basé sur les rôles (par exemple, un administrateur peut accéder à certaines ressources, tandis qu'un utilisateur normal peut avoir un accès limité).
+Implémenter une gestion des permissions pour protéger certaines routes.
+4. Tests Unitaires et de Charge
+4.1. Tests Unitaires
+Pour chaque route, implémenter des tests unitaires pour vérifier le bon fonctionnement des opérations CRUD.
+Utiliser pytest ou une autre bibliothèque de test pour cela.
+4.2. Tests de Charge
+Vérifier que l'API peut supporter un grand nombre de requêtes simultanées.
+Tester l'optimisation des requêtes SQL pour les recherches croisées.
+5. Documentation et Versionnement de l'API
+5.1. Documentation de l'API
+FastAPI génère automatiquement la documentation Swagger UI. Tu pourras y accéder à http://127.0.0.1:8000/docs après avoir démarré le serveur.
+Décrire clairement les paramètres d'entrée et de sortie pour chaque route.
+5.2. Gestion des Versions
+Si des changements importants sont apportés aux routes de l'API, il est essentiel de maintenir une bonne gestion de version des API.
+Utiliser des conventions de versionnement des API comme /v1/presenters.
+Prochaines étapes
+Initialiser FastAPI et la base de données (s'assurer que la structure des tables et des migrations fonctionne).
+Commencer par les routes CRUD de base pour les entités principales (ex. : Présentateurs, Invités, Utilisateurs).
+Mettre en place l'authentification JWT pour sécuriser les routes sensibles.
+Tester les routes avec des tests unitaires et de charge.
+Documenter l'API pour faciliter la collaboration et l'utilisation future.
+Chaque étape peut être affinée et ajustée selon l'évolution des besoins de ton projet.
+
+
+
+
+
+
+

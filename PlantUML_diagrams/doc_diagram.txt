@@ -1,0 +1,38 @@
+Pour générer un diagramme de classes directement dans Visual Studio Code (VSCode), voici quelques étapes et outils que vous pouvez utiliser :
+
+1. Utilisation de l'extension PlantUML dans VSCode
+PlantUML est un outil qui permet de créer des diagrammes UML à partir de texte. Dans VSCode, vous pouvez installer l'extension PlantUML pour générer facilement des diagrammes de classes UML.
+
+Étapes pour installer et utiliser PlantUML dans VSCode :
+Installer l'extension PlantUML :
+
+Ouvrez VSCode.
+Allez dans l'onglet Extensions (ou appuyez sur Ctrl+Shift+X).
+Cherchez PlantUML et installez l'extension officielle.
+Installer Java et Graphviz :
+
+PlantUML nécessite Java et Graphviz pour générer les diagrammes.
+Téléchargez et installez Java depuis ici.
+Téléchargez Graphviz depuis ici.
+Créer un fichier PlantUML :
+
+Créez un nouveau fichier avec l'extension .puml (par exemple, diagram.puml).
+Écrivez votre diagramme de classes en utilisant la syntaxe PlantUML.
+Exemple pour la classe Skill :
+
+plantuml
+Copier le code
+@startuml
+class Skill {
+    - id: int
+    + model_config: ConfigDict
+    + model_dump(): dict
+}
+@enduml
+Générer le diagramme de classes :
+
+Cliquez avec le bouton droit sur le fichier .puml dans VSCode et sélectionnez Preview Diagram ou utilisez le raccourci Alt+D pour afficher un aperçu du diagramme.
+Si tout est correctement configuré, le diagramme de classes apparaîtra dans l'éditeur.
+Exporter le diagramme :
+
+Vous pouvez exporter le diagramme en cliquant sur l'icône d'exportation (en haut à droite de la fenêtre de prévisualisation) ou en utilisant la commande PlantUML: Export Current Diagram.

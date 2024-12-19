@@ -1,0 +1,1002 @@
+2024-11-30 17:54:22,372 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-11-30 17:54:22,576 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-11-30 17:54:23,079 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.71s
+2024-11-30 17:54:37,327 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-11-30 17:54:37,695 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.37s
+2024-11-30 17:54:47,262 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/programmes
+2024-11-30 17:54:47,264 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/programmes - Status: 307 - Time: 0.00s
+2024-11-30 17:54:47,268 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/programmes/
+2024-11-30 18:09:12,699 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/programmes
+2024-11-30 18:09:12,701 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/programmes - Status: 307 - Time: 0.00s
+2024-11-30 18:09:12,704 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/programmes/
+2024-11-30 18:09:13,061 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.36s
+2024-11-30 18:09:33,111 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-11-30 18:09:33,195 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.08s
+2024-11-30 18:09:40,773 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/programmes/update/1
+2024-11-30 18:09:40,774 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/programmes/update/1 - Status: 404 - Time: 0.00s
+2024-11-30 18:10:38,438 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/programmes/update/1
+2024-11-30 18:10:38,439 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/programmes/update/1 - Status: 404 - Time: 0.00s
+2024-11-30 18:10:40,390 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/programmes/update/1
+2024-11-30 18:10:40,392 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/programmes/update/1 - Status: 404 - Time: 0.00s
+2024-11-30 18:11:12,867 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/programmes/update/1
+2024-11-30 18:11:13,015 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/programmes/update/1 - Status: 200 - Time: 0.15s
+2024-11-30 18:11:25,277 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/programmes/9
+2024-11-30 18:11:25,324 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/programmes/9 - Status: 200 - Time: 0.05s
+2024-11-30 18:11:38,691 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/programmes/one/10
+2024-11-30 18:11:38,692 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/programmes/one/10 - Status: 404 - Time: 0.00s
+2024-11-30 18:11:47,559 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/programmes/one/11
+2024-11-30 18:11:47,560 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/programmes/one/11 - Status: 404 - Time: 0.00s
+2024-11-30 18:19:46,051 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/programmes/one/11
+2024-11-30 18:19:46,350 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/programmes/one/11 - Status: 200 - Time: 0.30s
+2024-11-30 18:20:25,136 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/
+2024-11-30 18:20:25,146 - routeur.presentateur - INFO - Listing presenters
+2024-11-30 18:20:25,235 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.10s
+2024-11-30 18:30:49,679 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-11-30 18:30:49,693 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-11-30 18:30:50,137 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.46s
+2024-11-30 18:53:03,138 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/4/programmes?limit=10&offset=0
+2024-11-30 18:53:03,188 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/4/programmes?limit=10&offset=0 - Status: 200 - Time: 0.05s
+2024-11-30 18:53:14,164 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/programmes/7/assign_presenter?presenter_id=5
+2024-11-30 18:53:14,177 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/programmes/7/assign_presenter?presenter_id=5 - Status: 200 - Time: 0.01s
+2024-11-30 18:53:26,414 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/
+2024-11-30 18:53:26,415 - routeur.presentateur - INFO - Listing presenters
+2024-11-30 18:53:26,435 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.02s
+2024-11-30 18:59:30,915 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/programmes/5/assign_presenter?presenter_id=4
+2024-11-30 18:59:30,989 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/programmes/5/assign_presenter?presenter_id=4 - Status: 200 - Time: 0.07s
+2024-11-30 18:59:38,497 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/
+2024-11-30 18:59:38,507 - routeur.presentateur - INFO - Listing presenters
+2024-11-30 18:59:38,541 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.04s
+2024-11-30 19:00:36,055 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/programmes/2/assign_presenter?presenter_id=4
+2024-11-30 19:00:36,109 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/programmes/2/assign_presenter?presenter_id=4 - Status: 200 - Time: 0.05s
+2024-11-30 19:00:41,556 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/
+2024-11-30 19:00:41,557 - routeur.presentateur - INFO - Listing presenters
+2024-11-30 19:00:41,592 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.04s
+2024-11-30 19:02:43,111 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/4/programmes?limit=10&offset=0
+2024-11-30 19:02:43,131 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/4/programmes?limit=10&offset=0 - Status: 200 - Time: 0.02s
+2024-11-30 19:04:43,503 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/programmes?limit=10&offset=0
+2024-11-30 19:04:43,516 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/programmes?limit=10&offset=0 - Status: 422 - Time: 0.01s
+2024-11-30 19:05:02,682 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/3222/programmes?limit=10&offset=0
+2024-11-30 19:05:02,686 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/3222/programmes?limit=10&offset=0 - Status: 404 - Time: 0.00s
+2024-11-30 19:05:14,494 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/4/programmes?limit=10&offset=0
+2024-11-30 19:05:14,506 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/4/programmes?limit=10&offset=0 - Status: 200 - Time: 0.01s
+2024-11-30 19:07:18,992 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/docs
+2024-11-30 19:07:19,004 - hapson-api - INFO - Completed Request: GET http://localhost:8000/docs - Status: 200 - Time: 0.01s
+2024-11-30 19:07:23,042 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/openapi.json
+2024-11-30 19:07:23,192 - hapson-api - INFO - Completed Request: GET http://localhost:8000/openapi.json - Status: 200 - Time: 0.15s
+2024-11-30 19:10:38,196 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/conducteur/show_plans/
+2024-11-30 19:10:38,206 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/conducteur/show_plans/ - Status: 405 - Time: 0.01s
+2024-12-02 23:37:45,621 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-02 23:37:45,642 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.02s
+2024-12-02 23:37:45,661 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-02 23:37:45,693 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-02 23:42:08,850 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-02 23:42:08,852 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-02 23:42:08,856 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-02 23:42:08,879 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-02 23:42:09,439 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.58s
+2024-12-02 23:42:32,428 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-02 23:42:32,464 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 401 - Time: 0.04s
+2024-12-02 23:42:43,851 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-02 23:42:44,227 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.38s
+2024-12-02 23:42:55,663 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-02 23:42:55,694 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.03s
+2024-12-02 23:44:07,373 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-02 23:44:12,153 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-02 23:44:45,676 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts
+2024-12-02 23:44:45,677 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/posts - Status: 307 - Time: 0.00s
+2024-12-02 23:44:45,680 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts/
+2024-12-02 23:45:16,835 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-02 23:46:17,994 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts
+2024-12-02 23:46:17,996 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/posts - Status: 307 - Time: 0.00s
+2024-12-02 23:46:18,002 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts/
+2024-12-02 23:48:24,398 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts
+2024-12-02 23:48:24,401 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/posts - Status: 307 - Time: 0.00s
+2024-12-02 23:48:24,405 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts/
+2024-12-02 23:48:42,872 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts
+2024-12-02 23:48:42,874 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/posts - Status: 307 - Time: 0.00s
+2024-12-02 23:48:42,878 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/posts/
+2024-12-02 23:48:48,877 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-02 23:48:48,899 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 403 - Time: 0.02s
+2024-12-02 23:49:10,371 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-02 23:49:10,373 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-02 23:49:10,377 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-02 23:49:10,394 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-02 23:49:10,850 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.47s
+2024-12-02 23:49:18,616 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-02 23:49:19,057 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.44s
+2024-12-02 23:49:53,519 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-02 23:49:53,540 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.02s
+2024-12-02 23:50:00,459 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-02 23:50:00,490 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.03s
+2024-12-02 23:50:08,193 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/
+2024-12-02 23:50:08,203 - routeur.presentateur - INFO - Listing presenters
+2024-12-02 23:50:08,220 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.03s
+2024-12-03 00:05:49,868 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 00:05:54,267 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 00:06:11,147 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 00:06:38,029 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 00:06:38,039 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.01s
+2024-12-03 00:06:38,047 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 00:06:38,065 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 00:07:48,474 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 00:07:48,476 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 00:07:48,481 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 00:07:48,502 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 00:21:47,172 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 00:21:47,174 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 00:21:47,184 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 00:21:47,201 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 00:21:47,919 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.73s
+2024-12-03 00:21:54,394 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 00:21:54,804 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.41s
+2024-12-03 00:22:08,820 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 00:22:08,904 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.08s
+2024-12-03 00:22:17,417 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 00:22:17,496 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.08s
+2024-12-03 12:43:31,346 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 12:43:31,766 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 403 - Time: 0.42s
+2024-12-03 12:43:41,354 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 12:43:41,358 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 12:43:41,363 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 12:43:41,429 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 12:43:42,065 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.70s
+2024-12-03 12:43:47,574 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 12:43:47,994 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.42s
+2024-12-03 12:43:55,081 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 12:43:55,149 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.07s
+2024-12-03 12:44:00,418 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 12:44:00,501 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.08s
+2024-12-03 12:49:46,476 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 12:49:46,477 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 12:49:46,482 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 12:49:46,500 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 12:49:47,333 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.85s
+2024-12-03 12:49:52,022 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 12:49:52,422 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.40s
+2024-12-03 12:49:58,020 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 12:49:58,164 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.14s
+2024-12-03 12:50:02,249 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 12:50:02,325 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.08s
+2024-12-03 12:58:54,144 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 12:58:54,146 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 12:58:54,150 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 12:58:54,172 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 12:58:59,583 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 12:58:59,593 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.01s
+2024-12-03 12:58:59,596 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 13:00:00,996 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 13:00:01,412 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 13:00:01,876 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.88s
+2024-12-03 13:00:13,500 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 13:00:13,593 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.09s
+2024-12-03 13:00:17,542 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 13:00:17,579 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.04s
+2024-12-03 13:09:00,822 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 13:09:00,824 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 13:09:00,829 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 13:09:00,860 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 13:09:01,651 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.82s
+2024-12-03 13:09:06,297 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 13:09:06,762 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.47s
+2024-12-03 13:09:12,531 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 13:09:12,607 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.08s
+2024-12-03 13:09:16,936 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 13:09:17,004 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.07s
+2024-12-03 13:21:15,937 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 13:21:15,943 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.01s
+2024-12-03 13:21:15,953 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 13:21:15,984 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 13:21:16,856 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.90s
+2024-12-03 13:21:21,053 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 13:21:21,907 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.85s
+2024-12-03 13:21:27,600 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 13:21:27,635 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.03s
+2024-12-03 13:21:32,815 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 13:21:32,889 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.07s
+2024-12-03 13:37:18,273 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 13:37:18,277 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 13:37:18,284 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 13:37:18,313 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 13:37:19,005 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.72s
+2024-12-03 13:37:29,120 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 13:37:29,594 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.47s
+2024-12-03 13:37:36,119 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 13:37:36,218 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.10s
+2024-12-03 13:37:41,764 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 13:37:41,783 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.02s
+2024-12-03 13:57:10,692 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 13:57:10,696 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 13:57:10,702 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 13:57:10,730 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 13:57:11,341 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.64s
+2024-12-03 13:57:15,220 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 13:57:15,615 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.39s
+2024-12-03 13:57:20,415 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 13:57:20,513 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.10s
+2024-12-03 13:57:25,224 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 13:57:25,307 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.08s
+2024-12-03 14:04:10,771 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-03 14:04:10,774 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-03 14:04:10,780 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-03 14:04:10,820 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-03 14:04:11,573 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 0.79s
+2024-12-03 14:04:15,948 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-03 14:04:16,451 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.50s
+2024-12-03 14:04:21,983 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-03 14:04:22,129 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.15s
+2024-12-03 14:04:24,811 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-03 14:04:24,960 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.15s
+2024-12-04 09:28:28,127 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-04 09:28:28,134 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.01s
+2024-12-04 09:28:28,205 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-04 09:28:28,445 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-04 09:32:32,961 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-04 09:32:32,963 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-04 09:32:32,969 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-04 09:32:32,993 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-04 09:32:34,643 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/ - Status: 201 - Time: 1.67s
+2024-12-04 09:33:16,017 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-04 09:33:16,507 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.49s
+2024-12-04 09:34:54,214 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/programmes/
+2024-12-04 09:34:54,360 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/programmes/ - Status: 200 - Time: 0.15s
+2024-12-12 19:32:17,695 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-12 19:32:17,714 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.02s
+2024-12-12 19:32:17,827 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-12 19:32:18,305 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-12 19:40:47,838 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-12 19:40:47,841 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 307 - Time: 0.00s
+2024-12-12 19:40:47,849 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/
+2024-12-12 19:40:47,925 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-12 19:48:00,654 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-12 19:48:00,656 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 404 - Time: 0.00s
+2024-12-12 19:49:59,555 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 19:49:59,576 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 422 - Time: 0.02s
+2024-12-12 19:51:55,219 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 19:51:55,231 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 422 - Time: 0.01s
+2024-12-12 19:54:50,406 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 19:54:50,415 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 422 - Time: 0.01s
+2024-12-12 19:58:59,606 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 19:58:59,638 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 422 - Time: 0.03s
+2024-12-12 19:59:37,423 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 19:59:37,445 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 422 - Time: 0.02s
+2024-12-12 19:59:50,102 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 20:01:09,953 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 20:01:09,988 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 500 - Time: 0.03s
+2024-12-12 20:05:59,017 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 20:05:59,040 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 500 - Time: 0.02s
+2024-12-12 20:15:13,366 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 20:15:13,478 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 500 - Time: 0.11s
+2024-12-12 20:37:39,441 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 20:37:39,532 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 500 - Time: 0.09s
+2024-12-12 20:40:54,752 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 20:40:54,832 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 500 - Time: 0.08s
+2024-12-12 20:43:24,441 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-12 20:43:24,546 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 500 - Time: 0.10s
+2024-12-13 15:57:13,142 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-13 15:57:13,146 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 422 - Time: 0.00s
+2024-12-13 15:57:30,140 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-13 15:57:30,171 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 422 - Time: 0.03s
+2024-12-13 15:57:42,220 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-13 15:57:42,241 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 500 - Time: 0.02s
+2024-12-13 17:11:52,153 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-13 17:13:44,592 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-13 17:20:00,530 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-13 17:20:00,995 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.47s
+2024-12-13 17:49:18,197 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-13 17:49:18,213 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-13 17:49:19,063 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.87s
+2024-12-13 18:29:19,229 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-13 18:29:19,408 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-13 18:29:19,864 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.63s
+2024-12-13 18:29:48,315 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-13 18:29:48,849 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 403 - Time: 0.53s
+2024-12-13 18:29:54,326 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-13 18:29:54,811 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.49s
+2024-12-13 18:29:58,744 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-13 18:29:59,210 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.47s
+2024-12-13 19:45:03,062 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-13 19:45:03,236 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-13 19:45:03,675 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.61s
+2024-12-13 19:50:35,650 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 19:50:35,651 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 404 - Time: 0.00s
+2024-12-13 19:51:09,509 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 19:51:09,510 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 404 - Time: 0.00s
+2024-12-13 19:52:22,881 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 19:52:22,883 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-13 19:52:22,888 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 19:52:22,925 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 422 - Time: 0.04s
+2024-12-13 19:54:31,489 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 19:54:31,492 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-13 19:54:31,498 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 19:54:31,512 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 422 - Time: 0.01s
+2024-12-13 19:58:05,952 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 19:58:05,953 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-13 19:58:05,956 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 20:01:55,220 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 20:01:55,222 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-13 20:01:55,226 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 20:01:55,380 - app.db.crud.crud_presenters - INFO - Presenter 'prersenter 3 Doe9999' created successfully.
+2024-12-13 20:01:55,382 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.16s
+2024-12-13 20:02:06,793 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 20:02:06,794 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-13 20:02:06,797 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 20:02:06,802 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this name already exists
+2024-12-13 20:02:06,809 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.01s
+2024-12-13 20:02:19,899 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 20:02:19,900 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-13 20:02:19,903 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 20:02:19,926 - app.db.crud.crud_presenters - INFO - Presenter 'prersenter aa Doe9999' created successfully.
+2024-12-13 20:02:19,927 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.02s
+2024-12-13 20:05:40,170 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 20:05:40,180 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.01s
+2024-12-13 20:05:40,188 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 20:05:40,209 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this name already exists
+2024-12-13 20:05:40,211 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.02s
+2024-12-13 20:17:21,232 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/get/3
+2024-12-13 20:17:21,242 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/get/3 - Status: 404 - Time: 0.01s
+2024-12-13 20:17:26,770 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/get/1
+2024-12-13 20:17:26,771 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/get/1 - Status: 404 - Time: 0.00s
+2024-12-13 20:17:37,932 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/get/1
+2024-12-13 20:17:37,933 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/get/1 - Status: 404 - Time: 0.00s
+2024-12-13 20:18:05,591 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/get/1
+2024-12-13 20:21:25,300 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/send/1
+2024-12-13 20:22:19,164 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters-a/send/1
+2024-12-13 20:23:50,790 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters-a/send/1
+2024-12-13 20:23:50,969 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters-a/send/1 - Status: 200 - Time: 0.18s
+2024-12-13 20:24:45,802 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-13 20:24:45,984 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 200 - Time: 0.18s
+2024-12-13 20:31:05,546 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 20:31:05,551 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 422 - Time: 0.00s
+2024-12-13 20:38:43,450 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 20:38:43,453 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 422 - Time: 0.00s
+2024-12-13 20:41:33,192 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 20:41:53,336 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 20:41:53,583 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.25s
+2024-12-13 20:46:32,974 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:04:24,489 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:11:15,593 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:11:15,836 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.24s
+2024-12-13 21:13:14,723 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:13:15,088 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.36s
+2024-12-13 21:16:49,482 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:16:49,876 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.39s
+2024-12-13 21:21:23,090 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:24:41,169 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:24:41,356 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.19s
+2024-12-13 21:42:55,036 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:42:55,063 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.03s
+2024-12-13 21:43:07,911 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-13 21:43:07,922 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.01s
+2024-12-13 21:43:07,930 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-13 21:43:07,967 - app.db.crud.crud_presenters - INFO - Presenter 'prersentecxcr aa Doe9999' created successfully.
+2024-12-13 21:43:07,970 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.04s
+2024-12-13 21:43:14,118 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 21:43:14,124 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.01s
+2024-12-13 21:46:55,420 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 21:46:55,423 - app.db.crud.crud_presenters - ERROR - Error updating presenter: check_permission() missing 1 required positional argument: 'db'
+2024-12-13 21:46:55,424 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 500 - Time: 0.00s
+2024-12-13 21:47:36,012 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 21:47:36,194 - app.db.crud.crud_presenters - ERROR - Error updating presenter: 'NoneType' object has no attribute 'name'
+2024-12-13 21:47:36,195 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 500 - Time: 0.18s
+2024-12-13 21:51:10,580 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 21:51:10,744 - app.db.crud.crud_presenters - ERROR - Error updating presenter: 'NoneType' object has no attribute 'name'
+2024-12-13 21:51:10,745 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 500 - Time: 0.17s
+2024-12-13 21:51:58,730 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 21:51:58,951 - app.db.crud.crud_presenters - ERROR - Error updating presenter: 'NoneType' object has no attribute 'name'
+2024-12-13 21:51:58,954 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 500 - Time: 0.22s
+2024-12-13 21:53:25,667 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 21:53:25,867 - app.db.crud.crud_presenters - ERROR - Error updating presenter: 'NoneType' object has no attribute 'name'
+2024-12-13 21:53:25,868 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 500 - Time: 0.20s
+2024-12-13 21:54:21,570 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 21:54:21,741 - app.db.crud.crud_presenters - ERROR - Error updating presenter: 'NoneType' object has no attribute 'name'
+2024-12-13 21:54:21,742 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 500 - Time: 0.17s
+2024-12-13 22:02:21,790 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 22:02:21,996 - app.db.crud.crud_presenters - ERROR - Error updating presenter: 'NoneType' object has no attribute 'name'
+2024-12-13 22:02:21,998 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 500 - Time: 0.21s
+2024-12-13 22:04:09,474 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 22:04:09,479 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 422 - Time: 0.01s
+2024-12-13 22:07:54,287 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 22:07:54,517 - app.db.crud.crud_presenters - INFO - Presenter 'Janekkkkk Doe francis' updated successfully.
+2024-12-13 22:07:54,519 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 200 - Time: 0.23s
+2024-12-13 22:08:53,483 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 22:08:53,834 - app.db.crud.crud_presenters - INFO - Presenter 'Janekkkkk Doe francis' updated successfully.
+2024-12-13 22:08:53,841 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 200 - Time: 0.36s
+2024-12-13 22:09:10,338 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/update/2
+2024-12-13 22:09:10,454 - app.db.crud.crud_presenters - INFO - Presenter 'Janekkkkk Doe francis' updated successfully.
+2024-12-13 22:09:10,459 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/update/2 - Status: 200 - Time: 0.12s
+2024-12-13 22:11:28,437 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/presenters/2
+2024-12-13 22:11:28,438 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/presenters/2 - Status: 405 - Time: 0.00s
+2024-12-13 22:12:30,274 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/presenters/del/2
+2024-12-13 22:13:54,060 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/presenters/del/2
+2024-12-13 22:13:54,338 - app.db.crud.crud_presenters - INFO - Presenter 'Janekkkkk Doe francis' marked as deleted.
+2024-12-13 22:13:54,343 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/presenters/del/2 - Status: 200 - Time: 0.28s
+2024-12-13 22:14:06,369 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-13 22:14:06,383 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.01s
+2024-12-14 13:11:25,977 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/presenters/del/1
+2024-12-14 13:11:26,011 - app.db.crud.crud_presenters - INFO - Presenter 'prersenter 3 Doe9999' marked as deleted.
+2024-12-14 13:11:26,018 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/presenters/del/1 - Status: 200 - Time: 0.04s
+2024-12-14 14:38:23,325 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-14 14:38:23,358 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: When initializing mapper Mapper[Presenter(presenters)], expression 'show_presenters' failed to locate a name ("name 'show_presenters' is not defined"). If this is a class name, consider adding this relationship() to the <class 'app.models.model_presenter.Presenter'> class after both dependent classes have been defined.
+2024-12-14 14:38:23,361 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.04s
+2024-12-14 14:39:11,087 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-14 14:39:11,132 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: When initializing mapper Mapper[Presenter(presenters)], expression 'show_presenters' failed to locate a name ("name 'show_presenters' is not defined"). If this is a class name, consider adding this relationship() to the <class 'app.models.model_presenter.Presenter'> class after both dependent classes have been defined.
+2024-12-14 14:39:11,134 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.05s
+2024-12-14 14:39:54,652 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-14 14:39:54,654 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Presenter(presenters)]'. Original exception was: When initializing mapper Mapper[Presenter(presenters)], expression 'show_presenters' failed to locate a name ("name 'show_presenters' is not defined"). If this is a class name, consider adding this relationship() to the <class 'app.models.model_presenter.Presenter'> class after both dependent classes have been defined.
+2024-12-14 14:39:54,656 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.00s
+2024-12-14 14:44:30,823 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-14 14:44:30,852 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: When initializing mapper Mapper[Presenter(presenters)], expression 'show_presenters' failed to locate a name ("name 'show_presenters' is not defined"). If this is a class name, consider adding this relationship() to the <class 'app.models.model_presenter.Presenter'> class after both dependent classes have been defined.
+2024-12-14 14:44:30,854 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.03s
+2024-12-14 14:47:17,373 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-14 14:47:17,422 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: When initializing mapper Mapper[Presenter(presenters)], expression 'show_presenters' failed to locate a name ("name 'show_presenters' is not defined"). If this is a class name, consider adding this relationship() to the <class 'app.models.model_presenter.Presenter'> class after both dependent classes have been defined.
+2024-12-14 14:47:17,423 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.05s
+2024-12-14 14:47:45,781 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-14 14:47:45,783 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Presenter(presenters)]'. Original exception was: When initializing mapper Mapper[Presenter(presenters)], expression 'show_presenters' failed to locate a name ("name 'show_presenters' is not defined"). If this is a class name, consider adding this relationship() to the <class 'app.models.model_presenter.Presenter'> class after both dependent classes have been defined.
+2024-12-14 14:47:45,784 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.00s
+2024-12-14 15:49:37,116 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-14 15:49:37,118 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-14 15:49:37,143 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-14 15:49:37,457 - app.db.crud.crud_presenters - INFO - Presenter 'prersentecxcr aa Doe9999' created successfully.
+2024-12-14 15:49:37,459 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.32s
+2024-12-14 15:50:10,901 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-14 15:50:10,905 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-14 15:50:10,910 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-14 15:50:11,012 - app.db.crud.crud_presenters - INFO - Presenter ' aa Doe9999' created successfully.
+2024-12-14 15:50:11,019 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.11s
+2024-12-14 15:50:19,677 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-14 15:50:19,677 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-14 15:50:19,681 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-14 15:50:19,693 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this name already exists
+2024-12-14 15:50:19,694 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.01s
+2024-12-14 15:50:34,783 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-14 15:50:34,784 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-14 15:50:34,788 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-14 15:50:34,816 - app.db.crud.crud_presenters - INFO - Presenter ' bb Doe9999' created successfully.
+2024-12-14 15:50:34,817 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.03s
+2024-12-14 15:50:55,055 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-14 15:50:55,220 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.16s
+2024-12-14 15:52:05,245 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-14 15:52:05,252 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 200 - Time: 0.01s
+2024-12-14 16:12:14,612 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guest
+2024-12-14 16:12:14,615 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guest - Status: 404 - Time: 0.00s
+2024-12-14 16:12:59,444 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-14 16:12:59,445 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 404 - Time: 0.00s
+2024-12-14 16:14:19,223 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-14 16:14:19,225 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 404 - Time: 0.00s
+2024-12-14 16:16:19,585 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-14 16:16:19,587 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-14 16:16:19,591 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-14 16:16:20,145 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.55s
+2024-12-15 11:59:10,486 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-15 11:59:10,601 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.12s
+2024-12-15 11:59:10,630 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-15 11:59:11,385 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.75s
+2024-12-17 01:12:32,852 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:12:32,855 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:12:32,869 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:18:00,421 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:18:00,428 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.01s
+2024-12-17 01:18:00,434 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:19:23,444 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-17 01:19:23,446 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 404 - Time: 0.00s
+2024-12-17 01:20:08,683 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-17 01:20:08,684 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 404 - Time: 0.00s
+2024-12-17 01:21:39,641 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-17 01:21:39,642 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 404 - Time: 0.00s
+2024-12-17 01:21:41,552 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2024-12-17 01:21:41,556 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 404 - Time: 0.00s
+2024-12-17 01:21:51,973 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-17 01:26:24,372 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:26:24,373 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:26:24,377 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:27:33,509 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:27:33,510 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:27:33,513 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:27:33,560 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.05s
+2024-12-17 01:33:44,673 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:33:44,675 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:33:44,678 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:33:44,722 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.04s
+2024-12-17 01:40:55,612 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:40:55,613 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:40:55,617 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:40:55,685 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.07s
+2024-12-17 01:43:52,803 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:43:52,804 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:43:52,808 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:43:52,867 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.06s
+2024-12-17 01:47:49,656 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:47:49,658 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:47:49,661 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:47:49,736 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.07s
+2024-12-17 01:57:45,329 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 01:57:45,331 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 01:57:45,335 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 01:57:45,493 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.16s
+2024-12-17 02:04:56,400 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 02:04:56,401 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 02:04:56,404 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 02:04:56,551 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.15s
+2024-12-17 02:11:22,418 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 02:11:22,421 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 02:11:22,428 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 02:11:22,610 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.18s
+2024-12-17 02:12:21,933 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 02:12:21,934 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 02:12:21,937 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 02:12:22,101 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.16s
+2024-12-17 02:16:16,439 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 02:16:16,441 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 02:16:16,446 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 02:16:16,599 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.15s
+2024-12-17 02:19:20,435 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 02:19:20,439 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 02:19:20,446 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 02:19:20,583 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.14s
+2024-12-17 02:22:31,542 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 02:22:31,543 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 02:22:31,547 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 02:22:31,693 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.15s
+2024-12-17 15:00:59,149 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:00:59,154 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:00:59,177 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:00:59,256 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 500 - Time: 0.08s
+2024-12-17 15:10:29,996 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:10:29,998 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:10:30,002 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:10:30,187 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.18s
+2024-12-17 15:47:39,518 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:47:39,521 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 404 - Time: 0.00s
+2024-12-17 15:48:41,226 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:48:41,228 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:48:41,235 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:48:50,520 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:48:50,521 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:48:50,528 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:50:59,035 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:50:59,037 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:50:59,041 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:51:53,040 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:51:53,044 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:51:53,048 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:51:53,217 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.17s
+2024-12-17 15:52:36,018 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:52:36,022 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:52:36,028 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:52:36,256 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.23s
+2024-12-17 15:53:28,753 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:53:28,767 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.01s
+2024-12-17 15:53:28,771 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:53:28,823 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.05s
+2024-12-17 15:54:37,027 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:54:37,028 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:54:37,032 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:54:37,086 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.05s
+2024-12-17 15:54:49,886 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 15:54:49,888 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 15:54:49,893 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 15:54:49,914 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.02s
+2024-12-17 16:08:22,654 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions
+2024-12-17 16:08:22,664 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.01s
+2024-12-17 16:08:22,668 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/
+2024-12-17 16:08:22,696 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.03s
+2024-12-17 16:09:59,646 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/1
+2024-12-17 16:09:59,664 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/1 - Status: 200 - Time: 0.02s
+2024-12-17 16:10:27,997 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/7
+2024-12-17 16:10:28,002 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/7 - Status: 200 - Time: 0.00s
+2024-12-17 16:10:31,806 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/70
+2024-12-17 16:10:31,814 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/70 - Status: 404 - Time: 0.01s
+2024-12-17 16:10:41,181 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/
+2024-12-17 16:10:41,189 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.01s
+2024-12-17 16:10:56,183 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/2
+2024-12-17 16:10:56,193 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/2 - Status: 200 - Time: 0.01s
+2024-12-17 16:12:58,949 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/emissions/1
+2024-12-17 16:12:58,951 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/emissions/1 - Status: 405 - Time: 0.00s
+2024-12-17 16:13:22,332 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/emissions/upd/1
+2024-12-17 16:13:22,342 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/emissions/upd/1 - Status: 422 - Time: 0.01s
+2024-12-17 16:14:54,061 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/emissions/upd/1
+2024-12-17 16:15:43,207 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/emissions/upd/1
+2024-12-17 16:15:43,377 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/emissions/upd/1 - Status: 200 - Time: 0.17s
+2024-12-17 16:15:58,258 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions
+2024-12-17 16:15:58,260 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 16:15:58,264 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/
+2024-12-17 16:15:58,290 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.03s
+2024-12-17 16:20:04,296 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/emissions/1
+2024-12-17 16:20:04,298 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/emissions/1 - Status: 405 - Time: 0.00s
+2024-12-17 16:20:17,231 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/emissions/del/1
+2024-12-17 16:20:17,266 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/emissions/del/1 - Status: 200 - Time: 0.03s
+2024-12-17 16:21:13,629 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/emissions/del/1
+2024-12-17 16:21:13,634 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/emissions/del/1 - Status: 404 - Time: 0.00s
+2024-12-17 16:21:27,190 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/emissions/softdel/2
+2024-12-17 16:21:27,191 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/emissions/softdel/2 - Status: 404 - Time: 0.00s
+2024-12-17 16:21:37,206 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/emissions/softdel/3
+2024-12-17 16:21:37,207 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/emissions/softdel/3 - Status: 404 - Time: 0.00s
+2024-12-17 16:22:04,740 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/emissions/softDel/2
+2024-12-17 16:22:04,762 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/emissions/softDel/2 - Status: 200 - Time: 0.02s
+2024-12-17 16:26:45,924 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions
+2024-12-17 16:26:45,927 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2024-12-17 16:26:45,930 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/emissions/
+2024-12-17 16:26:46,121 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.19s
+2024-12-17 17:17:38,611 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows
+2024-12-17 17:17:38,615 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-17 17:17:38,620 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/
+2024-12-17 17:17:38,633 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/ - Status: 422 - Time: 0.01s
+2024-12-17 17:18:27,861 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows
+2024-12-17 17:18:27,863 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-17 17:18:27,867 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/
+2024-12-17 17:18:28,595 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/ - Status: 201 - Time: 0.73s
+2024-12-17 17:19:14,999 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows
+2024-12-17 17:19:15,009 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows - Status: 307 - Time: 0.01s
+2024-12-17 17:19:15,013 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/
+2024-12-17 17:19:15,069 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/ - Status: 201 - Time: 0.06s
+2024-12-17 17:21:55,253 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2024-12-17 17:21:55,264 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.01s
+2024-12-17 17:21:55,267 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2024-12-17 17:21:55,334 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.07s
+2024-12-17 17:22:26,802 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows
+2024-12-17 17:22:26,805 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-17 17:22:26,808 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/
+2024-12-17 17:22:26,925 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/ - Status: 201 - Time: 0.12s
+2024-12-17 17:26:29,943 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/upd/1
+2024-12-17 17:26:30,006 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/shows/upd/1 - Status: 200 - Time: 0.06s
+2024-12-17 17:30:03,402 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-17 17:30:03,403 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-17 17:30:03,407 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-17 17:30:03,420 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.01s
+2024-12-17 17:33:04,998 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/1
+2024-12-17 17:33:05,012 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/1 - Status: 200 - Time: 0.01s
+2024-12-17 17:34:35,475 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/del/1
+2024-12-17 17:34:35,477 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/del/1 - Status: 405 - Time: 0.00s
+2024-12-17 17:40:48,162 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/del/1
+2024-12-17 17:40:48,208 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/del/1 - Status: 405 - Time: 0.05s
+2024-12-17 17:41:11,758 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-17 17:41:11,760 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-17 17:41:11,763 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-17 17:41:11,810 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.05s
+2024-12-17 17:41:24,246 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/shows/del/1
+2024-12-17 17:41:24,355 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/shows/del/1 - Status: 200 - Time: 0.11s
+2024-12-17 17:41:40,421 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/shows/del/1
+2024-12-17 17:41:40,426 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/shows/del/1 - Status: 404 - Time: 0.01s
+2024-12-17 17:43:04,287 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/2
+2024-12-17 17:43:04,306 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/2 - Status: 200 - Time: 0.02s
+2024-12-17 17:43:38,133 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/shows/del/3
+2024-12-17 17:43:38,183 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/shows/del/3 - Status: 200 - Time: 0.05s
+2024-12-18 13:47:13,245 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-18 13:47:13,923 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 403 - Time: 0.68s
+2024-12-18 13:47:37,584 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-18 13:47:37,595 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 403 - Time: 0.01s
+2024-12-18 13:47:58,465 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-18 13:47:58,489 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-18 13:47:59,038 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.57s
+2024-12-18 13:48:04,085 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-18 13:48:04,767 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.68s
+2024-12-18 13:52:59,920 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 13:52:59,923 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 13:52:59,927 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 13:53:00,120 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.19s
+2024-12-18 13:53:30,502 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 13:53:30,505 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 13:53:30,509 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 13:53:30,718 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.21s
+2024-12-18 13:54:56,649 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 13:54:56,651 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 13:54:56,656 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 13:54:56,876 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.22s
+2024-12-18 13:59:20,460 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 13:59:20,462 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 13:59:20,475 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 13:59:20,770 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.29s
+2024-12-18 13:59:31,129 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 13:59:31,131 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 13:59:31,135 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 13:59:31,161 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.03s
+2024-12-18 13:59:51,118 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/2
+2024-12-18 13:59:51,127 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/2 - Status: 200 - Time: 0.01s
+2024-12-18 13:59:57,318 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 13:59:57,319 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 13:59:57,324 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 13:59:57,354 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.03s
+2024-12-18 14:01:21,296 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 14:01:21,307 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.01s
+2024-12-18 14:01:21,311 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 14:01:21,326 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.01s
+2024-12-18 14:01:50,474 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 14:01:50,476 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 14:01:50,480 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 14:01:50,504 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 401 - Time: 0.02s
+2024-12-18 14:01:58,151 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 14:01:58,152 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 14:01:58,156 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 14:01:58,172 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.02s
+2024-12-18 15:30:52,466 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-18 15:30:52,468 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-18 15:30:52,482 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-18 15:30:52,527 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 401 - Time: 0.04s
+2024-12-18 15:31:10,521 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/2
+2024-12-18 15:31:11,469 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/2 - Status: 200 - Time: 0.95s
+2024-12-18 15:42:55,398 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:42:55,399 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:42:55,403 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:42:55,500 - app.db.crud.crud_presenters - ERROR - Error creating presenter: (psycopg2.errors.NotNullViolation) null value in column "users_id" of relation "presenters" violates not-null constraint
+DETAIL:  Failing row contains (1,  bb Doe9999, null, animateur, 2024-12-18 15:42:55.414564, 2024-12-18 15:42:55.414564, null, f, null).
+
+[SQL: INSERT INTO presenters (name, contact_info, biography, users_id, is_deleted, deleted_at) VALUES (%(name)s, %(contact_info)s, %(biography)s, %(users_id)s, %(is_deleted)s, %(deleted_at)s) RETURNING presenters.id, presenters.created_at, presenters.updated_at]
+[parameters: {'name': ' bb Doe9999', 'contact_info': None, 'biography': 'animateur', 'users_id': None, 'is_deleted': False, 'deleted_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-12-18 15:42:55,501 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.10s
+2024-12-18 15:43:58,450 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:43:58,451 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:43:58,464 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:43:59,010 - app.db.crud.crud_presenters - ERROR - Error creating presenter: (psycopg2.errors.NotNullViolation) null value in column "users_id" of relation "presenters" violates not-null constraint
+DETAIL:  Failing row contains (2,  bb Doe9999, null, animateur, 2024-12-18 15:43:59.000474, 2024-12-18 15:43:59.000474, null, f, null).
+
+[SQL: INSERT INTO presenters (name, contact_info, biography, users_id, is_deleted, deleted_at) VALUES (%(name)s, %(contact_info)s, %(biography)s, %(users_id)s, %(is_deleted)s, %(deleted_at)s) RETURNING presenters.id, presenters.created_at, presenters.updated_at]
+[parameters: {'name': ' bb Doe9999', 'contact_info': None, 'biography': 'animateur', 'users_id': None, 'is_deleted': False, 'deleted_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-12-18 15:43:59,011 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.55s
+2024-12-18 15:47:30,015 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:47:30,026 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.01s
+2024-12-18 15:47:30,030 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:47:30,039 - app.db.crud.crud_presenters - ERROR - Error creating presenter: (psycopg2.errors.NotNullViolation) null value in column "users_id" of relation "presenters" violates not-null constraint
+DETAIL:  Failing row contains (3, nom presentateur 1, null, pr de medecine, 2024-12-18 15:47:30.035498, 2024-12-18 15:47:30.035498, null, f, null).
+
+[SQL: INSERT INTO presenters (name, contact_info, biography, users_id, is_deleted, deleted_at) VALUES (%(name)s, %(contact_info)s, %(biography)s, %(users_id)s, %(is_deleted)s, %(deleted_at)s) RETURNING presenters.id, presenters.created_at, presenters.updated_at]
+[parameters: {'name': 'nom presentateur 1', 'contact_info': None, 'biography': 'pr de medecine', 'users_id': None, 'is_deleted': False, 'deleted_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-12-18 15:47:30,040 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.01s
+2024-12-18 15:51:24,645 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:51:24,648 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:51:24,655 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:51:24,902 - app.db.crud.crud_presenters - ERROR - Error creating presenter: (psycopg2.errors.NotNullViolation) null value in column "users_id" of relation "presenters" violates not-null constraint
+DETAIL:  Failing row contains (4, nom presentateur 1, null, pr de medecine, 2024-12-18 15:51:24.8946, 2024-12-18 15:51:24.8946, null, f, null).
+
+[SQL: INSERT INTO presenters (name, contact_info, biography, users_id, is_deleted, deleted_at) VALUES (%(name)s, %(contact_info)s, %(biography)s, %(users_id)s, %(is_deleted)s, %(deleted_at)s) RETURNING presenters.id, presenters.created_at, presenters.updated_at]
+[parameters: {'name': 'nom presentateur 1', 'contact_info': None, 'biography': 'pr de medecine', 'users_id': None, 'is_deleted': False, 'deleted_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-12-18 15:51:24,903 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.25s
+2024-12-18 15:53:00,433 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:53:00,434 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:53:00,437 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:53:00,676 - app.db.crud.crud_presenters - ERROR - Error creating presenter: (psycopg2.errors.NotNullViolation) null value in column "users_id" of relation "presenters" violates not-null constraint
+DETAIL:  Failing row contains (5, nom presentateur 1, null, pr de medecine, 2024-12-18 15:53:00.667696, 2024-12-18 15:53:00.667696, null, f, null).
+
+[SQL: INSERT INTO presenters (name, contact_info, biography, users_id, is_deleted, deleted_at) VALUES (%(name)s, %(contact_info)s, %(biography)s, %(users_id)s, %(is_deleted)s, %(deleted_at)s) RETURNING presenters.id, presenters.created_at, presenters.updated_at]
+[parameters: {'name': 'nom presentateur 1', 'contact_info': None, 'biography': 'pr de medecine', 'users_id': None, 'is_deleted': False, 'deleted_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-12-18 15:53:00,678 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.24s
+2024-12-18 15:54:20,948 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:54:20,949 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:54:20,953 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:54:21,192 - app.db.crud.crud_presenters - INFO - Presenter 'nom presentateur 1' created successfully.
+2024-12-18 15:54:21,194 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.24s
+2024-12-18 15:57:01,714 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:57:01,716 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:57:01,719 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:57:01,864 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this name already exists
+2024-12-18 15:57:01,865 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.15s
+2024-12-18 15:57:23,566 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:57:23,567 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:57:23,572 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:57:23,582 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this name already exists
+2024-12-18 15:57:23,583 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.01s
+2024-12-18 15:57:36,163 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 15:57:36,164 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 15:57:36,168 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 15:57:36,211 - app.db.crud.crud_presenters - INFO - Presenter 'nom presentateur 1c' created successfully.
+2024-12-18 15:57:36,212 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.04s
+2024-12-18 15:57:59,441 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-18 15:57:59,555 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.11s
+2024-12-18 16:00:08,531 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-18 16:00:08,765 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.23s
+2024-12-18 16:07:34,192 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 16:07:34,194 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 16:07:34,198 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 16:07:34,445 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this name already exists
+2024-12-18 16:07:34,446 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.25s
+2024-12-18 16:07:41,945 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 16:07:41,947 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 16:07:41,951 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 16:07:41,965 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this UserID already exists
+2024-12-18 16:07:41,968 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.02s
+2024-12-18 16:08:04,683 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 16:08:04,692 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.01s
+2024-12-18 16:08:04,695 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 16:08:04,760 - app.db.crud.crud_presenters - ERROR - Error creating presenter: (psycopg2.errors.ForeignKeyViolation) insert or update on table "presenters" violates foreign key constraint "presenters_users_id_fkey"
+DETAIL:  Key (users_id)=(5) is not present in table "users".
+
+[SQL: INSERT INTO presenters (name, contact_info, biography, users_id, is_deleted, deleted_at) VALUES (%(name)s, %(contact_info)s, %(biography)s, %(users_id)s, %(is_deleted)s, %(deleted_at)s) RETURNING presenters.id, presenters.created_at, presenters.updated_at]
+[parameters: {'name': 'nom presentateur 1ccc', 'contact_info': None, 'biography': 'pr de medecine', 'users_id': 5, 'is_deleted': False, 'deleted_at': None}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2024-12-18 16:08:04,761 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.07s
+2024-12-18 16:12:38,965 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 16:12:38,977 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.01s
+2024-12-18 16:12:38,981 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 16:12:39,372 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: this UserID not exists
+2024-12-18 16:12:39,373 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.39s
+2024-12-18 16:18:24,378 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 16:18:24,380 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 16:18:24,384 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 16:18:24,613 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: this UserID not exists
+2024-12-18 16:18:24,614 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.23s
+2024-12-18 16:18:40,773 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 16:18:40,774 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 16:18:40,781 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 16:18:40,798 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: Presenter with this UserID already exists
+2024-12-18 16:18:40,799 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.02s
+2024-12-18 16:19:07,189 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-18 16:19:07,190 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.00s
+2024-12-18 16:19:07,194 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-18 16:19:07,209 - app.db.crud.crud_presenters - ERROR - Error creating presenter: 400: this UserID not exists
+2024-12-18 16:19:07,210 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 500 - Time: 0.02s
+2024-12-18 16:20:00,360 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/presenters/del/1
+2024-12-18 16:20:00,368 - app.db.crud.crud_presenters - ERROR - Error deleting presenter: 404: Presenter not found
+2024-12-18 16:20:00,370 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/presenters/del/1 - Status: 500 - Time: 0.01s
+2024-12-18 16:22:10,478 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/presenters/del/6
+2024-12-18 16:22:10,571 - app.db.crud.crud_presenters - INFO - Presenter 'nom presentateur 1' marked as deleted.
+2024-12-18 16:22:10,576 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/presenters/del/6 - Status: 200 - Time: 0.10s
+2024-12-19 15:44:53,326 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2024-12-19 15:44:53,460 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-19 15:44:54,538 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 200 - Time: 1.21s
+2024-12-19 17:29:21,386 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-19 17:29:21,389 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-19 17:29:21,396 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-19 17:29:22,224 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.83s
+2024-12-19 17:29:42,141 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-19 17:29:42,143 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-19 17:29:42,149 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-19 17:29:42,173 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.02s
+2024-12-19 17:29:50,813 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-19 17:29:50,815 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-19 17:29:50,822 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-19 17:29:50,843 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.02s
+2024-12-19 17:31:58,115 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-19 17:31:58,117 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-19 17:31:58,120 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-19 17:31:58,292 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.17s
+2024-12-19 17:33:47,735 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters
+2024-12-19 17:33:47,744 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters - Status: 307 - Time: 0.01s
+2024-12-19 17:33:47,750 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/
+2024-12-19 17:33:47,801 - app.db.crud.crud_presenters - INFO - Presenter 'nom presentateur 2' created successfully.
+2024-12-19 17:33:47,803 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/ - Status: 200 - Time: 0.05s
+2024-12-19 17:34:33,856 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 17:41:19,759 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/1
+2024-12-19 17:41:51,413 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-19 17:41:51,416 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-19 17:41:51,420 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-19 17:46:01,657 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 17:51:08,122 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 17:56:28,319 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 17:58:51,253 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 17:59:22,127 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 17:59:22,824 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/detail - Status: 201 - Time: 0.70s
+2024-12-19 18:12:46,240 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 18:12:46,243 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 18:12:46,935 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/detail - Status: 201 - Time: 0.69s
+2024-12-19 18:12:46,935 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/detail - Status: 201 - Time: 0.70s
+2024-12-19 18:15:51,386 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/detail
+2024-12-19 18:15:51,503 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/detail - Status: 201 - Time: 0.12s
+2024-12-19 18:18:39,999 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/detail/1
+2024-12-19 18:18:40,019 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/shows/detail/1 - Status: 404 - Time: 0.02s
+2024-12-19 18:19:49,898 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/detail/2
+2024-12-19 18:19:49,971 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/shows/detail/2 - Status: 500 - Time: 0.07s
+2024-12-19 18:21:25,986 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/detail/2
+2024-12-19 18:21:25,996 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/shows/detail/2 - Status: 500 - Time: 0.01s
+2024-12-19 18:21:34,349 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/detail/2
+2024-12-19 18:22:29,225 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/detail/2
+2024-12-19 18:23:42,208 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/detail/2
+2024-12-19 18:23:42,471 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/shows/detail/2 - Status: 200 - Time: 0.26s
+2024-12-19 18:49:23,279 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/getdetail/2
+2024-12-19 18:50:35,968 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/getdetail/2
+2024-12-19 18:50:36,203 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/getdetail/2 - Status: 200 - Time: 0.24s
+2024-12-19 18:50:53,553 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/getdetail/6
+2024-12-19 18:50:53,566 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/getdetail/6 - Status: 200 - Time: 0.01s
+2024-12-19 18:54:04,215 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/2
+2024-12-19 18:54:04,234 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/2 - Status: 200 - Time: 0.02s
+2024-12-19 18:54:24,299 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/6
+2024-12-19 18:54:24,316 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/6 - Status: 200 - Time: 0.02s
+2024-12-19 19:23:56,835 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/6
+2024-12-19 19:23:56,866 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/6 - Status: 401 - Time: 0.03s

@@ -1,0 +1,150 @@
+@startuml "radMAn"
+
+class User {
+    +id : Integer
+    +username : String
+    +email : String
+    +password : String
+    +phone_number : String
+    +is_active : Boolean
+    +is_deleted : Boolean
+    +created_at : TIMESTAMP
+    +deleted_at : DateTime
+}
+
+class Role {
+    +id : Integer
+    +name : String
+}
+
+class Permission {
+    +id : Integer
+    +name : String
+}
+
+class Emission {
+    +id : Integer
+    +title : String
+    +synopsis : Text
+    +created_at : DateTime
+    +is_deleted : Boolean
+    +deleted_at : DateTime
+}
+
+class Show {
+    +id : Integer
+    +title : String
+    +type : String
+    +broadcast_date : DateTime
+    +duration : Integer
+    +frequency : String
+    +description : Text
+    +status : String
+    +created_at : DateTime
+    +updated_at : DateTime
+}
+
+class Segment {
+    +id : Integer
+    +title : String
+    +type : String
+    +duration : Integer
+    +description : Text
+    +technical_notes : Text
+    +position : Integer
+    +created_at : DateTime
+    +updated_at : DateTime
+}
+
+class Guest {
+    +id : Integer
+    +name : String
+    +contact_info : String
+    +biography : Text
+    +created_at : DateTime
+    +updated_at : DateTime
+    +is_deleted : Boolean
+    +deleted_at : DateTime
+}
+
+class Presenter {
+    +id : Integer
+    +name : String
+    +contact_info : String
+    +biography : Text
+    +created_at : DateTime
+    +updated_at : DateTime
+    +is_deleted : Boolean
+    +deleted_at : DateTime
+}
+
+class AuditLog {
+    +id : Integer
+    +user_id : Integer
+    +action : String
+    +table_name : String
+    +record_id : Integer
+    +timestamp : DateTime
+}
+
+class ArchivedAuditLog {
+    +id : Integer
+    +user_id : Integer
+    +action : String
+    +table_name : String
+    +record_id : Integer
+    +timestamp : DateTime
+}
+
+class LoginHistory {
+    +id : Integer
+    +user_id : Integer
+    +timestamp : DateTime
+    +ip_address : String
+    +login_time : TIMESTAMP
+}
+
+class Notification {
+    +id : Integer
+    +user_id : Integer
+    +message : Text
+    +read : Boolean
+    +timestamp : DateTime
+    +created_at : TIMESTAMP
+}
+
+class UserRole {
+    +user_id : Integer
+    +role_id : Integer
+}
+
+class RolePermission {
+    +role_id : Integer
+    +permission_id : Integer
+}
+
+class ShowPresenter {
+    +id : Integer
+    +show_id : Integer
+    +presenter_id : Integer
+    +role : String
+    +added_at : DateTime
+}
+
+User "1" -- "0..*" UserRole
+Role "1" -- "0..*" UserRole
+Role "1" -- "0..*" RolePermission
+Permission "1" -- "0..*" RolePermission
+
+User "1" -- "0..*" AuditLog
+User "1" -- "0..*" ArchivedAuditLog
+User "1" -- "0..*" LoginHistory
+User "1" -- "0..*" Notification
+
+Presenter "1" -- "0..*" ShowPresenter
+Show "1" -- "0..*" ShowPresenter
+
+Emission "1" -- "0..*" Show
+Show "1" -- "0..*" Segment
+
+@enduml

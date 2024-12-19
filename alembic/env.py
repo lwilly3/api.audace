@@ -6,9 +6,28 @@ from sqlalchemy import pool
 from alembic import context
 
 # importation de la base de donee 10h36 modification a 10h42
+# from app.db.database import metadata
 
-from app.config import settings
-from app.table_models import Base
+from app.config.config import settings
+from app.models.model_user import Base as Base__models 
+
+# Charger les modèles de votre projet
+target_metadata =  Base__models.metadata
+# from app.models.table_models import Base as TableBase
+# from app.models.mediaLib_models import Base as MediaLibBase
+# target_metadata = [
+#     Base_table_models.metadata, 
+#     Base_model_invite.metadata,
+#     Base_model_audit_log.metadata ,
+#     Base_model_presenter.metadata ,
+#     Base_model_programme.metadata ,
+#     Base_model_programme_invite.metadata ,
+#     Base_model_programme_status.metadata ,
+#     Base_model_show_plan.metadata ,
+#     Base_model_skill.metadata
+    
+    
+#     ]
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -26,7 +45,9 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
     # 10h36
-target_metadata = Base.metadata
+# target_metadata = Base.metadata
+# Ajouter les métadonnées pour Alembic
+# target_metadata = [TableBase.metadata, MediaLibBase.metadata]
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

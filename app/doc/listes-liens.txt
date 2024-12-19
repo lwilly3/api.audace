@@ -1,0 +1,159 @@
+Voici une liste des tables de votre base de données avec leurs relations :
+
+BaseModel (classe abstraite, utilisée pour implémenter la suppression douce)
+
+# is_deleted : marque la ligne comme supprimée.
+deleted_at : date de suppression.
+Presenter : Informations sur les présentateurs de la radio.
+
+# id, name, biography
+ArchivedAuditLog : Archivage des logs d'audit.
+
+# user_id, action, table_name, record_id, timestamp
+Relation : Un utilisateur peut avoir plusieurs logs d'audit archivé.
+AuditLog : Logs d'audit des actions effectuées par les utilisateurs.
+
+user_id, action, table_name, record_id, timestamp
+Relation : Un utilisateur peut avoir plusieurs logs d'audit.
+Guest : Informations sur les invités.
+
+# id, name, biography
+LoginHistory : Historique des connexions des utilisateurs.
+
+# user_id, timestamp, ip_address
+Relation : Un utilisateur peut avoir plusieurs connexions.
+Notification : Notifications envoyées aux utilisateurs.
+
+# user_id, message, read, timestamp
+Relation : Un utilisateur peut recevoir plusieurs notifications.
+Permission : Permissions disponibles dans le système.
+
+# id, name
+PresenterHistory : Historique des modifications des présentateurs.
+
+# presenter_id, name, biography, updated_at, updated_by
+Relation : Un présentateur peut avoir plusieurs entrées dans l'historique.
+RolePermission : Table de liaison entre les rôles et les permissions.
+
+# role_id, permission_id
+Relation : Un rôle peut avoir plusieurs permissions.
+Role : Rôles des utilisateurs.
+
+# id, name
+Relation : Un rôle peut avoir plusieurs permissions via la table de liaison.
+User : Utilisateurs de l'application.
+
+# id, username, email, password_hash, is_active
+Relation : Un utilisateur peut avoir plusieurs connexions, logs d'audit, et notifications.
+Routes Optimales pour l'Indexation et les Recherches Croisées
+
+=====================
+Routes pour la gestion des présentateurs (Presenter)
+====================
+GET /presenters : Récupérer tous les présentateurs.
+GET /presenters/{id} : Récupérer un présentateur spécifique.
+POST /presenters : Créer un nouveau présentateur.
+PUT /presenters/{id} : Mettre à jour un présentateur existant.
+DELETE /presenters/{id} : Supprimer un présentateur (soft delete).
+GET /presenters/history/{id} : Récupérer l'historique des modifications d'un présentateur.
+
+======================
+Routes pour les invités (Guest)
+========================
+GET /guests : Récupérer tous les invités.
+GET /guests/{id} : Récupérer un invité spécifique.
+POST /guests : Ajouter un nouvel invité.
+PUT /guests/{id} : Mettre à jour un invité existant.
+DELETE /guests/{id} : Supprimer un invité (soft delete).
+
+=======================
+Routes pour la gestion des utilisateurs (User)
+=======================
+GET /users : Récupérer tous les utilisateurs.
+GET /users/{id} : Récupérer un utilisateur spécifique.
+POST /users : Créer un nouvel utilisateur.
+PUT /users/{id} : Mettre à jour un utilisateur existant.
+DELETE /users/{id} : Supprimer un utilisateur (soft delete).
+GET /users/{id}/logins : Récupérer l'historique des connexions d'un utilisateur.
+GET /users/{id}/notifications : Récupérer les notifications d'un utilisateur.
+GET /users/{id}/audit-logs : Récupérer les logs d'audit d'un utilisateur.
+
+=====================================
+Routes pour l'audit et les logs
+=====================================
+GET /audit-logs : Récupérer tous les logs d'audit.
+GET /audit-logs/{id} : Récupérer un log d'audit spécifique.
+POST /audit-logs : Créer un nouveau log d'audit (généré automatiquement lors de chaque action).
+GET /archived-audit-logs : Récupérer les logs d'audit archivés.
+GET /archived-audit-logs/{id} : Récupérer un log d'audit archivé spécifique.
+
+
+=================================
+Routes pour les rôles et permissions
+===========================
+GET /roles : Récupérer tous les rôles.
+GET /roles/{id} : Récupérer un rôle spécifique.
+POST /roles : Créer un nouveau rôle.
+PUT /roles/{id} : Mettre à jour un rôle existant.
+DELETE /roles/{id} : Supprimer un rôle (soft delete).
+GET /roles/{id}/permissions : Récupérer les permissions d'un rôle.
+GET /permissions : Récupérer toutes les permissions disponibles.
+GET /permissions/{id} : Récupérer une permission spécifique.
+
+=======================================
+Routes pour la gestion des notifications
+======================================
+GET /notifications : Récupérer toutes les notifications.
+GET /notifications/{id} : Récupérer une notification spécifique.
+POST /notifications : Envoyer une nouvelle notification à un utilisateur.
+PUT /notifications/{id} : Mettre à jour une notification.
+DELETE /notifications/{id} : Supprimer une notification (soft delete).
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+Recherches croisées et indexation
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+#####################
+Rechercher un présentateur par nom ou biographie :
+######################
+
+GET /presenters/search?name={name}&biography={biography}
+Cette route permet d'effectuer une recherche croisée en fonction du nom et de la biographie.
+
+#####################
+Rechercher des utilisateurs par nom, email ou rôle :
+####################
+
+GET /users/search?name={name}&email={email}&role={role}
+Recherche par nom, email ou rôle des utilisateurs.
+
+##################
+Rechercher des logs d'audit par utilisateur, action ou table :
+#################
+
+GET /audit-logs/search?user_id={user_id}&action={action}&table_name={table_name}
+Recherche avancée dans les logs d'audit.
+
+#####################
+Rechercher des invités par nom ou biographie :
+#######################
+
+GET /guests/search?name={name}&biography={biography}
+Permet de rechercher des invités selon leur nom ou biographie.
+
+########################
+Historique des modifications des présentateurs par date ou utilisateur :
+##########################
+
+GET /presenter-history/search?presenter_id={presenter_id}&updated_by={user_id}&date={date}
+Recherche de l'historique des modifications d'un présentateur.
+
+
+
+
+
+Ces routes sont pensées pour une meilleure indexation et permettent
+ des recherches croisées efficaces sur les principales entités de votre système.
+  Vous pouvez envisager d'ajouter des index sur les colonnes fréquemment
+   utilisées dans les recherches (comme name, biography, email, timestamp, etc.) 
+   pour améliorer la performance des requêtes.
