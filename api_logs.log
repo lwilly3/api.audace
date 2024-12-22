@@ -1000,3 +1000,127 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2024-12-19 18:54:24,316 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/6 - Status: 200 - Time: 0.02s
 2024-12-19 19:23:56,835 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/6
 2024-12-19 19:23:56,866 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/6 - Status: 401 - Time: 0.03s
+2024-12-21 01:14:30,366 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/docs
+2024-12-21 01:14:30,368 - hapson-api - INFO - Completed Request: GET http://localhost:8000/docs - Status: 200 - Time: 0.00s
+2024-12-21 01:14:32,717 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/openapi.json
+2024-12-21 01:14:32,842 - hapson-api - INFO - Completed Request: GET http://localhost:8000/openapi.json - Status: 200 - Time: 0.13s
+2024-12-21 02:14:10,938 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests?skip=0&limit=10
+2024-12-21 02:14:10,945 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests?skip=0&limit=10 - Status: 307 - Time: 0.01s
+2024-12-21 02:14:10,952 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/?skip=0&limit=10
+2024-12-21 02:46:02,560 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/?skip=0&limit=10
+2024-12-21 02:46:02,874 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/?skip=0&limit=10 - Status: 500 - Time: 0.32s
+2024-12-21 02:50:18,895 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:50:18,915 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.04s
+2024-12-21 02:50:18,927 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:50:18,996 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 500 - Time: 0.07s
+2024-12-21 02:50:26,584 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:50:26,585 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:50:26,590 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:50:26,600 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 500 - Time: 0.01s
+2024-12-21 02:52:30,352 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:52:30,364 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.01s
+2024-12-21 02:52:30,374 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:52:30,388 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 500 - Time: 0.01s
+2024-12-21 02:52:35,689 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:52:35,690 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:52:35,696 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:52:35,700 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 500 - Time: 0.00s
+2024-12-21 02:52:41,692 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:52:41,694 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:52:41,706 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:52:41,710 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 500 - Time: 0.00s
+2024-12-21 02:53:39,761 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-21 02:53:39,763 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:53:39,769 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-21 02:53:39,774 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 500 - Time: 0.01s
+2024-12-21 02:56:12,972 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-21 02:56:12,974 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:56:12,979 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-21 02:56:17,551 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-21 02:56:17,556 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:56:17,560 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-21 02:57:12,913 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-21 02:57:12,916 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:57:12,923 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-21 02:57:39,188 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-21 02:57:39,189 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:57:39,193 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-21 02:57:39,446 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.25s
+2024-12-21 02:58:20,156 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:58:20,157 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:58:20,162 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:58:20,167 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.00s
+2024-12-21 02:58:45,682 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:58:45,685 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:58:45,691 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:58:45,698 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.01s
+2024-12-21 02:59:33,757 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:59:33,766 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.01s
+2024-12-21 02:59:33,774 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:59:33,784 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.01s
+2024-12-21 02:59:37,825 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:59:37,828 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:59:37,833 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:59:37,839 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.01s
+2024-12-21 02:59:45,319 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 02:59:45,322 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 02:59:45,336 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 02:59:45,346 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.01s
+2024-12-21 03:00:51,588 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-21 03:00:51,591 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-21 03:00:51,614 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-21 03:00:51,625 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.01s
+2024-12-21 20:00:28,576 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-21 20:00:28,594 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.03s
+2024-12-21 20:00:28,609 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-21 20:00:28,690 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.08s
+2024-12-22 13:41:58,402 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-22 13:41:58,422 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.02s
+2024-12-22 13:41:58,437 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-22 13:41:59,943 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 1.51s
+2024-12-22 19:13:19,257 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-22 19:13:19,277 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.02s
+2024-12-22 19:13:19,472 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-22 19:13:19,683 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.21s
+2024-12-22 19:21:51,768 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/docs
+2024-12-22 19:21:51,797 - hapson-api - INFO - Completed Request: GET http://localhost:8000/docs - Status: 200 - Time: 0.03s
+2024-12-22 19:21:52,298 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/openapi.json
+2024-12-22 19:21:52,561 - hapson-api - INFO - Completed Request: GET http://localhost:8000/openapi.json - Status: 200 - Time: 0.26s
+2024-12-22 19:38:42,164 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/docs
+2024-12-22 19:38:42,168 - hapson-api - INFO - Completed Request: GET http://localhost:8000/docs - Status: 200 - Time: 0.00s
+2024-12-22 19:38:42,491 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/openapi.json
+2024-12-22 19:38:42,752 - hapson-api - INFO - Completed Request: GET http://localhost:8000/openapi.json - Status: 200 - Time: 0.26s
+2024-12-22 21:11:30,107 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-22 21:11:30,114 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.01s
+2024-12-22 21:11:30,126 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-22 21:11:30,239 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 401 - Time: 0.11s
+2024-12-22 21:12:50,328 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-22 21:12:50,330 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-22 21:12:50,335 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-22 21:12:51,301 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 400 - Time: 0.97s
+2024-12-22 21:14:36,450 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-22 21:14:36,452 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-22 21:14:36,455 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-22 21:14:36,598 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.14s
+2024-12-22 21:18:21,519 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/docs
+2024-12-22 21:18:21,520 - hapson-api - INFO - Completed Request: GET http://localhost:8000/docs - Status: 200 - Time: 0.00s
+2024-12-22 21:18:21,836 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/openapi.json
+2024-12-22 21:18:22,341 - hapson-api - INFO - Completed Request: GET http://localhost:8000/openapi.json - Status: 200 - Time: 0.50s
+2024-12-22 21:40:22,793 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-22 21:40:22,875 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.09s
+2024-12-22 21:40:22,913 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-22 21:40:23,221 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.31s
+2024-12-22 21:58:34,994 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-22 21:58:35,014 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.02s
+2024-12-22 21:58:35,027 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-22 21:58:35,097 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.07s
+2024-12-22 21:58:55,727 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-22 21:58:55,736 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.01s
+2024-12-22 21:58:55,760 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-22 21:58:55,765 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.00s
+2024-12-22 22:13:06,271 - hapson-api - INFO - Incoming Request: POST http://localhost:8000/guests/
+2024-12-22 22:13:06,366 - hapson-api - INFO - Completed Request: POST http://localhost:8000/guests/ - Status: 200 - Time: 0.10s
+2024-12-22 22:13:06,467 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests
+2024-12-22 22:13:06,470 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests - Status: 307 - Time: 0.00s
+2024-12-22 22:13:06,509 - hapson-api - INFO - Incoming Request: GET http://localhost:8000/guests/
+2024-12-22 22:13:06,529 - hapson-api - INFO - Completed Request: GET http://localhost:8000/guests/ - Status: 200 - Time: 0.02s

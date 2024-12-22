@@ -14,10 +14,10 @@ router = APIRouter(
 )
 
 # créer un conducteur avec ses segments
-# /////////////////////////////////
+# ///////////////////////////////// , current_user: int = Depends(oauth2.get_current_user)
 
 @router.post("/detail",  status_code=status.HTTP_201_CREATED)
-async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db: Session = Depends(get_db)):
     """
     Endpoint pour créer un show avec ses segments, présentateurs et invités.
     
@@ -56,7 +56,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
 async def update_show(
     show_id: int, 
     show_data: ShowUpdate, 
-    db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
     Met à jour un show avec ses segments, présentateurs et invités.
@@ -82,7 +82,7 @@ async def update_show(
 
 # Route pour créer un nouveau show
 @router.post("/", response_model=ShowOut, status_code=201)
-def create_new_show_route(show: ShowCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def create_new_show_route(show: ShowCreate, db: Session = Depends(get_db)):
     """
     Crée un nouveau show.
     """
@@ -90,16 +90,16 @@ def create_new_show_route(show: ShowCreate, db: Session = Depends(get_db), curre
 
 # Route pour récupérer tous les shows
 @router.get("/", response_model=List[ShowOut])
-def read_shows_route(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def read_shows_route(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     """
     Récupère une liste de tous les shows.
     """
-    print(current_user.id)
+    # print(current_user.id)
     return get_shows(db=db, skip=skip, limit=limit)
 
 # Route pour récupérer un show par son ID
 @router.get("/{show_id}", response_model=ShowOut)
-def read_show_route(show_id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def read_show_route(show_id: int, db: Session = Depends(get_db)):
     """
     Récupère un show par son ID.
     """

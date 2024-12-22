@@ -3,17 +3,22 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.model_guest import Guest
-from app.schemas import GuestCreate, GuestUpdate
+from app.schemas import GuestCreate, GuestUpdate,GuestResponse
 from typing import List
 
-def create_guest(db: Session, guest: GuestCreate) -> Guest:
+def create_guest(db: Session, guest: GuestCreate) -> GuestResponse:
     """Créer un nouvel invité."""
     try:
         db_guest = Guest(
             name=guest.name,
             contact_info=guest.contact_info,
-            biography=guest.biography
+            biography=guest.biography,
+            role=guest.role,
+            email=guest.email,
+            phone=guest.phone
+
         )
+
         db.add(db_guest)
         db.commit()
         db.refresh(db_guest)
@@ -22,21 +27,21 @@ def create_guest(db: Session, guest: GuestCreate) -> Guest:
         db.rollback()  # Annule la transaction en cas d'erreur
         raise Exception(f"Erreur lors de la création de l'invité : {str(e)}")
 
-def get_guest_by_id(db: Session, guest_id: int) -> Guest:
+def get_guest_by_id(db: Session, guest_id: int) -> GuestResponse:
     """Récupérer un invité par son ID."""
     try:
         return db.query(Guest).filter(Guest.id == guest_id).first()
     except SQLAlchemyError as e:
         raise Exception(f"Erreur lors de la récupération de l'invité avec ID {guest_id}: {str(e)}")
 
-def get_guests(db: Session, skip: int = 0, limit: int = 10) -> List[Guest]:
+def get_guests(db: Session, skip: int = 0, limit: int = 10):
     """Récupérer tous les invités avec pagination."""
     try:
-        return db.query(Guest).offset(skip).limit(limit).all()
+        return  db.query(Guest).offset(skip).limit(limit).all()
     except SQLAlchemyError as e:
         raise Exception(f"Erreur lors de la récupération des invités : {str(e)}")
 
-def update_guest(db: Session, guest_id: int, guest_update: GuestUpdate) -> Guest:
+def update_guest(db: Session, guest_id: int, guest_update: GuestUpdate) -> GuestResponse:
     """Mettre à jour un invité existant."""
     try:
         db_guest = db.query(Guest).filter(Guest.id == guest_id).first()

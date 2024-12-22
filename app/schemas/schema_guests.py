@@ -12,20 +12,33 @@ from typing import Optional,List
 class GuestCreate(BaseModel):
     """Validation pour créer un invité."""
     name: str = Field(..., max_length=100, description="Nom de l'invité", example="Marie Claire")
-    contact_info: Optional[str] = Field(None, max_length=255, description="Informations de contact", example="marie.claire@email.com")
+    contact_info: Optional[str] = Field(None, max_length=255, description="Informations de contact", example="vie a douala")
     biography: Optional[str] = Field(None, description="Biographie", example="Marie Claire est une experte en développement durable.")
+     # role phone email
+    role: Optional[str] = Field(None, description="role", example="journalist")
+    phone: Optional[str] = Field(None, description="phone", example="+237 05 06 07 06")
+    email: Optional[str] = Field(None, description="email", example="Marie@gmail.com")
+
 
 class GuestUpdate(BaseModel):
     """Validation pour mettre à jour un invité existant."""
     name: Optional[str] = Field(None, max_length=100, description="Nom de l'invité")
     contact_info: Optional[str] = Field(None, max_length=255, description="Informations de contact")
     biography: Optional[str] = Field(None, description="Biographie")
+    role: Optional[str] = Field(None, description="role")
+    phone: Optional[str] = Field(None, description="phone")
+    email: Optional[str] = Field(None, description="email")
+
+
 
 class GuestResponse(BaseModel):
     """Réponse après validation ou récupération d'un invité."""
     name: str
     contact_info: Optional[str]
     biography: Optional[str]
+    role: Optional[str] = Field(None, description="role")
+    phone: Optional[str] = Field(None, description="phone")
+    email: Optional[str] = Field(None, description="email")
     segments: List[str] = Field(default=[], description="Liste des segments associés")
 
 

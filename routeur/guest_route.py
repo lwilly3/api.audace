@@ -14,7 +14,7 @@ from app.schemas import GuestResponse, GuestCreate, GuestUpdate
 from app.db.database import get_db
 from typing import List
 from core.auth import oauth2
-
+# current_user: int = Depends(oauth2.get_current_user)
 router = APIRouter(
 
     prefix="/guests",
@@ -24,8 +24,7 @@ router = APIRouter(
 @router.post("/", response_model=GuestResponse)
 def create_guest_route(
     guest: GuestCreate,
-    db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
-):
+    db: Session = Depends(get_db)):
     """Route pour créer un invité."""
     try:
         return create_guest(db=db, guest=guest)
@@ -35,7 +34,7 @@ def create_guest_route(
 @router.get("/{guest_id}", response_model=GuestResponse)
 def get_guest_route(
     guest_id: int,
-    db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
+    db: Session = Depends(get_db), 
 ):
     """Route pour récupérer un invité par ID."""
     try:
@@ -46,14 +45,13 @@ def get_guest_route(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération de l'invité: {str(e)}")
 
-@router.get("/", response_model=List[GuestResponse])
+@router.get("/")
 def get_guests_route(
     skip: int = 0, limit: int = 10,
-    db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
-):
-    """Route pour récupérer la liste des invités."""
+    db: Session = Depends(get_db)):
+    """Route pour récupérer la liste des invités.   , current_user: int = Depends(oauth2.get_current_user)"""
     try:
-        return get_guests(db=db, skip=skip, limit=limit)
+        return  get_guests(db=db, skip=skip, limit=limit)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des invités: {str(e)}")
 
@@ -61,7 +59,7 @@ def get_guests_route(
 def update_guest_route(
     guest_id: int,
     guest_update: GuestUpdate,
-    db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
+    db: Session = Depends(get_db)
 ):
     """Route pour mettre à jour un invité."""
     try:
@@ -75,7 +73,7 @@ def update_guest_route(
 @router.delete("/{guest_id}", response_model=dict)
 def delete_guest_route(
     guest_id: int,
-    db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
+    db: Session = Depends(get_db)
 ):
     """Route pour supprimer un invité."""
     try:
