@@ -18,7 +18,7 @@ class Guest(BaseModel):
     Modèle représentant un invité d'une émission ou d'un segment.
     Un invité peut être associé à plusieurs segments.
     """
-    __tablename__ = "guests"  # Nom de la table dans la base de données
+    __tablename__ = "guests"  # Nom de la table dans la base de données a metre a jour
 
     id = Column(Integer, primary_key=True)  #  Identifiant unique de l'invité
     name = Column(String, nullable=False, index=True)  # Nom de l'invité
