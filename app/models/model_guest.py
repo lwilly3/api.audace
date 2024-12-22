@@ -20,11 +20,11 @@ class Guest(BaseModel):
     """
     __tablename__ = "guests"  # Nom de la table dans la base de données a metre a jour
 
-    id = Column(Integer, primary_key=True)  #  Identifiant unique de l'invité
-    name = Column(String, nullable=False, index=True)  # Nom de l'invité
-    email = Column(String, nullable=True)  # Email  de l'invite
-    phone= Column(String, nullable=True)  # Numéro de téléphone de l'invite (optionnel)
-    role= Column(String, nullable=True)  # role de l'invite (optionnel)
+    id  = Column(Integer, primary_key=True)  #  Identifiant unique de l'invité
+    name  = Column(String, nullable=False, index=True)  # Nom de l'invité
+    email  = Column(String, nullable=True)  # Email  de l'invite
+    phone = Column(String, nullable=True)  # Numéro de téléphone de l'invite 
+    role  = Column(String, nullable=True)  # role de l'invite (optionnel)
 # role phone email
     contact_info = Column(String, nullable=True, index=True)  # Informations de contact
     biography = Column(Text, nullable=True)  # Biographie ou informations détaillées sur l'invité
