@@ -7,6 +7,7 @@ from pydantic.networks import EmailStr
 class PresenterBase(BaseModel):
     name: str
     biography: Optional[str] = None
+    profilePicture: Optional[str] = None
 
     
     model_config = {
@@ -65,6 +66,8 @@ class PresenterSearch(BaseModel):
     id: int
     name: str
     biography: str
+    profilePicture: Optional[str] = None
+
     created_at: datetime
 
 
@@ -95,17 +98,21 @@ class PresenterCreate(BaseModel):
     contact_info: Optional[str] = Field("", max_length=255, description="Informations de contact", example="jean.dupont@email.com")
     biography: Optional[str] = Field("", description="Biographie", example="Jean Dupont est un journaliste spécialisé en économie.")
     users_id: int
+    profilePicture: Optional[str] = None
+
 class PresenterUpdate(BaseModel):
     """Validation pour mettre à jour un présentateur existant."""
     name: Optional[str] = Field(None, max_length=100, description="Nom du présentateur")
     contact_info: Optional[str] = Field(None, max_length=255, description="Informations de contact")
     biography: Optional[str] = Field(None, description="Biographie")
+    profilePicture: Optional[str] = None
 
 class PresenterResponse(BaseModel):
     """Réponse après validation ou récupération d'un présentateur."""
     name: str
     contact_info: Optional[str]
     biography: Optional[str]
+    profilePicture: Optional[str]
     users_id: int
     shows: List[str] = Field(default=[], description="Liste des émissions associées")
 

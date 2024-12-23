@@ -18,6 +18,8 @@ class GuestCreate(BaseModel):
     role: Optional[str] = Field(None, description="role", example="journalist")
     phone: Optional[str] = Field(None, description="phone", example="+237 05 06 07 06")
     email: Optional[str] = Field(None, description="email", example="Marie@gmail.com")
+    avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
+
 
 
 class GuestUpdate(BaseModel):
@@ -28,6 +30,7 @@ class GuestUpdate(BaseModel):
     role: Optional[str] = Field(None, description="role")
     phone: Optional[str] = Field(None, description="phone")
     email: Optional[str] = Field(None, description="email")
+    avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
 
 
 
@@ -39,6 +42,8 @@ class GuestResponse(BaseModel):
     role: Optional[str] = Field(None, description="role")
     phone: Optional[str] = Field(None, description="phone")
     email: Optional[str] = Field(None, description="email")
+    avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
+
     segments: List[str] = Field(default=[], description="Liste des segments associés")
 
 
