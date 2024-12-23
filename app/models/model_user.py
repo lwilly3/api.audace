@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Index,DateTime
+from sqlalchemy import Column, Integer, String,Text, Boolean, Index,DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
@@ -31,7 +31,7 @@ class User(BaseModel):
     is_active = Column(Boolean, default=True)  # Indique si l'utilisateur est actif
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))  # Date de création
     phone_number = Column(String, nullable=True, index=True)  # Numéro de téléphone de l'utilisateur (optionnel)
-
+    profilePicture = Column(Text, nullable=True)
     # Relations avec d'autres tables
     # roles = relationship('Role', secondary='user_roles', back_populates='users') # Relation avec les rôles via UserRole
     # user_roles = relationship("UserRole", back_populates="user")

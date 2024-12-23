@@ -46,7 +46,7 @@ def update_guest(db: Session, guest_id: int, guest_update: GuestUpdate) -> Guest
     try:
         db_guest = db.query(Guest).filter(Guest.id == guest_id).first()
         if db_guest:
-            for key, value in guest_update.dict(exclude_unset=True).items():
+            for key, value in guest_update.model_dump(exclude_unset=True).items():
                 setattr(db_guest, key, value)
             db.commit()
             db.refresh(db_guest)

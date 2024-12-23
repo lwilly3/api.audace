@@ -20,6 +20,10 @@ class Emission(BaseModel):
     title = Column(String(255), nullable=False)
     synopsis = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    type = Column(Text, nullable=True)
+    duration = Column(int, nullable=True)
+    frequency = Column(Text, nullable=True)
+    description = Column(Text, nullable=True)
 
     # Relation avec les shows
     # shows = relationship('Show', back_populates='emission', cascade='all, delete-orphan')

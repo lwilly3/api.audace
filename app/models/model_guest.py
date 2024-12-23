@@ -28,8 +28,8 @@ class Guest(BaseModel):
 # role phone email
     contact_info = Column(String, nullable=True, index=True)  # Informations de contact
     biography = Column(Text, nullable=True)  # Biographie ou informations détaillées sur l'invité
-
-    # Dates de création et de dernière modification
+    avatar = Column(Text, nullable=True)
+    # Dates de création et de dernière modification 
     created_at = Column(DateTime, server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, index=True)
 

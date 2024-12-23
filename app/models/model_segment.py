@@ -19,6 +19,8 @@ class Segment(Base):
     duration = Column(Integer, nullable=False)
     description = Column(Text, nullable=True)
     technical_notes = Column(Text, nullable=True)
+    
+
     position = Column(Integer, nullable=False, default=0)  # Nouvelle colonne
 
     # show_id = Column(Integer, ForeignKey("shows.id"), nullable=False, index=True)
