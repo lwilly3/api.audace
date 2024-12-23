@@ -21,7 +21,7 @@ class Emission(BaseModel):
     synopsis = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     type = Column(Text, nullable=True)
-    duration = Column(int, nullable=True)
+    duration = Column(Integer, nullable=True)
     frequency = Column(Text, nullable=True)
     description = Column(Text, nullable=True)
 
