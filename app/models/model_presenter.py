@@ -45,8 +45,8 @@ class Presenter(BaseModel):
     id = Column(Integer, primary_key=True)  # Identifiant unique du présentateur
     name = Column(String, nullable=False, index=True)  # Nom du présentateur
     contact_info = Column(String, nullable=True)  # Informations de contact
-    biography = Column(Text, nullable=True),  # Biographie ou informations détaillées sur le présentateur
-    profilePicture = Column(Text, nullable=True),
+    biography = Column(Text, nullable=True)  # Biographie ou informations détaillées sur le présentateur
+    profilePicture = Column(Text, nullable=True)
     isMainPresenter = Column(Boolean, default=False)  # Indique si le présentateur est le principal 
     
     # Dates de création et de dernière modification
