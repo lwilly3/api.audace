@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends,APIRouter,status
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas import ShowCreate, ShowUpdate,ShowCreateWithDetail,ShowUpdateWithDetails, SegmentUpdateWithDetails, ShowWithdetailResponse
-from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details
+from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id
 from app.db.database import get_db # Assurez-vous d'avoir une fonction SessionLocal pour obtenir la session DB
 from app.schemas import ShowOut  # Modèle Show que vous avez défini précédemment
 from core.auth import oauth2
@@ -12,6 +12,33 @@ router = APIRouter(
      tags=['shows']
     
 )
+
+
+
+
+
+# //==========================================================?
+# //==========================================================?
+# //==========================================================?
+# //==========================================================?
+
+# Route pour récupérer tous les détails des émissions
+@router.get("/x")
+def get_all_show_details(db: Session = Depends(get_db)):
+    # print("get_all_show_details")
+    shows = get_show_details_all(db)
+    return shows
+
+# Route pour récupérer les détails d'une émission par ID
+@router.get("/x/{show_id}", response_model=dict)
+def get_show_details(show_id: int, db: Session = Depends(get_db)):
+    show = get_show_details_by_id(db, show_id)
+    if not show:
+        raise HTTPException(status_code=404, detail="Show not found")
+    return show
+
+
+
 
 # créer un conducteur avec ses segments
 # ///////////////////////////////// , current_user: int = Depends(oauth2.get_current_user)
@@ -137,3 +164,26 @@ def delete_existing_show_route(show_id: int, db: Session = Depends(get_db), curr
     if db_show is None:
         raise HTTPException(status_code=404, detail="Show non trouvé")
     return db_show
+
+
+
+
+# # //==========================================================?
+# # //==========================================================?
+# # //==========================================================?
+# # //==========================================================?
+
+# # Route pour récupérer tous les détails des émissions
+# @router.get("/x")
+# def get_all_show_details(db: Session = Depends(get_db)):
+#     # print("get_all_show_details")
+#     shows = get_show_details_all(db)
+#     return shows
+
+# # Route pour récupérer les détails d'une émission par ID
+# @router.get("/x/{show_id}", response_model=dict)
+# def get_show_details(show_id: int, db: Session = Depends(get_db)):
+#     show = get_show_details_by_id(db, show_id)
+#     if not show:
+#         raise HTTPException(status_code=404, detail="Show not found")
+#     return show

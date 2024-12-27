@@ -1135,3 +1135,51 @@ Traceback (most recent call last):
     version = _bcrypt.__about__.__version__
 AttributeError: module 'bcrypt' has no attribute '__about__'
 2024-12-23 01:34:47,013 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.92s
+2024-12-27 18:58:06,990 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/delail
+2024-12-27 18:58:07,001 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/delail - Status: 422 - Time: 0.01s
+2024-12-27 18:58:59,149 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 18:58:59,152 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 422 - Time: 0.00s
+2024-12-27 19:03:48,130 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 19:03:48,134 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 422 - Time: 0.00s
+2024-12-27 19:04:24,624 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:04:25,069 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.45s
+2024-12-27 19:04:32,330 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/
+2024-12-27 19:04:32,331 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/ - Status: 307 - Time: 0.00s
+2024-12-27 19:04:32,336 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 19:04:32,345 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 422 - Time: 0.01s
+2024-12-27 19:05:14,811 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/
+2024-12-27 19:05:14,814 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/ - Status: 307 - Time: 0.00s
+2024-12-27 19:05:14,818 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 19:05:14,834 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 422 - Time: 0.02s
+2024-12-27 19:05:51,414 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/
+2024-12-27 19:05:51,432 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/ - Status: 307 - Time: 0.02s
+2024-12-27 19:05:51,448 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 19:05:51,547 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 422 - Time: 0.10s
+2024-12-27 19:17:53,272 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:17:53,581 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.31s
+2024-12-27 19:19:17,536 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:19:17,836 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.30s
+2024-12-27 19:20:51,482 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:20:51,842 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.36s
+2024-12-27 19:21:22,361 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:21:22,561 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.20s
+2024-12-27 19:22:43,656 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:22:44,000 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.34s
+2024-12-27 19:23:02,422 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:23:02,726 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.30s
+2024-12-27 19:23:41,702 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:23:42,014 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.31s
+2024-12-27 19:25:12,388 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2024-12-27 19:25:12,390 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2024-12-27 19:25:12,394 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2024-12-27 19:25:12,649 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.26s
+2024-12-27 19:27:36,456 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 19:27:36,460 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 422 - Time: 0.00s
+2024-12-27 19:29:56,182 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 19:29:56,525 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.34s
+2024-12-27 19:31:31,058 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/1
+2024-12-27 19:31:31,094 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/1 - Status: 404 - Time: 0.04s
+2024-12-27 19:31:39,585 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x/4
+2024-12-27 19:31:39,709 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x/4 - Status: 200 - Time: 0.12s
+2024-12-27 19:32:15,329 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-27 19:32:15,344 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.02s

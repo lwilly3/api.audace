@@ -9,6 +9,147 @@ from datetime import datetime
 
 
 
+# ==================  get show details ========================
+
+
+# Requête pour récupérer les émissions avec leurs segments, invités, et présentateurs
+def get_show_details_all(db: Session):
+    # Récupérer toutes les émissions avec les segments, invités et présentateurs associés
+    shows = db.query(Show).options(
+        joinedload(Show.presenters),  # Charger les présentateurs associés à chaque émission
+        joinedload(Show.segments).joinedload(Segment.guests),  # Charger les segments avec leurs invités
+    ).all()
+
+    show_details = []
+
+    for show in shows:
+        show_info = {
+            "title": show.title,
+            "type": show.type,
+            "broadcast_date": show.broadcast_date,
+            "duration": show.duration,
+            "frequency": show.frequency,
+            "description": show.description,
+            "status": show.status,
+            "presenters": [],
+            "segments": []
+        }
+
+        # Récupérer les présentateurs associés
+        for presenter in show.presenters:
+            show_info["presenters"].append({
+                "name": presenter.name,
+                "contact_info": presenter.contact_info,
+                "biography": presenter.biography,
+                "isMainPresenter": presenter.isMainPresenter,
+            })
+        
+        # Récupérer les segments associés
+        for segment in show.segments:
+            segment_info = {
+                "title": segment.title,
+                "type": segment.type,
+                "duration": segment.duration,
+                "description": segment.description,
+                "startTime": segment.startTime,
+                "position": segment.position,
+                "guests": []
+            }
+            
+            # Récupérer les invités associés à ce segment
+            for guest in segment.guests:
+                segment_info["guests"].append({
+                    "name": guest.name,
+                    "contact_info": guest.contact_info,
+                    "biography": guest.biography,
+                    "role": guest.role,
+                    "avatar": guest.avatar,
+                })
+            
+            show_info["segments"].append(segment_info)
+        
+        show_details.append(show_info)
+
+    return show_details
+
+
+
+
+
+
+
+# ==================  get show details by id ========================
+# from sqlalchemy.orm import joinedload
+# from datetime import datetime
+
+# Requête pour récupérer une émission particulière par ID avec ses segments, invités et présentateurs
+def get_show_details_by_id(db:Session, show_id:int):
+    print("/////////////////////////// {show_id}")
+    print(show_id)
+    # Récupérer une seule émission par son ID avec les segments, invités et présentateurs associés
+    show = db.query(Show).options(
+        joinedload(Show.presenters),  # Charger les présentateurs associés à l'émission
+        joinedload(Show.segments).joinedload(Segment.guests),  # Charger les segments avec leurs invités
+    ).filter(Show.id == show_id).first()
+    print(show)
+
+    if not show:
+        return None  # Aucun show trouvé avec l'ID donné
+
+    show_info = {
+        "title": show.title,
+        "type": show.type,
+        "broadcast_date": show.broadcast_date,
+        "duration": show.duration,
+        "frequency": show.frequency,
+        "description": show.description,
+        "status": show.status,
+        "presenters": [],
+        "segments": []
+    }
+
+    # Récupérer les présentateurs associés
+    for presenter in show.presenters:
+        show_info["presenters"].append({
+            "name": presenter.name,
+            "contact_info": presenter.contact_info,
+            "biography": presenter.biography,
+            "isMainPresenter": presenter.isMainPresenter,
+        })
+    
+    # Récupérer les segments associés
+    for segment in show.segments:
+        segment_info = {
+            "title": segment.title,
+            "type": segment.type,
+            "duration": segment.duration,
+            "description": segment.description,
+            "startTime": segment.startTime,
+            "position": segment.position,
+            "guests": []
+        }
+        
+        # Récupérer les invités associés à ce segment
+        for guest in segment.guests:
+            segment_info["guests"].append({
+                "name": guest.name,
+                "contact_info": guest.contact_info,
+                "biography": guest.biography,
+                "role": guest.role,
+                "avatar": guest.avatar,
+            })
+        
+        show_info["segments"].append(segment_info)
+
+    return show_info
+
+
+# //----------------=---------------------------------------=---------------
+# 
+# 
+# 
+# 
+
 
 
 #//////////////////// show + details invite, presentateurs et segment /////////
