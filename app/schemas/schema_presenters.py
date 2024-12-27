@@ -99,6 +99,7 @@ class PresenterCreate(BaseModel):
     biography: Optional[str] = Field("", description="Biographie", example="Jean Dupont est un journaliste spécialisé en économie.")
     users_id: int
     profilePicture: Optional[str] = None
+    isMainPresenter: Optional[bool] = False
 
 class PresenterUpdate(BaseModel):
     """Validation pour mettre à jour un présentateur existant."""
@@ -106,6 +107,7 @@ class PresenterUpdate(BaseModel):
     contact_info: Optional[str] = Field(None, max_length=255, description="Informations de contact")
     biography: Optional[str] = Field(None, description="Biographie")
     profilePicture: Optional[str] = None
+    isMainPresenter: Optional[bool] = False
 
 class PresenterResponse(BaseModel):
     """Réponse après validation ou récupération d'un présentateur."""
@@ -115,7 +117,7 @@ class PresenterResponse(BaseModel):
     profilePicture: Optional[str]
     users_id: int
     shows: List[str] = Field(default=[], description="Liste des émissions associées")
-
+    isMainPresenter: Optional[bool] = False
 
 
 

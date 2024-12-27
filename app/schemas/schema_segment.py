@@ -16,6 +16,7 @@ class SegmentBase(BaseModel):
     technical_notes: Optional[str] = None
     position: int
     show_id: int
+    startTime: Optional[str] = None
 
     model_config = {
         "from_attributes": True,
@@ -34,6 +35,8 @@ class SegmentUpdate(BaseModel):
     duration: Optional[int] = None
     description: Optional[str] = None
     technical_notes: Optional[str] = None
+    startTime: Optional[str] = None
+
 
 
 

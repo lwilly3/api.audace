@@ -47,6 +47,7 @@ class Presenter(BaseModel):
     contact_info = Column(String, nullable=True)  # Informations de contact
     biography = Column(Text, nullable=True),  # Biographie ou informations détaillées sur le présentateur
     profilePicture = Column(Text, nullable=True),
+    isMainPresenter = Column(Boolean, default=False)  # Indique si le présentateur est le principal 
     
     # Dates de création et de dernière modification
     created_at = Column(DateTime, server_default=func.now(), nullable=False, index=True)

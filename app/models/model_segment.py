@@ -20,6 +20,8 @@ class Segment(Base):
     description = Column(Text, nullable=True)
     technical_notes = Column(Text, nullable=True)
     
+    startTime = Column(Text, nullable=True)
+
 
     position = Column(Integer, nullable=False, default=0)  # Nouvelle colonne
 
