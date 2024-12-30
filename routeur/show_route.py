@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends,APIRouter,status
 from sqlalchemy.orm import Session
 from typing import List
-from app.schemas import ShowCreate, ShowUpdate,ShowCreateWithDetail,ShowUpdateWithDetails, SegmentUpdateWithDetails, ShowWithdetailResponse
-from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id
+from app.schemas import ShowCreate, ShowUpdate,ShowCreateWithDetail,ShowUpdateWithDetails, SegmentUpdateWithDetails, ShowWithdetailResponse, ShowBase_jsonShow
+from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id,create_show_with_elements_from_json
 from app.db.database import get_db # Assurez-vous d'avoir une fonction SessionLocal pour obtenir la session DB
 from app.schemas import ShowOut  # Modèle Show que vous avez défini précédemment
 from core.auth import oauth2
@@ -21,6 +21,23 @@ router = APIRouter(
 # //==========================================================?
 # //==========================================================?
 # //==========================================================?
+
+
+# Route pour créer un nouveau show
+
+# Route pour créer une émission avec ses segments et présentateurs
+@router.post("/new")
+async def create_show(
+    shows_data: List[ShowBase_jsonShow], 
+    db: Session = Depends(get_db)
+):
+    try:
+        # Appel de la fonction pour insérer les données dans la base
+        new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data)
+        return {"message": "Émission créée avec succès", "show_id": new_show.id}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
 # Route pour récupérer tous les détails des émissions
 @router.get("/x")

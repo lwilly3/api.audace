@@ -13,4 +13,4 @@ from .schema_presenters import PresenterCreate, PresenterUpdate, PresenterRespon
 from .schema_presenter_history import PresenterHistoryCreate, PresenterHistoryRead
 from .schema_guests import GuestCreate,  GuestUpdate,GuestResponse
 from .schema_segment import SegmentCreate, SegmentUpdate,SegmentPositionUpdate,SegmentBase,SegmentResponse
-from .schema_show import ShowCreate, ShowOut,ShowUpdate,ShowCreateWithDetail,SegmentDetailCreate,ShowUpdateWithDetails, SegmentUpdateWithDetails,ShowWithdetailResponse
+from .schema_show import ShowCreate, ShowOut,ShowUpdate,ShowCreateWithDetail,SegmentDetailCreate,ShowUpdateWithDetails, SegmentUpdateWithDetails,ShowWithdetailResponse,ShowBase_jsonShow

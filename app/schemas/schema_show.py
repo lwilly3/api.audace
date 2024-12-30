@@ -169,3 +169,37 @@ class ShowDetails(BaseModel):
     #     json_encoders = {
     #         datetime: lambda v: v.isoformat()  # Convert datetime to ISO format
     #     }
+
+
+
+
+
+#////// pour la creation et la lecture des conjucteurs detailler
+# from pydantic import BaseModel
+# from typing import List, Optional
+
+class SegmentBase_jsonShow(BaseModel):
+    title: str
+    type: str
+    duration: int
+    description: Optional[str] = None
+    startTime: Optional[str] = None
+    position: int
+    guests: List[int] = []# Liste des invités
+    technical_notes:Optional[str] = None  
+
+class PresenterBase_jsonShow(BaseModel):
+    id: int
+    isMainPresenter: Optional[bool] = False
+
+class ShowBase_jsonShow(BaseModel):
+    emission_id: int
+    title: str
+    type: str
+    broadcast_date: str
+    duration: int
+    frequency: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = "active"
+    presenters: List[PresenterBase_jsonShow]
+    segments: List[SegmentBase_jsonShow]

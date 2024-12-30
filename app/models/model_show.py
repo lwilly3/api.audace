@@ -31,24 +31,8 @@ class Show(Base):
 
     # Relation inverse vers Emission
     emission = relationship("Emission", back_populates="shows")
-    
-    # Relation inverse avec l'émission
-    # emission = relationship('Emission', back_populates='shows')
-    # Relation avec les présentateurs via la table associative "show_presenters"
-    # presenters = relationship("Presenter", secondary=show_presenters, back_populates="shows")
 
-        # Relation avec les présentateurs via la table "show_presenters"
-    # show_presenters = relationship("ShowPresenter", back_populates="show", cascade="all, delete-orphan")
-    # presenters = relationship("Presenter", secondary="show_presenters", back_populates="shows", cascade="all")
-
-
-    # Relation plusieurs-à-plusieurs avec Presenter via ShowPresenter
     presenters = relationship("Presenter", secondary="show_presenters", back_populates="shows")
-    
-    # Relation avec les segments (une émission peut contenir plusieurs segments)
-    # segments = relationship("Segment", back_populates="show", cascade="all, delete")
-
-    # Relation un-à-plusieurs avec Segment
     segments = relationship("Segment", back_populates="show", cascade="all, delete-orphan")
 
     # Ajout d'un index composite pour optimiser les recherches par type et statut

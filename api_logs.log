@@ -1192,3 +1192,27 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2024-12-30 17:50:12,026 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.25s
 2024-12-30 18:01:32,719 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
 2024-12-30 18:01:33,075 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.36s
+2024-12-30 20:26:08,200 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:26:08,203 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 405 - Time: 0.00s
+2024-12-30 20:27:06,723 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:27:06,726 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 405 - Time: 0.00s
+2024-12-30 20:27:55,363 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:27:55,364 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 405 - Time: 0.00s
+2024-12-30 20:28:51,630 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:28:51,632 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 405 - Time: 0.00s
+2024-12-30 20:29:38,604 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:29:38,609 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 400 - Time: 0.01s
+2024-12-30 20:31:19,892 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:31:19,896 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 400 - Time: 0.00s
+2024-12-30 20:43:07,086 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:43:08,040 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 400 - Time: 0.95s
+2024-12-30 20:44:13,262 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:44:13,468 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 400 - Time: 0.21s
+2024-12-30 20:47:11,069 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2024-12-30 20:47:11,353 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 200 - Time: 0.28s
+2024-12-30 20:53:54,483 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-30 20:53:54,744 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.26s
+2024-12-30 20:57:56,838 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-30 20:57:57,133 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.30s
+2024-12-30 21:00:11,299 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2024-12-30 21:00:11,482 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.18s

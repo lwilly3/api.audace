@@ -1,11 +1,91 @@
 from sqlalchemy.orm import joinedload, aliased
+from typing import List, Dict
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import asc
 from app.models import Show, Segment,Presenter, Guest, ShowPresenter, SegmentGuest
 from sqlalchemy.orm import Session
-from app.schemas import ShowCreateWithDetail, ShowUpdate ,ShowCreate # Schémas de validation pour Show
+from app.schemas import ShowCreateWithDetail, ShowUpdate ,ShowCreate,ShowBase_jsonShow # Schémas de validation pour Show
 from fastapi import HTTPException
 from starlette import status
 from datetime import datetime
+
+# ==================  create show details ========================
+
+def create_show_with_elements_from_json(
+    db: Session,
+    shows_data: List[ShowBase_jsonShow],
+):
+    try:
+        for show_data in shows_data:
+            # Création de l'émission
+            new_show = Show(
+                title=show_data.title,
+                type=show_data.type,
+                broadcast_date=show_data.broadcast_date,
+                duration=show_data.duration,
+                frequency=show_data.frequency,
+                description=show_data.description,
+                status=show_data.status,
+                emission_id=show_data.emission_id,
+            )
+            db.add(new_show)
+            db.flush()  # Sauvegarde partielle pour récupérer l'ID de l'émission
+
+            # Ajout des segments et des invités spécifiques à chaque segment
+            for segment_data in show_data.segments:
+                # Création du segment
+                new_segment = Segment(
+                    title=segment_data.title,
+                    type=segment_data.type,
+                    duration=segment_data.duration,
+                    description=segment_data.description,
+                    technical_notes=segment_data.technical_notes,
+                    position=segment_data.position,
+                    startTime=segment_data.startTime,
+                    show_id=new_show.id,
+                )
+                db.add(new_segment)
+                db.flush()  # Sauvegarde partielle pour récupérer l'ID du segment
+
+                # Association des invités à ce segment
+                guest_ids = segment_data.guests  # Récupère les invités spécifiques pour ce segment
+                for guest_id in guest_ids:
+                    guest = db.query(Guest).filter(Guest.id == guest_id).one_or_none()
+                    if guest:
+                        new_segment.guests.append(guest)
+
+            # Ajout des présentateurs à l'émission
+            for presenter_data in show_data.presenters:
+                presenter = db.query(Presenter).filter(Presenter.id == presenter_data.id).one_or_none()
+                if presenter:
+                    # L'ajout du présentateur à l'émission
+                    new_show.presenters.append(presenter)
+
+                    # Gérer le rôle (si nécessaire, ici on peut vérifier 'isMainPresenter' par exemple)
+                    if presenter_data.isMainPresenter:
+                        # Faire quelque chose si c'est le présentateur principal (par exemple, modifier un champ 'role')
+                        pass
+
+            db.commit()
+
+        return new_show  # Retourner la dernière émission créée
+    except IntegrityError as e:
+        print(e)
+        db.rollback()
+        raise ValueError(f"Une erreur s'est produite : {str(e)}")
+    except Exception as e:
+        print(e)    
+        db.rollback()
+        raise ValueError(f"Une erreur inattendue s'est produite : {str(e)}")
+
+
+
+
+
+
+#=================== end create show details ========================
+
+
 
 
 
@@ -25,7 +105,9 @@ def get_show_details_all(db: Session):
 
     for show in shows:
         show_info = {
-            "emission": show.emission.title if show.emission else "No Emission Limked" ,
+            "id": show.id,
+            "emission": show.emission.title if show.emission else "No Emission Linked",
+            "emission_id": show.emission_id,
             "title": show.title,
             "type": show.type,
             "broadcast_date": show.broadcast_date,
@@ -40,27 +122,33 @@ def get_show_details_all(db: Session):
         # Récupérer les présentateurs associés
         for presenter in show.presenters:
             show_info["presenters"].append({
+                "id": presenter.id,
                 "name": presenter.name,
                 "contact_info": presenter.contact_info,
                 "biography": presenter.biography,
                 "isMainPresenter": presenter.isMainPresenter,
             })
         
-        # Récupérer les segments associés
-        for segment in show.segments:
+        # Récupérer et trier les segments associés par la position
+        sorted_segments = sorted(show.segments, key=lambda x: x.position)
+        
+        for segment in sorted_segments:
             segment_info = {
+                "id": segment.id,
                 "title": segment.title,
                 "type": segment.type,
                 "duration": segment.duration,
                 "description": segment.description,
                 "startTime": segment.startTime,
                 "position": segment.position,
+                "technical_notes": segment.technical_notes,
                 "guests": []
             }
             
             # Récupérer les invités associés à ce segment
             for guest in segment.guests:
                 segment_info["guests"].append({
+                    "id": guest.id,
                     "name": guest.name,
                     "contact_info": guest.contact_info,
                     "biography": guest.biography,
@@ -73,6 +161,7 @@ def get_show_details_all(db: Session):
         show_details.append(show_info)
 
     return show_details
+
 
 
 
