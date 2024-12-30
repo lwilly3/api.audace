@@ -25,7 +25,7 @@ def get_show_details_all(db: Session):
 
     for show in shows:
         show_info = {
-            "emission": show.emission.title if show.emission else "No Emission" ,
+            "emission": show.emission.title if show.emission else "No Emission Limked" ,
             "title": show.title,
             "type": show.type,
             "broadcast_date": show.broadcast_date,
