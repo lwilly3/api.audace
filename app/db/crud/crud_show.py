@@ -16,14 +16,16 @@ from datetime import datetime
 def get_show_details_all(db: Session):
     # Récupérer toutes les émissions avec les segments, invités et présentateurs associés
     shows = db.query(Show).options(
+        joinedload(Show.emission),  # Charger les détails de l'émission associée
         joinedload(Show.presenters),  # Charger les présentateurs associés à chaque émission
         joinedload(Show.segments).joinedload(Segment.guests),  # Charger les segments avec leurs invités
     ).all()
-
+   
     show_details = []
 
     for show in shows:
         show_info = {
+            "emission": show.emission.title if show.emission else "No Emission" ,
             "title": show.title,
             "type": show.type,
             "broadcast_date": show.broadcast_date,
