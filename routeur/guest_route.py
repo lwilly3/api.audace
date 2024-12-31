@@ -9,7 +9,7 @@
 # guest.py
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db.crud.crud_guests import get_guest_by_id, get_guests, create_guest, update_guest, delete_guest
+from app.db.crud.crud_guests import get_guest_by_id, get_guests, create_guest, update_guest, delete_guest,search_guest
 from app.schemas import GuestResponse, GuestCreate, GuestUpdate
 from app.db.database import get_db
 from typing import List
@@ -30,6 +30,12 @@ def create_guest_route(
         return create_guest(db=db, guest=guest)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur lors de la création de l'invité: {str(e)}")
+
+@router.get("/search")
+def search_guests(query: str, db: Session = Depends(get_db)):
+    response = search_guest(db, query)
+    return response
+
 
 @router.get("/{guest_id}", response_model=GuestResponse)
 def get_guest_route(

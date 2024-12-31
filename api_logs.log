@@ -1399,3 +1399,11 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2024-12-31 13:32:27,529 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.27s
 2024-12-31 13:46:57,772 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
 2024-12-31 13:46:58,015 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.24s
+2024-12-31 14:27:55,017 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/search?query=John
+2024-12-31 14:27:55,367 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/search?query=John - Status: 200 - Time: 0.35s
+2024-12-31 14:28:01,648 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/search?query=w
+2024-12-31 14:28:01,663 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/search?query=w - Status: 200 - Time: 0.01s
+2024-12-31 14:28:52,345 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/search?query=7777
+2024-12-31 14:28:52,352 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/search?query=7777 - Status: 200 - Time: 0.01s
+2024-12-31 14:28:56,608 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/search?query=7
+2024-12-31 14:28:56,621 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/search?query=7 - Status: 200 - Time: 0.01s

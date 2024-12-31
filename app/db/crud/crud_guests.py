@@ -5,6 +5,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.models.model_guest import Guest
 from app.schemas import GuestCreate, GuestUpdate,GuestResponse
 from typing import List
+from sqlalchemy import or_
+from typing import Dict, Any
 
 def create_guest(db: Session, guest: GuestCreate) -> GuestResponse:
     """Créer un nouvel invité."""
@@ -94,6 +96,87 @@ def delete_guest(db: Session, guest_id: int) -> bool:
 
 
 
+
+#///////////////////// pour la recherche //////////////////////////
+
+def search_guest(session: Session, query: str) -> Dict[str, Any]:
+    """
+    Recherche d'un invité dans la base de données en fonction d'un mot-clé,
+    avec gestion des exceptions et codes de réponse.
+
+    :param session: Session SQLAlchemy active.
+    :param query: Chaîne de recherche (nom, email, téléphone ou autre).
+    :return: Dictionnaire contenant les résultats ou un message d'erreur.
+    """
+    try:
+        # Vérifier si le mot-clé de recherche est vide
+        if not query.strip():
+            return {
+                "status_code": 400,
+                "message": "Le mot-clé de recherche ne peut pas être vide."
+            }
+        
+        # Recherche dans la base de données
+        results = session.query(Guest).filter(
+            Guest.is_deleted == False,  # Exclure les invités supprimés
+            or_(
+                Guest.name.ilike(f"%{query}%"),       # Recherche par nom
+                Guest.email.ilike(f"%{query}%"),      # Recherche par email
+                Guest.phone.ilike(f"%{query}%"),      # Recherche par numéro de téléphone
+                Guest.role.ilike(f"%{query}%"),       # Recherche par rôle
+                Guest.contact_info.ilike(f"%{query}%"),  # Recherche par infos de contact
+                Guest.biography.ilike(f"%{query}%")   # Recherche par biographie
+            )
+        ).all()
+        
+        # Vérifier si des résultats ont été trouvés
+        if not results:
+            return {
+                "status_code": 404,
+                "message": "Aucun invité correspondant trouvé.",
+                "data": []
+            }
+        
+        # Structurer les résultats pour la réponse
+        guests_data = [
+            {
+                "id": guest.id,
+                "name": guest.name,
+                "email": guest.email,
+                "phone": guest.phone,
+                "role": guest.role,
+                "contact_info": guest.contact_info,
+                "biography": guest.biography,
+                # "created_at": guest.created_at,
+                # "updated_at": guest.updated_at,
+                # "is_deleted": guest.is_deleted,
+                "showSegment_participation": len(guest.segments)
+
+            }
+            for guest in results
+        ]
+
+        return {
+            "status_code": 200,
+            "message": "Recherche effectuée avec succès.",
+            "data": guests_data
+        }
+
+    except SQLAlchemyError as e:
+        # Gérer les erreurs liées à SQLAlchemy
+        return {
+            "status_code": 500,
+            "message": f"Erreur interne de la base de données : {str(e)}",
+            "data": []
+        }
+
+    except Exception as e:
+        # Gérer d'autres exceptions
+        return {
+            "status_code": 500,
+            "message": f"Une erreur inattendue s'est produite : {str(e)}",
+            "data": []
+        }
 
 
 
