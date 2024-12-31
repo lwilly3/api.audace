@@ -37,7 +37,28 @@ def get_guest_by_id(db: Session, guest_id: int) -> GuestResponse:
 def get_guests(db: Session, skip: int = 0, limit: int = 10):
     """Récupérer tous les invités avec pagination."""
     try:
-        return  db.query(Guest).offset(skip).limit(limit).all()
+        gest_result =  db.query(Guest).offset(skip).limit(limit).all()
+        serialized_guests = []
+        for guest in gest_result:
+            guests = {
+                    "email": guest.email,
+                    "id": guest.id,
+                    "role": guest.role,
+                    "biography": guest.biography,
+                    "avatar": guest.avatar,
+                    # "updated_at": "2024-12-19T17:29:22.037544",
+                    # "deleted_at": null,
+                    "phone": guest.phone,
+                    "name": guest.name,
+                    "contact_info": guest.contact_info,
+                    # "created_at": "2024-12-19T17:29:22.037544",
+                    # "is_deleted": false   
+                    "showSegment_participation": len(guest.segments)
+        }
+            serialized_guests.append(guests)
+        return serialized_guests
+    
+        # return guests
     except SQLAlchemyError as e:
         raise Exception(f"Erreur lors de la récupération des invités : {str(e)}")
 

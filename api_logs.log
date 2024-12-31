@@ -1216,3 +1216,186 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2024-12-30 20:57:57,133 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.30s
 2024-12-30 21:00:11,299 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
 2024-12-30 21:00:11,482 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.18s
+2024-12-31 10:58:12,261 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 10:58:12,263 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 10:58:12,269 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 10:58:12,344 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 401 - Time: 0.07s
+2024-12-31 10:58:30,969 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-31 10:58:31,383 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-31 10:58:31,871 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.90s
+2024-12-31 10:58:43,304 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 10:58:43,306 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 10:58:43,311 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 10:58:43,360 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.05s
+2024-12-31 11:03:43,864 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests
+2024-12-31 11:03:43,886 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests - Status: 307 - Time: 0.02s
+2024-12-31 11:03:43,898 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
+2024-12-31 11:03:44,044 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.15s
+2024-12-31 11:05:02,947 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:05:03,000 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: 'Show' object has no attribute 'name'
+2024-12-31 11:05:03,003 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.06s
+2024-12-31 11:05:31,413 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-31 11:05:31,430 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 11:05:31,432 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.02s
+2024-12-31 11:12:44,961 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-31 11:12:45,168 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 11:12:45,170 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.21s
+2024-12-31 11:12:47,051 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-31 11:12:47,056 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 11:12:47,057 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.01s
+2024-12-31 11:14:43,567 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-31 11:14:43,828 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 11:14:43,830 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.26s
+2024-12-31 11:14:54,699 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:14:54,736 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: 'Show' object has no attribute 'name'
+2024-12-31 11:14:54,738 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.04s
+2024-12-31 11:16:20,731 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:16:43,077 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:17:26,404 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:17:52,897 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:17:53,099 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: 'Show' object has no attribute 'name'
+2024-12-31 11:17:53,100 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.20s
+2024-12-31 11:21:07,944 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:21:08,188 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: 'Show' object has no attribute 'name'
+2024-12-31 11:21:08,189 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.25s
+2024-12-31 11:21:10,735 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:21:10,745 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with votes: 'Show' object has no attribute 'name'
+2024-12-31 11:21:10,747 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.01s
+2024-12-31 11:26:55,934 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:26:56,102 - app.db.crud.crud_presenters - ERROR - Error fetching presenters with 00: 'Show' object has no attribute 'name'
+2024-12-31 11:26:56,103 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 500 - Time: 0.17s
+2024-12-31 11:36:04,808 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:36:04,815 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 401 - Time: 0.01s
+2024-12-31 11:36:48,496 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-31 11:36:48,756 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-31 11:36:49,193 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.70s
+2024-12-31 11:37:08,965 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 11:37:08,996 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.03s
+2024-12-31 12:08:18,817 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:08:18,823 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 401 - Time: 0.01s
+2024-12-31 12:08:26,195 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-31 12:08:26,418 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-31 12:08:26,867 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.67s
+2024-12-31 12:08:37,671 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:09:26,999 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:09:27,301 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.30s
+2024-12-31 12:10:14,939 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:10:15,139 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.20s
+2024-12-31 12:10:37,688 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:10:37,916 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.23s
+2024-12-31 12:11:02,558 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:11:02,905 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.35s
+2024-12-31 12:11:29,449 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:11:29,855 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.41s
+2024-12-31 12:12:08,671 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:12:08,919 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.25s
+2024-12-31 12:12:27,259 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:12:27,489 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.23s
+2024-12-31 12:15:52,172 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:15:52,410 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.24s
+2024-12-31 12:19:08,343 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:19:08,589 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.25s
+2024-12-31 12:19:59,190 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:19:59,554 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.36s
+2024-12-31 12:46:29,134 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:46:29,144 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 401 - Time: 0.01s
+2024-12-31 12:46:35,734 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-31 12:46:36,052 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-31 12:46:36,652 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.92s
+2024-12-31 12:46:41,932 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:46:41,963 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.03s
+2024-12-31 12:47:19,347 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:47:19,629 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.28s
+2024-12-31 12:48:07,392 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:48:07,668 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.28s
+2024-12-31 12:49:11,973 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:49:12,054 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.08s
+2024-12-31 12:50:49,934 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:50:50,180 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.25s
+2024-12-31 12:51:41,436 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:51:41,718 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.28s
+2024-12-31 12:52:18,796 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:52:19,039 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.24s
+2024-12-31 12:53:26,091 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:53:26,435 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.34s
+2024-12-31 12:58:49,327 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 12:58:49,626 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.30s
+2024-12-31 13:01:33,521 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:01:33,522 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:01:33,528 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:01:33,824 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.30s
+2024-12-31 13:03:12,077 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-31 13:03:12,097 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 13:03:12,099 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.02s
+2024-12-31 13:06:48,033 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/1
+2024-12-31 13:06:48,279 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 13:06:48,281 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/1 - Status: 500 - Time: 0.25s
+2024-12-31 13:07:03,357 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/5
+2024-12-31 13:07:03,369 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 13:07:03,370 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/5 - Status: 500 - Time: 0.01s
+2024-12-31 13:08:04,937 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/5
+2024-12-31 13:08:05,161 - app.db.crud.crud_presenters - ERROR - Error fetching presenter: 404: Presenter not found
+2024-12-31 13:08:05,166 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/5 - Status: 500 - Time: 0.23s
+2024-12-31 13:08:44,053 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/9
+2024-12-31 13:08:44,085 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/9 - Status: 200 - Time: 0.03s
+2024-12-31 13:10:45,734 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:10:45,745 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.01s
+2024-12-31 13:10:45,754 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:10:45,766 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.01s
+2024-12-31 13:18:19,915 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:18:19,916 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:18:19,920 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:18:19,934 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 401 - Time: 0.01s
+2024-12-31 13:18:27,677 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2024-12-31 13:18:28,023 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2024-12-31 13:18:28,600 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.92s
+2024-12-31 13:18:50,884 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:18:50,885 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:18:50,890 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:18:50,913 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 500 - Time: 0.02s
+2024-12-31 13:19:28,968 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:19:28,970 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:19:28,975 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:19:29,206 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 500 - Time: 0.23s
+2024-12-31 13:22:07,191 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:22:07,192 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:22:07,200 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:22:07,440 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 500 - Time: 0.24s
+2024-12-31 13:26:42,050 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:26:42,051 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:26:42,057 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:26:42,302 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.25s
+2024-12-31 13:28:23,795 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:28:23,797 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:28:23,800 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:28:24,100 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.30s
+2024-12-31 13:29:49,955 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:29:49,956 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2024-12-31 13:29:49,960 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:29:50,247 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 500 - Time: 0.29s
+2024-12-31 13:32:27,248 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2024-12-31 13:32:27,253 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.01s
+2024-12-31 13:32:27,258 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2024-12-31 13:32:27,529 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.27s
+2024-12-31 13:46:57,772 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2024-12-31 13:46:58,015 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.24s

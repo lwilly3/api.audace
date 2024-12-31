@@ -101,6 +101,11 @@ class PresenterCreate(BaseModel):
     profilePicture: Optional[str] = None
     isMainPresenter: Optional[bool] = False
 
+    model_config = {
+        "from_attributes": True,
+    }
+
+
 class PresenterUpdate(BaseModel):
     """Validation pour mettre à jour un présentateur existant."""
     name: Optional[str] = Field(None, max_length=100, description="Nom du présentateur")
@@ -108,6 +113,11 @@ class PresenterUpdate(BaseModel):
     biography: Optional[str] = Field(None, description="Biographie")
     profilePicture: Optional[str] = None
     isMainPresenter: Optional[bool] = False
+
+    model_config = {
+        "from_attributes": True,
+    }
+
 
 class PresenterResponse(BaseModel):
     """Réponse après validation ou récupération d'un présentateur."""
@@ -118,6 +128,11 @@ class PresenterResponse(BaseModel):
     users_id: int
     shows: List[str] = Field(default=[], description="Liste des émissions associées")
     isMainPresenter: Optional[bool] = False
+
+    model_config = {
+        "from_attributes": True,
+    }
+
 
 
 

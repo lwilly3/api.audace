@@ -96,8 +96,26 @@ def get_presenter(db: Session, presenter_id: int):
         if not presenter:
             raise PresenterNotFoundError()
         
-        return presenter
+        serialized_presenter = {
+                
+                    "id": presenter.id,
+                    "name": presenter.name,
+                    "biography": presenter.biography,
+                    "is_deleted": presenter.is_deleted,
+                    "deleted_at": presenter.deleted_at,
+                    "users_id": presenter.users_id,
+                    "contact_info": presenter.contact_info,
+                    "profilePicture": presenter.profilePicture,
+                    # "shows": [show.title for show in presenter.shows]
+                    "shows_presented": len(presenter.shows)
+
+
+                
+                       }
+        
+        return serialized_presenter
     except Exception as e:
+        print({e})
         logger.error(f"Error fetching presenter: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching presenter")
 
@@ -143,24 +161,32 @@ def get_all_presenters(db: Session, skip: int = 0, limit: int = 10) -> Presenter
                     "is_deleted": presenter.is_deleted,
                     "deleted_at": presenter.deleted_at,
                     "users_id": presenter.users_id,
-                    "shows": [show.name for show in presenter.shows],
+                    "contact_info": presenter.contact_info,
+                    "profilePicture": presenter.profilePicture,
+                    # "shows": [show.title for show in presenter.shows]
+                    "shows_presented": len(presenter.shows)
+
+
                 
                        }
-        serialized_results.append(serialized_presenter)
+            serialized_results.append(serialized_presenter)
+           
+            
+                  
 
         return {
             "total": total_presenters,
-            "presenters": presenters_and_counts,
+            "presenters": serialized_results,
         }
 
 
 
     except Exception as e:
             print({e})  
-            logger.error(f"Error fetching presenters with votes: {e}")
+            logger.error(f"Error fetching presenters with 00: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error fetching presenters with votes",
+                detail="Error fetching presenters with 001",
             )
 
 

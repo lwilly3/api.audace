@@ -20,7 +20,7 @@ def create_presenter_route(presenter_to_create: PresenterCreate, db: Session = D
 
 
 
-@router.get("/all", response_model=PresenterResponsePaged)
+@router.get("/all")
 def list_presenters(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     return get_all_presenters(db, skip, limit)
 
