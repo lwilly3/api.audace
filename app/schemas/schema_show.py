@@ -37,6 +37,12 @@ from pydantic.fields import Field
 #     status: str
 #     presenters: List[str] = Field(default=[], description="Liste des présentateurs associés")
 #     segments: List[str] = Field(default=[], description="Liste des segments associés")
+class ShowStatuslUpdate(BaseModel):
+    status: Optional[str] = None
+
+    model_config = {
+        "from_attributes": True,
+    }
 
 
 

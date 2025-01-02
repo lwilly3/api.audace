@@ -9,6 +9,33 @@ from fastapi import HTTPException
 from starlette import status
 from datetime import datetime
 
+
+#============ update show status
+
+
+def update_show_status(db: Session, show_id: int, status: str):
+    """
+    Met à jour le statut d'un show dans la base de données.
+
+    Args:
+        - db (Session): Session de base de données.
+        - show_id (int): ID du show à mettre à jour.
+        - status (str): Nouveau statut à appliquer.
+
+    Returns:
+        - dict: ID du show et son statut mis à jour.
+    """
+    show = db.query(Show).filter(Show.id == show_id).first()
+    if not show:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Show with ID {show_id} not found."
+        )
+    show.status = status
+    db.commit()
+    db.refresh(show)
+    return {"id": show.id, "status": show.status}
+
 # ==================  create show details ========================
 
 def create_show_with_elements_from_json(

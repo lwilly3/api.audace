@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends,APIRouter,status
 from sqlalchemy.orm import Session
 from typing import List
-from app.schemas import ShowCreate, ShowUpdate,ShowCreateWithDetail,ShowUpdateWithDetails, SegmentUpdateWithDetails, ShowWithdetailResponse, ShowBase_jsonShow
-from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id,create_show_with_elements_from_json
+from app.schemas import ShowCreate, ShowUpdate,ShowCreateWithDetail,ShowUpdateWithDetails, SegmentUpdateWithDetails, ShowWithdetailResponse, ShowBase_jsonShow, ShowStatuslUpdate
+from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id,create_show_with_elements_from_json,update_show_status
 from app.db.database import get_db # Assurez-vous d'avoir une fonction SessionLocal pour obtenir la session DB
 from app.schemas import ShowOut  # Modèle Show que vous avez défini précédemment
 from core.auth import oauth2
@@ -54,8 +54,32 @@ def get_show_details(show_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Show not found")
     return show
 
+# ///////////////////////////////// modifier statut show avec id
 
+@router.patch("/status/{show_id}")
+async def update_show_status_route(
+    show_id: int,
+    show_data: ShowStatuslUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Met à jour le statut d'un show.
 
+    Args:
+        - show_id (int): ID du show à mettre à jour.
+        - show_data (ShowPartialUpdate): Données partiellement mises à jour.
+        - db (Session): Session de base de données.
+
+    Returns:
+        - dict: ID du show et statut mis à jour.
+    """
+    if not show_data.status:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Status field is required."
+        )
+
+    return update_show_status(db, show_id, show_data.status)
 
 # créer un conducteur avec ses segments
 # ///////////////////////////////// , current_user: int = Depends(oauth2.get_current_user)
@@ -96,7 +120,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
 #  mise a joure show avec details
 # ///////////////////////////////////
 
-@router.put("/detail/{show_id}")
+@router.patch("/detail/{show_id}")
 async def update_show(
     show_id: int, 
     show_data: ShowUpdate, 

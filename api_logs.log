@@ -1407,3 +1407,9 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2024-12-31 14:28:52,352 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/search?query=7777 - Status: 200 - Time: 0.01s
 2024-12-31 14:28:56,608 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/search?query=7
 2024-12-31 14:28:56,621 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/search?query=7 - Status: 200 - Time: 0.01s
+2025-01-02 18:25:17,333 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/shows/detail/5
+2025-01-02 18:25:18,305 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/shows/detail/5 - Status: 500 - Time: 0.98s
+2025-01-02 18:32:07,736 - hapson-api - INFO - Incoming Request: PATCH http://127.0.0.1:8000/shows/detail/5
+2025-01-02 18:32:07,969 - hapson-api - INFO - Completed Request: PATCH http://127.0.0.1:8000/shows/detail/5 - Status: 500 - Time: 0.23s
+2025-01-02 18:54:48,768 - hapson-api - INFO - Incoming Request: PATCH http://127.0.0.1:8000/shows/status/5
+2025-01-02 18:54:49,346 - hapson-api - INFO - Completed Request: PATCH http://127.0.0.1:8000/shows/status/5 - Status: 200 - Time: 0.58s
