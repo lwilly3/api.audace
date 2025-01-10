@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: e6c6ae9227bc
+Revision ID: 75e8b3bb0750
 Revises: 
-Create Date: 2024-12-17 16:32:31.883839
+Create Date: 2025-01-10 18:50:44.761352
 
 """
 from typing import Sequence, Union
@@ -11,8 +11,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic. modifie
-revision: str = 'e6c6ae9227bc'
+# revision identifiers, used by Alembic.
+revision: str = '75e8b3bb0750'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,6 +25,10 @@ def upgrade() -> None:
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('synopsis', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('type', sa.Text(), nullable=True),
+    sa.Column('duration', sa.Integer(), nullable=True),
+    sa.Column('frequency', sa.Text(), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
     sa.Column('is_deleted', sa.Boolean(), nullable=True),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
@@ -33,8 +37,12 @@ def upgrade() -> None:
     op.create_table('guests',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
+    sa.Column('email', sa.String(), nullable=True),
+    sa.Column('phone', sa.String(), nullable=True),
+    sa.Column('role', sa.String(), nullable=True),
     sa.Column('contact_info', sa.String(), nullable=True),
     sa.Column('biography', sa.Text(), nullable=True),
+    sa.Column('avatar', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('is_deleted', sa.Boolean(), nullable=True),
@@ -65,13 +73,14 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('phone_number', sa.String(), nullable=True),
+    sa.Column('profilePicture', sa.Text(), nullable=True),
     sa.Column('is_deleted', sa.Boolean(), nullable=True),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('ix_users_email', 'users', ['email'], unique=False)
+    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_index('ix_users_phone_number', 'users', ['phone_number'], unique=False)
-    op.create_index('ix_users_username', 'users', ['username'], unique=False)
+    op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('archived_audit_logs',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -116,6 +125,8 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('contact_info', sa.String(), nullable=True),
     sa.Column('biography', sa.Text(), nullable=True),
+    sa.Column('profilePicture', sa.Text(), nullable=True),
+    sa.Column('isMainPresenter', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('users_id', sa.Integer(), nullable=False),
@@ -135,7 +146,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('role_id', 'permission_id')
     )
     op.create_index('ix_role_permissions_permission_id', 'role_permissions', ['permission_id'], unique=False)
-    op.create_index(op.f('ix_role_permissions_role_id'), 'role_permissions', ['role_id'], unique=False)
+    op.create_index('ix_role_permissions_role_id', 'role_permissions', ['role_id'], unique=False)
     op.create_table('shows',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(), nullable=False),
@@ -158,6 +169,20 @@ def upgrade() -> None:
     op.create_index(op.f('ix_shows_title'), 'shows', ['title'], unique=False)
     op.create_index(op.f('ix_shows_type'), 'shows', ['type'], unique=False)
     op.create_index(op.f('ix_shows_updated_at'), 'shows', ['updated_at'], unique=False)
+    op.create_table('user_permissions',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('can_create_showplan', sa.Boolean(), nullable=False),
+    sa.Column('can_edit_showplan', sa.Boolean(), nullable=False),
+    sa.Column('can_archive_showplan', sa.Boolean(), nullable=False),
+    sa.Column('can_delete_showplan', sa.Boolean(), nullable=False),
+    sa.Column('can_destroy_showplan', sa.Boolean(), nullable=False),
+    sa.Column('can_changestatus_showplan', sa.Boolean(), nullable=False),
+    sa.Column('granted_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_user_permissions_id'), 'user_permissions', ['id'], unique=False)
     op.create_table('user_roles',
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=False),
@@ -172,6 +197,7 @@ def upgrade() -> None:
     sa.Column('duration', sa.Integer(), nullable=False),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('technical_notes', sa.Text(), nullable=True),
+    sa.Column('startTime', sa.Text(), nullable=True),
     sa.Column('position', sa.Integer(), nullable=False),
     sa.Column('show_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
@@ -219,6 +245,8 @@ def downgrade() -> None:
     op.drop_index('ix_segment_title_type', table_name='segments')
     op.drop_table('segments')
     op.drop_table('user_roles')
+    op.drop_index(op.f('ix_user_permissions_id'), table_name='user_permissions')
+    op.drop_table('user_permissions')
     op.drop_index(op.f('ix_shows_updated_at'), table_name='shows')
     op.drop_index(op.f('ix_shows_type'), table_name='shows')
     op.drop_index(op.f('ix_shows_title'), table_name='shows')
@@ -227,7 +255,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_shows_broadcast_date'), table_name='shows')
     op.drop_index('ix_show_type_status', table_name='shows')
     op.drop_table('shows')
-    op.drop_index(op.f('ix_role_permissions_role_id'), table_name='role_permissions')
+    op.drop_index('ix_role_permissions_role_id', table_name='role_permissions')
     op.drop_index('ix_role_permissions_permission_id', table_name='role_permissions')
     op.drop_table('role_permissions')
     op.drop_index(op.f('ix_presenters_updated_at'), table_name='presenters')
@@ -238,9 +266,9 @@ def downgrade() -> None:
     op.drop_table('login_history')
     op.drop_table('audit_logs')
     op.drop_table('archived_audit_logs')
-    op.drop_index('ix_users_username', table_name='users')
+    op.drop_index(op.f('ix_users_username'), table_name='users')
     op.drop_index('ix_users_phone_number', table_name='users')
-    op.drop_index('ix_users_email', table_name='users')
+    op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     op.drop_table('roles')
     op.drop_table('permissions')

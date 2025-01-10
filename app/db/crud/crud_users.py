@@ -6,6 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.models import User, LoginHistory, Notification, AuditLog, Presenter, Guest, ArchivedAuditLog, Role, RolePermission, Permission
 from sqlalchemy.orm.exc import NoResultFound
 from fastapi import HTTPException
+from app.db.crud.crud_permissions import initialize_user_permissions
 
 
 # -------------------------
@@ -95,6 +96,7 @@ def create_user(db: Session, user_data: dict) -> User:
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+        initialize_user_permissions(db, new_user.id)  # Initialiser les permissions de l'utilisateur
         return new_user
     except SQLAlchemyError as e:
         db.rollback()

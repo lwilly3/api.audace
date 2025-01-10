@@ -5,6 +5,60 @@ from fastapi import HTTPException, status, Depends
 from app.models import Role, Permission, RolePermission, User
 from app.db.database import get_db
 from core.auth import oauth2
+
+
+
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+from app.models import UserPermissions
+
+def initialize_user_permissions(db: Session, user_id: int):
+    """
+    Fonction pour initialiser les permissions de l'utilisateur avec les valeurs par défaut.
+    Si une erreur survient, elle est capturée et un message approprié est renvoyé.
+    """
+    try:
+        # Vérifier si l'utilisateur a déjà des permissions
+        existing_permissions = db.query(UserPermissions).filter(UserPermissions.user_id == user_id).first()
+
+        # Si des permissions existent déjà, ne pas les créer à nouveau
+        if existing_permissions:
+            return existing_permissions
+
+        # Sinon, créer une nouvelle entrée avec les permissions par défaut
+        new_permissions = UserPermissions(
+            user_id=user_id,
+            can_create_showplan=False,
+            can_edit_showplan=False,
+            can_archive_showplan=False,
+            can_delete_showplan=False,
+            can_destroy_showplan=False,
+            can_changestatus_showplan=False
+        )
+
+        # Ajouter la nouvelle entrée dans la session de la base de données
+        db.add(new_permissions)
+        db.commit()
+        db.refresh(new_permissions)
+
+        return new_permissions
+
+    except SQLAlchemyError as e:
+        # En cas d'erreur lors de l'exécution de la requête SQL
+        db.rollback()  # Annuler la transaction si erreur
+        raise Exception(f"Une erreur est survenue lors de l'initialisation des permissions : {str(e)}")
+
+    except Exception as e:
+        # En cas d'erreur générale
+        raise Exception(f"Une erreur inattendue est survenue : {str(e)}")
+
+
+
+
+
+
+
+
 # Récupérer tous les rôles
 def get_all_roles(db: Session = Depends(get_db)) -> List[Role]:
     try:
