@@ -12,6 +12,42 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import UserPermissions
 
+
+
+def get_user_permissions(db: Session, user_id: int):
+    """
+    Récupère les permissions d'un utilisateur en fonction de son ID.
+
+    :param db: Session de la base de données
+    :param user_id: ID de l'utilisateur
+    :return: Un dictionnaire contenant les permissions de l'utilisateur ou un message si l'utilisateur n'a pas de permissions
+    """
+    try:
+        # Requête pour récupérer les permissions de l'utilisateur
+        permissions = db.query(UserPermissions).filter(UserPermissions.user_id == user_id).first()
+
+        if not permissions:
+            # Si aucune permission n'est trouvée pour cet utilisateur
+            return {"error": f"Aucune permission trouvée pour l'utilisateur avec l'ID {user_id}"}
+
+        # Retourner les permissions sous forme de dictionnaire
+        return {
+            # "user_id": permissions.user_id,
+            "can_create_showplan": permissions.can_create_showplan,
+            "can_edit_showplan": permissions.can_edit_showplan,
+            "can_archive_showplan": permissions.can_archive_showplan,
+            "can_delete_showplan": permissions.can_delete_showplan,
+            "can_destroy_showplan": permissions.can_destroy_showplan,
+            "can_changestatus_showplan": permissions.can_changestatus_showplan,
+            # "granted_at": permissions.granted_at
+        }
+
+    except Exception as e:
+        # Gestion des erreurs
+        raise Exception(f"Une erreur est survenue lors de la récupération des permissions : {str(e)}")
+
+
+
 def initialize_user_permissions(db: Session, user_id: int):
     """
     Fonction pour initialiser les permissions de l'utilisateur avec les valeurs par défaut.

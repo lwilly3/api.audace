@@ -9,6 +9,7 @@ from core.auth import oauth2
 from app.db import database
 from app.schemas import schemas
 from app.utils import utils
+from app.db.crud.crud_permissions import get_user_permissions
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -17,8 +18,8 @@ router=APIRouter(
      tags=['Authentication']
 )
 
-
-@router.post('/login', response_model=schemas.Token)
+# response_model=schemas.Token
+@router.post('/login')
 # 7h10
 # def login(user_credentials: schemas.UserLogin, db: Session = Depends(database.get_db)):
 # sur la solution au on accede par user_credentials.email ..  pour la deuxieme solution il retourne un dict avec username et password
@@ -40,5 +41,7 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
 #    le data contien ce que je veux inclure dans le  payloard
 #    le token peut etre visualiser dans https://jwt.io/  9h09
    access_token= oauth2.create_acces_token(data={'user_id':user_to_log_on_db.id})
+
+   permissions= get_user_permissions(db, user_to_log_on_db.id)
    
-   return{"access_token" :access_token, "token_type":"bearer"}
+   return{"access_token" :access_token, "token_type":"bearer" , "permissions":permissions}
