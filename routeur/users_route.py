@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
 # from app.models import UserInDB, LoginLog, Notification, AuditLog
-from app.schemas import UserRead, UserInDB, LoginHistoryRead, NotificationRead, AuditLog,UserLogin,UserBase,UserCreate
+from app.schemas import UserRead, UserInDB, LoginHistoryRead, NotificationRead, AuditLog,UserLogin,UserBase,UserCreate, UserWithPermissionsResponse
 from app.models import Role, UserRole, Permission,RolePermission
 from app.utils import utils
 from core.auth import oauth2
@@ -16,6 +16,7 @@ from app.db.crud.crud_users import (
     get_user_logins,
     get_user_notifications,
     get_user_audit_logs,
+    get_user_or_404_with_permissions,
 )
 from app.db.database import get_db
 # from app.db.init_db_rolePermissions import create_default_role_and_permission
@@ -95,12 +96,13 @@ def get_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.
     """
     return get_all_users(db)
 
-@router.get("/users/{id}", response_model=UserInDB)
+@router.get("/users/{id}")
 def get_user(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
     Récupérer un utilisateur spécifique par son ID.
     """
-    user = get_user_or_404(db, id)
+    # user = get_user_or_404(db, id)
+    user=get_user_or_404_with_permissions(db, id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

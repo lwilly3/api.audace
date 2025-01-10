@@ -1,9 +1,53 @@
 
 from datetime import datetime, timezone
 from typing import List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session,joinedload
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import User, LoginHistory, Notification, AuditLog, Presenter, Guest, ArchivedAuditLog, Role, RolePermission, Permission
+from sqlalchemy.orm.exc import NoResultFound
+from fastapi import HTTPException
+
+
+# -------------------------
+# Fonction utilitaire pour récupérer un utilisateur avec leurs permissions
+# -------------------------
+def get_user_or_404_with_permissions(db: Session, user_id: int) -> dict:
+    """
+    Fonction pour récupérer un utilisateur avec ses permissions.
+    Retourne un dictionnaire contenant les informations de l'utilisateur et de ses permissions.
+    Si l'utilisateur n'est pas trouvé ou est inactif, lève une exception HTTP 404.
+    """
+    try:
+        user = db.query(User).options(joinedload(User.permissions)).filter(
+            User.id == user_id, User.is_active == True
+        ).first()
+
+        if not user:
+            raise NoResultFound("User not found or inactive")
+
+        # Structure les permissions sous forme de dictionnaire
+        permissions = user.permissions
+
+        # Retourne les données dans le format attendu par la réponse
+        return {
+            
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                
+                "can_create_showplan": permissions.can_create_showplan,
+                "can_edit_showplan": permissions.can_edit_showplan,
+                "can_archive_showplan": permissions.can_archive_showplan,
+                "can_delete_showplan": permissions.can_delete_showplan,
+                "can_destroy_showplan": permissions.can_destroy_showplan,
+                "can_changestatus_showplan": permissions.can_changestatus_showplan,                 
+        },
+    except NoResultFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+
+
 
 # -------------------------
 # Fonction utilitaire pour récupérer un utilisateur ou lever une erreur 404

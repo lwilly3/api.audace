@@ -74,6 +74,9 @@ class User(BaseModel):
     # Relation "un-à-un" avec Presenter   uselist=False : Spécifie qu'il s'agit d'une relation "un-à-un".
     presenter = relationship("Presenter", back_populates="user", uselist=False)
 
+    permissions = relationship("UserPermissions", back_populates="user", uselist=False)
+    # Relation avec la table des permissions
+
 
     # Index pour accélérer les recherches
     __table_args__ = (

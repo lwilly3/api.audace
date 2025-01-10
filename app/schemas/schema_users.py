@@ -16,7 +16,13 @@ class User(BaseModel):
         "from_attributes": True,  # Remplace orm_mode
     }
 
-
+class PermissionsResponse(BaseModel):
+    can_create_showplan: bool
+    can_edit_showplan: bool
+    can_archive_showplan: bool
+    can_delete_showplan: bool
+    can_destroy_showplan: bool
+    can_changestatus_showplan: bool
 
 
 class UserInDB(User):
@@ -32,6 +38,13 @@ class UserInDB(User):
         "from_attributes": True,  # Remplace orm_mode
     }
 
+class UserWithPermissionsResponse(BaseModel):
+    user: UserInDB
+    permissions: PermissionsResponse
+
+    model_config = {
+            "from_attributes": True,  # Remplace orm_mode
+        }
 
 class LoginLog(BaseModel):
     """
