@@ -1419,3 +1419,16 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-01-02 21:24:40,476 - hapson-api - INFO - Completed Request: PATCH http://127.0.0.1:8000/shows/status/5 - Status: 200 - Time: 1.02s
 2025-01-02 21:25:47,981 - hapson-api - INFO - Incoming Request: PATCH http://127.0.0.1:8000/shows/status/midi-info
 2025-01-02 21:25:47,998 - hapson-api - INFO - Completed Request: PATCH http://127.0.0.1:8000/shows/status/midi-info - Status: 422 - Time: 0.02s
+2025-01-10 19:02:26,470 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2025-01-10 19:02:26,502 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 401 - Time: 0.03s
+2025-01-10 19:02:50,908 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users
+2025-01-10 19:02:50,917 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users - Status: 404 - Time: 0.01s
+2025-01-10 19:03:01,759 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2025-01-10 19:03:01,772 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 401 - Time: 0.01s
+2025-01-10 19:06:19,834 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/users/users
+2025-01-10 19:06:20,138 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-01-10 19:06:21,248 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/users/users - Status: 200 - Time: 1.41s
