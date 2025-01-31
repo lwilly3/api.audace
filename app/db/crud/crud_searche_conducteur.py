@@ -12,7 +12,7 @@ class NotFoundError(Exception):
         self.detail = detail
         self.code = code
 
-def search_shows(db: Session, keyword=None, status=None,date_from=None,date_to=None,presenter_ids=None, guest_ids=None, skip: int = 0, limit: int = 10):
+def search_shows(db: Session, keyword=None, status=None,date_from=None,date_to=None,presenter_ids=None, guest_ids=None , skip: int = 0, limit: int = 10):
     """
     Recherche les émissions en fonction des filtres fournis et renvoie les résultats formatés.
 
@@ -35,10 +35,20 @@ def search_shows(db: Session, keyword=None, status=None,date_from=None,date_to=N
 
         # Filtrage par mot-clé (titre ou description)
         if keyword:
-            query = query.filter(
+            query = query.join(Show.segments).filter(
                 or_(
                     Show.title.ilike(f"%{keyword}%"),
                     Show.description.ilike(f"%{keyword}%")
+                )
+            )
+        
+           # Filtrage par mot-clé dans les segments (titre, description, notes techniques)
+        if keyword:
+            query = query.join(Show.segments).filter(
+                or_(
+                    Segment.title.ilike(f"%{keyword}%"),
+                    Segment.description.ilike(f"%{keyword}%"),
+                    Segment.technical_notes.ilike(f"%{keyword}%")
                 )
             )
 
