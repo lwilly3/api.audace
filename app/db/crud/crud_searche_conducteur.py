@@ -36,21 +36,25 @@ def search_shows(db: Session, keyword=None, status=None,date_from=None,date_to=N
         # Filtrage par mot-clé (titre ou description)
         if keyword:
             query = query.join(Show.segments).filter(
-                or_(
+                or_(  # Recherche dans le titre ou la description de l'émission ou des segments
                     Show.title.ilike(f"%{keyword}%"),
-                    Show.description.ilike(f"%{keyword}%")
+                    Show.description.ilike(f"%{keyword}%"),
+                    Segment.title.ilike(f"%{keyword}%"),
+                    Segment.description.ilike(f"%{keyword}%"),
+                    Segment.technical_notes.ilike(f"%{keyword}%")
+                    
                 )
             )
         
            # Filtrage par mot-clé dans les segments (titre, description, notes techniques)
-        if keyword:
-            query = query.join(Show.segments).filter(
-                or_(
-                    Segment.title.ilike(f"%{keyword}%"),
-                    Segment.description.ilike(f"%{keyword}%"),
-                    Segment.technical_notes.ilike(f"%{keyword}%")
-                )
-            )
+        # if keyword:
+        #     query = query.join(Show.segments).filter(
+        #         or_(
+        #             Segment.title.ilike(f"%{keyword}%"),
+        #             Segment.description.ilike(f"%{keyword}%"),
+        #             Segment.technical_notes.ilike(f"%{keyword}%")
+        #         )
+        #     )
 
         # Filtrage par statut
         if status:
