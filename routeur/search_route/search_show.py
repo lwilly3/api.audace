@@ -14,17 +14,22 @@ router = APIRouter(
 
 @router.get("/", response_model=dict)
 def get_shows(
-   keyword: Optional[str] = None,
+   keywords: Optional[str] = None,
     status: Optional[str] = None,
-    date_from: Optional[datetime] = None,
-    date_to: Optional[datetime] = None,
-    presenter_ids: Optional[List[int]] = None,
-    guest_ids: Optional[List[int]] =None,
+    dateFrom: Optional[datetime] = None,
+    dateTo: Optional[datetime] = None,
+    presenter: Optional[List[int]] = None,
+    guest: Optional[List[int]] =None,
     skip: Optional[int] = 0,
     limit: Optional[int] = 10,
     db: Session = Depends(get_db)
 ):
-    
+    # keywords: '',
+    #   dateFrom: '',
+    #   dateTo: '',
+    #   status: '',
+    #   presenter: '',
+    #   guest: '',
 
     """
     Endpoint pour récupérer les émissions filtrées.
@@ -39,4 +44,4 @@ def get_shows(
         dict: Résultats filtrés avec le nombre total d'éléments et les détails des émissions.
     """
     # print("filters", filters)
-    return search_shows(db, keyword,status,date_from,date_to, presenter_ids,guest_ids, skip, limit)
+    return search_shows(db, keyword=keywords,status=status,date_from=dateFrom,date_to=dateTo, presenter_ids=presenter,guest_ids=guest, skip=skip, limit=limit)
