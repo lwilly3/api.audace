@@ -5,6 +5,7 @@ from app.schemas.schema_segment import SegmentSearchFilter
 from fastapi import HTTPException
 from typing import Optional, List 
 from datetime import datetime
+from app.utils.format_datetime import format_datetime
 
 class NotFoundError(Exception):
     """Exception levée lorsqu'aucun résultat ne correspond à la recherche."""
@@ -36,6 +37,7 @@ def search_shows(db: Session, keyword=None, status=None,date_from=None,date_to=N
         # Filtrage par mot-clé (titre ou description)
         if keyword:
             query = query.join(Show.segments).filter(
+
                 or_(  # Recherche dans le titre ou la description de l'émission ou des segments
                     Show.title.ilike(f"%{keyword}%"),
                     Show.description.ilike(f"%{keyword}%"),
@@ -63,7 +65,7 @@ def search_shows(db: Session, keyword=None, status=None,date_from=None,date_to=N
         # Filtrage par date de diffusion
         if date_from and date_to:
             query = query.filter(
-                Show.broadcast_date.between(date_from, date_to)
+                Show.broadcast_date.between(format_datetime(date_from), format_datetime(date_to))
             )
 
         # Filtrage par présentateurs
