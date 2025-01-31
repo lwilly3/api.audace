@@ -5,6 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware  # Middleware pour la gestion
 # from app.db.init_db_rolePermissions import create_default_role_and_permission
 
 # from app.db.database import get_db
+from routeur.search_route import (
+    search_show
+
+)
 
 from routeur import (
     #  posts, 
@@ -20,7 +24,7 @@ from routeur import (
      presenter_route,
      guest_route,
      emission_route,
-     show_route
+     show_route, 
 
    
 )  # Importation des routeurs de l'application
@@ -106,6 +110,8 @@ app.include_router(presenter_route.router)  # Routes pour les présentateurs
 app.include_router(guest_route.router)  # Routes pour les invitations
 app.include_router(emission_route.router)  # Routes pour les émissions 
 app.include_router(show_route.router)  # Routes pour les émissions show_route
+app.include_router(search_show.router)  # Routes pour les recherches de conducteurs 
+
 
 
 # Endpoint par défaut pour vérifier que l'API est opérationnelle

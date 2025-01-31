@@ -1486,3 +1486,70 @@ Traceback (most recent call last):
     version = _bcrypt.__about__.__version__
 AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-01-10 20:26:58,497 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.90s
+2025-01-31 14:18:49,144 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-01-31 14:18:50,749 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 403 - Time: 1.61s
+2025-01-31 14:18:59,498 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-01-31 14:18:59,507 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-01-31 14:18:59,936 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.44s
+2025-01-31 14:20:57,614 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A
+2025-01-31 14:20:57,616 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A - Status: 404 - Time: 0.00s
+2025-01-31 14:21:15,627 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2025-01-31 14:21:15,692 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.07s
+2025-01-31 14:21:43,917 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A
+2025-01-31 14:21:43,918 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A - Status: 404 - Time: 0.00s
+2025-01-31 14:27:35,166 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A
+2025-01-31 14:27:35,168 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A - Status: 404 - Time: 0.00s
+2025-01-31 14:27:40,689 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A
+2025-01-31 14:27:40,690 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A - Status: 404 - Time: 0.00s
+2025-01-31 14:34:08,763 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A
+2025-01-31 14:34:08,765 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A - Status: 404 - Time: 0.00s
+2025-01-31 14:35:11,547 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A
+2025-01-31 14:35:11,552 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/shows?skip=0&limit=10%0A - Status: 404 - Time: 0.01s
+2025-01-31 14:38:33,885 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?skip=0&limit=10%0A
+2025-01-31 14:38:33,905 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?skip=0&limit=10%0A - Status: 422 - Time: 0.02s
+2025-01-31 14:38:41,870 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/
+
+2025-01-31 14:38:42,322 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/
+ - Status: 404 - Time: 0.45s
+2025-01-31 14:42:18,528 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01&date_to=2025-12-31&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 14:42:18,562 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01&date_to=2025-12-31&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.03s
+2025-01-31 14:43:36,087 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 14:43:36,093 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.01s
+2025-01-31 14:56:06,322 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4%0A
+2025-01-31 14:56:06,462 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4%0A - Status: 404 - Time: 0.14s
+2025-01-31 14:56:25,094 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A
+2025-01-31 14:56:25,101 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A - Status: 422 - Time: 0.01s
+2025-01-31 15:17:37,850 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A
+2025-01-31 15:17:37,855 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A - Status: 422 - Time: 0.01s
+2025-01-31 15:20:49,207 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A
+2025-01-31 15:20:49,213 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A - Status: 422 - Time: 0.01s
+2025-01-31 15:20:51,717 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A
+2025-01-31 15:20:51,721 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A - Status: 422 - Time: 0.00s
+2025-01-31 15:22:06,896 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4%0A
+2025-01-31 15:22:07,238 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4%0A - Status: 404 - Time: 0.34s
+2025-01-31 15:22:16,473 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 15:22:16,478 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.00s
+2025-01-31 15:27:24,545 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 15:27:24,552 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.01s
+2025-01-31 15:28:00,079 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4%0A
+2025-01-31 15:28:00,307 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4%0A - Status: 404 - Time: 0.23s
+2025-01-31 15:29:50,892 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 15:29:50,898 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.01s
+2025-01-31 16:13:02,992 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 16:13:03,044 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.05s
+2025-01-31 16:27:12,424 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 16:27:12,430 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.01s
+2025-01-31 16:49:42,310 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A
+2025-01-31 16:49:42,316 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10%0A - Status: 422 - Time: 0.01s
+2025-01-31 16:50:22,602 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A
+2025-01-31 16:50:22,607 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0%0A - Status: 422 - Time: 0.01s
+2025-01-31 16:50:42,779 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0
+2025-01-31 16:50:42,976 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0 - Status: 404 - Time: 0.20s
+2025-01-31 16:51:05,259 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10
+2025-01-31 16:51:05,266 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10 - Status: 404 - Time: 0.01s
+2025-01-31 16:51:35,106 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/
+2025-01-31 16:51:35,134 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/ - Status: 404 - Time: 0.03s

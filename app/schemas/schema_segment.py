@@ -55,6 +55,22 @@ class SegmentResponse(SegmentBase):
 
 
 
+class SegmentSearchFilter(BaseModel):
+    keyword: Optional[str] = Field(None, description="Recherche par mot-clé")
+    status: Optional[str] = Field(None, description="Filtrer par statut")
+    date_from: Optional[datetime] = Field(None, description="Date de début")
+    date_to: Optional[datetime] = Field(None, description="Date de fin")
+    presenter_ids: Optional[List[int]] = Field(None, description="Liste des IDs des présentateurs")
+    guest_ids: Optional[List[int]] = Field(None, description="Liste des IDs des invités")
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+
+
+
+
 
 # class SegmentBase(BaseModel):
 #     """
