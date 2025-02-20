@@ -1,4 +1,5 @@
 from typing import List
+from fastapi import Query
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -209,3 +210,14 @@ class ShowBase_jsonShow(BaseModel):
     status: Optional[str] = "active"
     presenters: List[PresenterBase_jsonShow]
     segments: List[SegmentBase_jsonShow]
+
+
+class SearchShowFilters(BaseModel):
+    keywords: Optional[str] = None
+    status: Optional[str] = None
+    dateFrom: Optional[datetime] = None
+    dateTo: Optional[datetime] = None
+    presenter: Optional[List[int]] = None
+    guest: Optional[List[int]] = None
+    skip: int = Query(0, ge=0, description="Nombre d'éléments à sauter (pagination)")
+    limit: int = Query(10, ge=1, le=100, description="Nombre maximum d'éléments à retourner")
