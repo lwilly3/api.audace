@@ -215,8 +215,8 @@ class ShowBase_jsonShow(BaseModel):
 class SearchShowFilters(BaseModel):
     keywords: Optional[str] = None
     status: Optional[str] = None
-    dateFrom: Optional[datetime] = None
-    dateTo: Optional[datetime] = None
+    dateFrom: Optional[str] = None
+    dateTo: Optional[str] = None
     presenter: Optional[List[int]] = None
     guest: Optional[List[int]] = None
     skip: int = Query(0, ge=0, description="Nombre d'éléments à sauter (pagination)")
