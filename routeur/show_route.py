@@ -35,7 +35,7 @@ async def create_show(
 ):
     try:
         # Appel de la fonction pour insérer les données dans la base
-        new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data, created_by=current_user.id)
+        new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data, curent_user_id=current_user.id)
         return {"message": "Émission créée avec succès", "show_id": new_show.id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -100,7 +100,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
     """
     try:
         # Appel du service pour créer un show avec ses segments et relations
-        show = create_show_with_details(db=db, show_data=show_data, created_by=current_user.id)
+        show = create_show_with_details(db=db, show_data=show_data, curent_user_id=current_user.id)
 
         # Retourne les données du show créé
         return {

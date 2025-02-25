@@ -41,7 +41,7 @@ def update_show_status(db: Session, show_id: int, status: str):
 def create_show_with_elements_from_json(
     db: Session,
     shows_data: List[ShowBase_jsonShow],
-    created_by: int
+    curent_user_id: int
 ):
     try:
         for show_data in shows_data:
@@ -55,7 +55,7 @@ def create_show_with_elements_from_json(
                 description=show_data.description,
                 status=show_data.status,
                 emission_id=show_data.emission_id,
-                created_by=created_by,
+                created_by=curent_user_id,
             )
             db.add(new_show)
             db.flush()  # Sauvegarde partielle pour récupérer l'ID de l'émission
