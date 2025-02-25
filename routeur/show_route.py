@@ -6,6 +6,7 @@ from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update
 from app.db.database import get_db # Assurez-vous d'avoir une fonction SessionLocal pour obtenir la session DB
 from app.schemas import ShowOut  # Modèle Show que vous avez défini précédemment
 from core.auth import oauth2
+from app.models.model_user import User
 # Initialisation de l'application FastAPI
 router = APIRouter(
         prefix="/shows",
@@ -30,11 +31,11 @@ router = APIRouter(
 async def create_show(
     shows_data: List[ShowBase_jsonShow], 
     db: Session = Depends(get_db),
-    current_user: int = Depends(oauth2.get_current_user)
+    current_user: User = Depends(oauth2.get_current_user)
 ):
     try:
         # Appel de la fonction pour insérer les données dans la base
-        new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data, created_by=current_user)
+        new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data, created_by=current_user.id)
         return {"message": "Émission créée avec succès", "show_id": new_show.id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -86,7 +87,7 @@ async def update_show_status_route(
 # ///////////////////////////////// , current_user: int = Depends(oauth2.get_current_user)
 
 @router.post("/detail",  status_code=status.HTTP_201_CREATED)
-async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db: Session = Depends(get_db),current_user: int = Depends(oauth2.get_current_user)):
+async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db: Session = Depends(get_db),current_user: User = Depends(oauth2.get_current_user)):
     """
     Endpoint pour créer un show avec ses segments, présentateurs et invités.
     
@@ -99,7 +100,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
     """
     try:
         # Appel du service pour créer un show avec ses segments et relations
-        show = create_show_with_details(db=db, show_data=show_data, created_by=current_user)
+        show = create_show_with_details(db=db, show_data=show_data, created_by=current_user.id)
 
         # Retourne les données du show créé
         return {

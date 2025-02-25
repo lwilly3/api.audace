@@ -153,6 +153,8 @@ def get_current_user(token: str= Depends(oauth2_scheme), db: Session = Depends(d
     # reourne l'id du l'utilisateur courant
     # current_user_info=db.query(table_models.User).filter(table_models.User.id==contenue_token.id).first()
     current_user_info=db.query(model_user.User).filter(model_user.User.id==contenue_token.id).first()
+   
+    
 
 
 
