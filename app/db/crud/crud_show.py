@@ -41,6 +41,7 @@ def update_show_status(db: Session, show_id: int, status: str):
 def create_show_with_elements_from_json(
     db: Session,
     shows_data: List[ShowBase_jsonShow],
+    created_by: int
 ):
     try:
         for show_data in shows_data:
@@ -54,6 +55,7 @@ def create_show_with_elements_from_json(
                 description=show_data.description,
                 status=show_data.status,
                 emission_id=show_data.emission_id,
+                created_by=created_by,
             )
             db.add(new_show)
             db.flush()  # Sauvegarde partielle pour récupérer l'ID de l'émission
@@ -272,7 +274,7 @@ def get_show_details_by_id(db:Session, show_id:int):
 
 #//////////////////// show + details invite, presentateurs et segment /////////
 
-def create_show_with_details(db: Session, show_data: ShowCreateWithDetail):
+def create_show_with_details(db: Session, show_data: ShowCreateWithDetail,curent_user_id:int):
     """
     Crée un show avec ses présentateurs, segments et invités en fonction des IDs envoyés par le frontend.
 
@@ -294,6 +296,7 @@ def create_show_with_details(db: Session, show_data: ShowCreateWithDetail):
             description=show_data.description,
             status=show_data.status,
             emission_id=show_data.emission_id,
+            created_by =curent_user_id,
         )
         db.add(db_show)
         db.commit()

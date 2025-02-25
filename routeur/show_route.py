@@ -29,11 +29,12 @@ router = APIRouter(
 @router.post("/new")
 async def create_show(
     shows_data: List[ShowBase_jsonShow], 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     try:
         # Appel de la fonction pour insérer les données dans la base
-        new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data)
+        new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data, created_by=current_user)
         return {"message": "Émission créée avec succès", "show_id": new_show.id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -85,7 +86,7 @@ async def update_show_status_route(
 # ///////////////////////////////// , current_user: int = Depends(oauth2.get_current_user)
 
 @router.post("/detail",  status_code=status.HTTP_201_CREATED)
-async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db: Session = Depends(get_db)):
+async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db: Session = Depends(get_db),current_user: int = Depends(oauth2.get_current_user)):
     """
     Endpoint pour créer un show avec ses segments, présentateurs et invités.
     
@@ -98,7 +99,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
     """
     try:
         # Appel du service pour créer un show avec ses segments et relations
-        show = create_show_with_details(db=db, show_data=show_data)
+        show = create_show_with_details(db=db, show_data=show_data, created_by=current_user)
 
         # Retourne les données du show créé
         return {

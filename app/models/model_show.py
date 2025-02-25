@@ -24,6 +24,9 @@ class Show(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False, index=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False, index=True)
     # emission_id = Column(Integer, ForeignKey('emissions.id'))
+
+    # Clé étrangère vers l'utilisateur qui a créé l'émission
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
    
     
     # Clé étrangère vers Emission
@@ -38,4 +41,6 @@ class Show(Base):
     # Ajout d'un index composite pour optimiser les recherches par type et statut
     __table_args__ = (
         Index("ix_show_type_status", "type", "status"),
+        Index("ix_created_by_status_type", "created_by", "status", "type"),  # Nouvel index composite
+        Index("ix_created_by_status_broadcast_date", "created_by", "status", "broadcast_date"),  # Nouvel index composite pour created_by, status et broadcast_date
     )
