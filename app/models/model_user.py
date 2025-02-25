@@ -78,7 +78,7 @@ class User(BaseModel):
     # Relation avec la table des permissions
 
     # Relation inverse avec les émissions créées
-    created_shows = relationship("Show", back_populates="creator")
+    created_shows = relationship("Show", back_populates="emission")
 
 
     # Index pour accélérer les recherches
