@@ -192,11 +192,169 @@ def get_show_details_all(db: Session):
     return show_details
 
 
+#=================== end get show details ========================
+
+
+# ==================  get show details filtred (whitout satus termine, preparation archive) ========================
+
+def get_production_show_details(db: Session):
+    # Récupérer toutes les émissions avec les segments, invités et présentateurs associés,
+    # en excluant les émissions avec les statuts "Terminée" ou "En préparation"
+    shows = db.query(Show).options(
+        joinedload(Show.emission),  # Charger les détails de l'émission associée
+        joinedload(Show.presenters),  # Charger les présentateurs associés à chaque émission
+        joinedload(Show.segments).joinedload(Segment.guests),  # Charger les segments avec leurs invités
+    ).filter(
+        Show.status.not_in(["preparation", "termine", "archive"])  # Exclure les émissions avec ces statuts
+    ).all()
+   
+    show_details = []
+
+    for show in shows:
+        show_info = {
+            "id": show.id,
+            "emission": show.emission.title if show.emission else "No Emission Linked",
+            "emission_id": show.emission_id,
+            "title": show.title,
+            "type": show.type,
+            "broadcast_date": show.broadcast_date,
+            "duration": show.duration,
+            "frequency": show.frequency,
+            "description": show.description,
+            "status": show.status,
+            "presenters": [],
+            "segments": []
+        }
+
+        # Récupérer les présentateurs associés
+        for presenter in show.presenters:
+            show_info["presenters"].append({
+                "id": presenter.id,
+                "name": presenter.name,
+                "contact_info": presenter.contact_info,
+                "biography": presenter.biography,
+                "isMainPresenter": presenter.isMainPresenter,
+            })
+        
+        # Récupérer et trier les segments associés par la position
+        sorted_segments = sorted(show.segments, key=lambda x: x.position)
+        
+        for segment in sorted_segments:
+            segment_info = {
+                "id": segment.id,
+                "title": segment.title,
+                "type": segment.type,
+                "duration": segment.duration,
+                "description": segment.description,
+                "startTime": segment.startTime,
+                "position": segment.position,
+                "technical_notes": segment.technical_notes,
+                "guests": []
+            }
+            
+            # Récupérer les invités associés à ce segment
+            for guest in segment.guests:
+                segment_info["guests"].append({
+                    "id": guest.id,
+                    "name": guest.name,
+                    "contact_info": guest.contact_info,
+                    "biography": guest.biography,
+                    "role": guest.role,
+                    "avatar": guest.avatar,
+                })
+            
+            show_info["segments"].append(segment_info)
+        
+        show_details.append(show_info)
+
+    return show_details
+
+#=================== end get show details filtred ========================
+# ==================  get show details filtred (whitout satus termine, preparation archive) ========================
+
+
+
+# ==================  get show details filtred By user owner ========================
+
+def get_show_details_owned(db: Session, user_id: int):
+    # Récupérer toutes les émissions créées par un utilisateur spécifique avec les segments, invités et présentateurs associés,
+    # en excluant les émissions avec les statuts "Terminée" ou "En préparation"
+    shows = db.query(Show).options(
+        joinedload(Show.emission),  # Charger les détails de l'émission associée
+        joinedload(Show.presenters),  # Charger les présentateurs associés à chaque émission
+        joinedload(Show.segments).joinedload(Segment.guests),  # Charger les segments avec leurs invités
+    ).filter(
+        Show.created_by == user_id,  # Filtrer par l'ID de l'utilisateur créateur
+        Show.status.not_in(["archive",])  # Exclure les statuts spécifiques
+    ).all()
+   
+    show_details = []
+
+    for show in shows:
+        show_info = {
+            "id": show.id,
+            "emission": show.emission.title if show.emission else "No Emission Linked",
+            "emission_id": show.emission_id,
+            "title": show.title,
+            "type": show.type,
+            "broadcast_date": show.broadcast_date,
+            "duration": show.duration,
+            "frequency": show.frequency,
+            "description": show.description,
+            "status": show.status,
+            "presenters": [],
+            "segments": []
+        }
+
+        # Récupérer les présentateurs associés
+        for presenter in show.presenters:
+            show_info["presenters"].append({
+                "id": presenter.id,
+                "name": presenter.name,
+                "contact_info": presenter.contact_info,
+                "biography": presenter.biography,
+                "isMainPresenter": presenter.isMainPresenter,
+            })
+        
+        # Récupérer et trier les segments associés par la position
+        sorted_segments = sorted(show.segments, key=lambda x: x.position)
+        
+        for segment in sorted_segments:
+            segment_info = {
+                "id": segment.id,
+                "title": segment.title,
+                "type": segment.type,
+                "duration": segment.duration,
+                "description": segment.description,
+                "startTime": segment.startTime,
+                "position": segment.position,
+                "technical_notes": segment.technical_notes,
+                "guests": []
+            }
+            
+            # Récupérer les invités associés à ce segment
+            for guest in segment.guests:
+                segment_info["guests"].append({
+                    "id": guest.id,
+                    "name": guest.name,
+                    "contact_info": guest.contact_info,
+                    "biography": guest.biography,
+                    "role": guest.role,
+                    "avatar": guest.avatar,
+                })
+            
+            show_info["segments"].append(segment_info)
+        
+        show_details.append(show_info)
+
+    return show_details
 
 
 
 
 
+
+#=================== end get show details filtred by user owne ========================
 
 # ==================  get show details by id ========================
 # from sqlalchemy.orm import joinedload

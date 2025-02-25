@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends,APIRouter,status
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas import ShowCreate, ShowUpdate,ShowCreateWithDetail,ShowUpdateWithDetails, SegmentUpdateWithDetails, ShowWithdetailResponse, ShowBase_jsonShow, ShowStatuslUpdate
-from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id,create_show_with_elements_from_json,update_show_status
+from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id,create_show_with_elements_from_json,update_show_status,get_production_show_details,get_show_details_owned
 from app.db.database import get_db # Assurez-vous d'avoir une fonction SessionLocal pour obtenir la session DB
 from app.schemas import ShowOut  # Modèle Show que vous avez défini précédemment
 from core.auth import oauth2
@@ -55,6 +55,24 @@ def get_show_details(show_id: int, db: Session = Depends(get_db)):
     if not show:
         raise HTTPException(status_code=404, detail="Show not found")
     return show
+
+# Route pour récupérer tous les détails des émissions pret a etre diffusé
+@router.get("/production")
+def get_all_show_details_for_production(db: Session = Depends(get_db)):
+    # print("get_all_show_details")
+    shows = get_production_show_details(db)
+    return shows
+
+
+# Route pour récupérer tous les détails des émissions pret a etre diffusé
+@router.get("/owned")
+def get_all_show_details_owned_by_user(db: Session = Depends(get_db), user_id: User = Depends(oauth2.get_current_user)):
+    # print("get_all_show_details")
+    shows = get_show_details_owned(db, user_id.id)
+    return shows
+
+
+
 
 # ///////////////////////////////// modifier statut show avec id
 
