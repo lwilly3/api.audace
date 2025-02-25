@@ -45,7 +45,9 @@ jobs:
           username: ${{ secrets.PROD_AUDACE_USERNAME }}
           password: ${{ secrets.PROD_AUDACE_PASSWORD }}
           script: |
+            cd app
             cd app/src
+            git checkout -- api_logs.log
             git pull
             sudo systemctl restart api
 
