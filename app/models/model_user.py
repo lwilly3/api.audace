@@ -76,9 +76,11 @@ class User(BaseModel):
 
     permissions = relationship("UserPermissions", back_populates="user", uselist=False)
     # Relation avec la table des permissions
+    # shows = relationship("Show", back_populates="user", uselist=False)
+    # Relation inverse avec les émissions créées (un-à-plusieurs)
+    created_shows = relationship("Show", back_populates="creator")
 
-    # Relation inverse avec les émissions créées
-    created_shows = relationship("Show", back_populates="emission")
+
 
 
     # Index pour accélérer les recherches

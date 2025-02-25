@@ -37,7 +37,8 @@ class Show(Base):
 
     presenters = relationship("Presenter", secondary="show_presenters", back_populates="shows")
     segments = relationship("Segment", back_populates="show", cascade="all, delete-orphan")
-
+    # Relation avec l'utilisateur créateur
+    creator = relationship("User", back_populates="created_shows")
     # Ajout d'un index composite pour optimiser les recherches par type et statut
     __table_args__ = (
         Index("ix_show_type_status", "type", "status"),
