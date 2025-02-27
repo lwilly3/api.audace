@@ -1,35 +1,37 @@
+
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import date, datetime
 from sqlalchemy.exc import SQLAlchemyError
 from typing import Dict, Any, List
-from app.models import Show, User, Segment
-from sqlalchemy.orm import joinedload
-
+from app.models import Show, User,Segment
 
 def get_dashboard(db: Session) -> Dict[str, Any]:
-    """
-    Récupère les données nécessaires pour le tableau de bord.
+
+    #     """
+#     Récupère les données nécessaires pour le tableau de bord.
     
-    Args:
-        db (Session): Session de base de données SQLAlchemy.
+#     Args:
+#         db (Session): Session de base de données SQLAlchemy.
     
-    Returns:
-        dict: Dictionnaire contenant les statistiques et le programme du jour.
+#     Returns:
+#         dict: Dictionnaire contenant les statistiques et le programme du jour.
     
-    Raises:
-        ValueError: Si les données de date sont invalides ou si aucune émission n'est trouvée.
-        SQLAlchemyError: Si une erreur de base de données survient.
-    """
+#     Raises:
+#         ValueError: Si les données de date sont invalides ou si aucune émission n'est trouvée.
+#         SQLAlchemyError: Si une erreur de base de données survient.
+#     """
     try:
         today = date.today()
         current_time = datetime.now()
+#         # Vérification de la validité des dates
 
-        # Vérification de la validité des dates
         if not today or not current_time:
             raise ValueError("Date ou heure invalide.")
 
-        # Programme du jour avec animateurs, segments, et invités
+#         # Programme du jour avec animateurs, segments, et invités
+
         programme_du_jour = db.query(Show).options(
             joinedload(Show.emission),
             joinedload(Show.presenters),
@@ -41,7 +43,6 @@ def get_dashboard(db: Session) -> Dict[str, Any]:
         # if not programme_du_jour and not db.query(Show).filter(func.date(Show.broadcast_date) == today).first():
         #     raise ValueError("Aucune émission trouvée pour aujourd'hui.")
 
-        # Structurer le programme du jour comme get_show_details_all
         program_du_jour_details: List[Dict[str, Any]] = []
         for show in programme_du_jour:
             show_info = {
@@ -67,7 +68,6 @@ def get_dashboard(db: Session) -> Dict[str, Any]:
                 "segments": []
             }
 
-            # Trier les segments par position
             sorted_segments = sorted(show.segments, key=lambda x: x.position)
             for segment in sorted_segments:
                 segment_info = {
@@ -92,11 +92,18 @@ def get_dashboard(db: Session) -> Dict[str, Any]:
                 }
                 show_info["segments"].append(segment_info)
 
-            # Définir l'animateur comme le premier présentateur principal
             main_presenter = next((p for p in show_info["presenters"] if p["isMainPresenter"]), None)
             show_info["animateur"] = main_presenter["name"] if main_presenter else "Aucun animateur principal"
 
             program_du_jour_details.append(show_info)
+
+        # Ajout de membres_equipe (approximation avec le nombre d'utilisateurs actifs)
+        membres_equipe = db.query(User).filter(User.is_active == True).count()
+        # Ajout de heures_direct (approximation avec les heures en direct calculées)
+        heures_direct = db.query(func.sum(Show.duration)).filter(
+            Show.status == 'en-cours',
+            Show.broadcast_date <= current_time
+        ).scalar() or 0 // 60
 
         response = {
             "emissions_du_jour": db.query(Show).filter(func.date(Show.broadcast_date) == today).count(),
@@ -105,11 +112,8 @@ def get_dashboard(db: Session) -> Dict[str, Any]:
                 Show.status.in_(['en-cours', 'attente-diffusion'])
             ).count(),
             "programme_du_jour": program_du_jour_details,
-            "membres_actifs": db.query(User).filter(User.is_active == True).count(),
-            "heures_en_direct": db.query(func.sum(Show.duration)).filter(
-                Show.status == 'en-cours',
-                Show.broadcast_date <= current_time
-            ).scalar() or 0 // 60,
+            "membres_equipe": membres_equipe,
+            "heures_direct": heures_direct,
             "emissions_planifiees": db.query(Show).filter(
                 Show.broadcast_date > current_time,
                 Show.status == 'attente-diffusion'
