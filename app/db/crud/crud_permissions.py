@@ -5,7 +5,7 @@ from fastapi import HTTPException, status, Depends
 from app.models import Role, Permission, RolePermission, User
 from app.db.database import get_db
 from core.auth import oauth2
-
+from typing import Dict, Any
 
 
 from sqlalchemy.orm import Session
@@ -64,14 +64,52 @@ def initialize_user_permissions(db: Session, user_id: int):
         # Sinon, créer une nouvelle entrée avec les permissions par défaut
         new_permissions = UserPermissions(
             user_id=user_id,
+            can_acces_showplan_broadcast_section=False,
+            can_acces_showplan_section=False,
             can_create_showplan=False,
             can_edit_showplan=False,
             can_archive_showplan=False,
+            can_archiveStatusChange_showplan=False,
             can_delete_showplan=False,
             can_destroy_showplan=False,
-            can_changestatus_showplan=False
+            can_changestatus_showplan=False,
+            can_changestatus_owned_showplan=False,
+            can_changestatus_archived_showplan=False,
+            can_setOnline_showplan=False,
+            can_viewAll_showplan=False,
+            can_acces_users_section=False,
+            can_view_users=False,
+            can_edit_users=False,
+            can_desable_users=False,
+            can_delete_users=False,
+            can_manage_roles=False,
+            can_assign_roles=False,
+            can_acces_guests_section=False,
+            can_view_guests=False,
+            can_edit_guests=False,
+            can_delete_guests=False,
+            can_acces_presenters_section=False,
+            can_view_presenters=False,
+            can_edit_presenters=False,
+            can_delete_presenters=False,
+            can_acces_emissions_section=False,
+            can_view_emissions=False,
+            can_create_emissions=False,
+            can_edit_emissions=False,
+            can_delete_emissions=False,
+            can_manage_emissions=False,
+            can_view_notifications=False,
+            can_manage_notifications=False,
+            can_view_audit_logs=False,
+            can_view_login_history=False,
+            can_manage_settings=False,
+            can_view_messages=False,
+            can_send_messages=False,
+            can_delete_messages=False,
+            can_view_files=False,
+            can_upload_files=False,
+            can_delete_files=False
         )
-
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
         db.commit()
@@ -215,10 +253,79 @@ def get_permission(id: int, db: Session) -> Permission:
 
 
 
+# //////////////////////////////////////////////////////////////////////
+
+         # # metre a jour les permissions de l'utilisateur
+
+# //////////////////////////////////////////////////////////////////////////
 
 
 
+def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bool], userConnected: int) -> Dict[str, Any]:
+    """
+    Met à jour les permissions d'un utilisateur dans la table user_permissions.
+    
+    Args:
+        db (Session): Session de base de données SQLAlchemy.
+        user_id (int): Identifiant de l'utilisateur.
+        permissions (Dict[str, bool]): Dictionnaire des permissions à modifier (clé: nom de la permission, valeur: booléen).
+    
+    Returns:
+        Dict[str, Any]: Résultat de l'opération avec un message de succès ou d'erreur.
+    
+    Raises:
+        SQLAlchemyError: Si une erreur de base de données survient.
+        ValueError: Si l'utilisateur n'est pas trouvé ou si les permissions sont invalides.
+    """
+    try:
+        # Vérifier si l'utilisateur existe
+        user_permission = db.query(UserPermissions).filter(UserPermissions.user_id == user_id).first()
+        if not user_permission:
+            raise ValueError(f"Aucun enregistrement de permissions trouvé pour l'utilisateur avec l'ID {user_id}")
 
+        # Liste des permissions valides (basée sur le modèle UserPermissions)
+        valid_permissions = {
+            'can_create_showplan', 'can_edit_showplan', 'can_archive_showplan', 'can_archiveStatusChange_showplan',
+            'can_delete_showplan', 'can_destroy_showplan', 'can_changestatus_showplan', 'can_changestatus_owned_showplan',
+            'can_changestatus_archived_showplan', 'can_setOnline_showplan', 'can_viewAll_showplan',
+            'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
+            'can_manage_roles', 'can_assign_roles',
+            'can_view_guests', 'can_edit_guests', 'can_delete_guests',
+            'can_view_presenters', 'can_edit_presenters', 'can_delete_presenters',
+            'can_manage_emissions',
+            'can_view_notifications', 'can_manage_notifications',
+            'can_view_audit_logs', 'can_view_login_history',
+            'can_manage_settings',
+            'can_view_messages', 'can_send_messages', 'can_delete_messages',
+            'can_view_files', 'can_upload_files', 'can_delete_files',
+
+            "can_acces_users_section",   
+            "can_acces_emissions_section", "can_view_emissions", "can_create_emissions", "can_edit_emissions", "can_delete_emissions",
+            "can_acces_presenters_section",
+            "can_acces_guests_section",  "can_acces_showplan_section","can_acces_showplan_broadcast_section",
+        }
+
+        # Vérifier les permissions fournies
+        invalid_permissions = [perm for perm in permissions.keys() if perm not in valid_permissions]
+        if invalid_permissions:
+            raise ValueError(f"Permissions invalides : {', '.join(invalid_permissions)}")
+
+        # Mettre à jour les permissions
+        for perm, value in permissions.items():
+            setattr(user_permission, perm, value)
+
+        db.commit()
+        return {"message": f"Permissions mises à jour avec succès pour l'utilisateur"}
+
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise SQLAlchemyError(f"Erreur de base de données : {str(e)}") from e
+    except ValueError as e:
+        db.rollback()
+        raise ValueError(f"Erreur de validation : {str(e)}") from e
+    except Exception as e:
+        db.rollback()
+        raise Exception(f"Erreur inattendue : {str(e)}") from e
 
 
 

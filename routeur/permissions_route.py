@@ -1,12 +1,25 @@
 # main.py
 from typing import List, Optional
-from fastapi import APIRouter, FastAPI, Depends
+from sqlalchemy.orm import Session
+from fastapi import APIRouter, FastAPI, Depends,HTTPException
 from app.db.crud.crud_role_permissions import  get_role_permissions
 from app.db.crud.crud_roles import get_all_roles, get_role, create_role, update_role, delete_role
 from app.db.crud.crud_permissions import get_all_permissions, get_permission
 # from models.model_role import Role
 from app.schemas import RoleRead, Permission
 from core.auth import oauth2
+from app.db.database import get_db
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+from starlette import status
+from app.db.crud.crud_permissions import update_user_permissions
+from app.models.model_user import User
+
+
+
+
+
+
     # get_all_roles, get_role, create_role, update_role, delete_role, get_role_permissions,
     # get_all_permissions, get_permission
 
@@ -82,3 +95,52 @@ def get_permission_route(id: int,  current_user: int = Depends(oauth2.get_curren
 
 
 
+#/////////////////////////////////////////////////////////
+   # update Permissions pour les Users
+#/////////////////////////////////////////////////////////
+
+
+# from fastapi import FastAPI, Depends, HTTPException
+# from app.db.database import get_db
+# from app.services.user_permissions_service import update_user_permissions
+# from sqlalchemy.orm import Session
+# from starlette import status
+
+
+
+@router.put("/update_permissions/{user_id}")
+def update_user_permissions_route(user_id: int, permissions: dict, userConnected: User = Depends(oauth2.get_current_user), db: Session = Depends(get_db)):
+    """
+    Met à jour les permissions d'un utilisateur spécifique.
+    
+    Args:
+        user_id (int): Identifiant de l'utilisateur.
+        permissions (dict): Dictionnaire des permissions à modifier (ex. {"can_edit_users": true}).
+        db (Session): Session de base de données injectée via Depends.
+    
+    Returns:
+        dict: Message de succès.
+    
+    Raises:
+        HTTPException: Avec un code d'erreur approprié en cas d'échec.
+    """
+    # user_id = userId.id
+
+    try:
+        result = update_user_permissions(db, user_id, permissions, userConnected.id)
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur de base de données : {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Une erreur interne s'est produite : {str(e)}"
+        )
