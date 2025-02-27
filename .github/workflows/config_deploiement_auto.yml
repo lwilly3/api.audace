@@ -46,8 +46,14 @@ jobs:
           password: ${{ secrets.PROD_AUDACE_PASSWORD }}
           script: |
             cd app/src
+            git checkout -- api_logs.log 
             git pull
+            alembic upgrade head
             sudo systemctl restart api
 
       # - name: Check API Status
       #   run: curl -f http://${{ secrets.PROD_AUDACE_HOST }}/health || exit 1
+      # git checkout -- api_logs.log   # Pour annuler les modifications sur le fichier api_logs.log
+      # git pull # Pour récupérer les modifications sur le dépôt distant
+      # alembic upgrade head # Pour mettre à jour la base de données
+      # sudo systemctl restart api # Pour redémarrer le service API

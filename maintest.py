@@ -25,6 +25,7 @@ from routeur import (
      guest_route,
      emission_route,
      show_route, 
+     dashbord_route,
 
    
 )  # Importation des routeurs de l'application
@@ -111,7 +112,7 @@ app.include_router(guest_route.router)  # Routes pour les invitations
 app.include_router(emission_route.router)  # Routes pour les émissions 
 app.include_router(show_route.router)  # Routes pour les émissions show_route
 app.include_router(search_show.router)  # Routes pour les recherches de conducteurs 
-
+app.include_router(dashbord_route.router) # Routes pour le tableau de bord
 
 
 # Endpoint par défaut pour vérifier que l'API est opérationnelle
