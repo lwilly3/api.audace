@@ -48,6 +48,9 @@ jobs:
             cd app/src
             git checkout -- api_logs.log 
             git pull
+            cd ..
+            source venv/bin/activate
+            cd src
             alembic upgrade head
             sudo systemctl restart api
 

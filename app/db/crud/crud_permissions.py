@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status, Depends
 from app.models import Role, Permission, RolePermission, User
@@ -13,40 +13,98 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.models import UserPermissions
 
 
+# Vérifie si l'utilisateur connecté a les droits nécessaires
+def check_permissions(user: User = Depends(oauth2.get_current_user), db: Session = Depends(get_db)):
+    permissions = db.query(UserPermissions).filter(UserPermissions.user_id == user.id).first()
+    if not permissions or not (permissions.can_manage_roles or permissions.can_edit_users):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous n'avez pas les droits pour effectuer cette action"
+        )
+    return user
 
-def get_user_permissions(db: Session, user_id: int):
+
+
+def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     """
     Récupère les permissions d'un utilisateur en fonction de son ID.
 
     :param db: Session de la base de données
     :param user_id: ID de l'utilisateur
-    :return: Un dictionnaire contenant les permissions de l'utilisateur ou un message si l'utilisateur n'a pas de permissions
+    :return: Un dictionnaire contenant les permissions de l'utilisateur ou un message d'erreur
+    :raises ValueError: Si l'ID de l'utilisateur est invalide
+    :raises SQLAlchemyError: Si une erreur de base de données survient
+    :raises Exception: Pour les erreurs inattendues
     """
     try:
+        # Vérification de la validité de l'ID
+        if user_id <= 0:
+            raise ValueError("L'ID de l'utilisateur doit être un entier positif.")
+
         # Requête pour récupérer les permissions de l'utilisateur
         permissions = db.query(UserPermissions).filter(UserPermissions.user_id == user_id).first()
 
+        # Si aucune permission n'est trouvée pour cet utilisateur
         if not permissions:
-            # Si aucune permission n'est trouvée pour cet utilisateur
             return {"error": f"Aucune permission trouvée pour l'utilisateur avec l'ID {user_id}"}
 
-        # Retourner les permissions sous forme de dictionnaire
+        # Retourner toutes les permissions sous forme de dictionnaire
         return {
-            # "user_id": permissions.user_id,
+            "user_id": permissions.user_id,
+            "can_acces_showplan_broadcast_section": permissions.can_acces_showplan_broadcast_section,
+            "can_acces_showplan_section": permissions.can_acces_showplan_section,
             "can_create_showplan": permissions.can_create_showplan,
             "can_edit_showplan": permissions.can_edit_showplan,
             "can_archive_showplan": permissions.can_archive_showplan,
+            "can_archiveStatusChange_showplan": permissions.can_archiveStatusChange_showplan,
             "can_delete_showplan": permissions.can_delete_showplan,
             "can_destroy_showplan": permissions.can_destroy_showplan,
             "can_changestatus_showplan": permissions.can_changestatus_showplan,
-            # "granted_at": permissions.granted_at
+            "can_changestatus_owned_showplan": permissions.can_changestatus_owned_showplan,
+            "can_changestatus_archived_showplan": permissions.can_changestatus_archived_showplan,
+            "can_setOnline_showplan": permissions.can_setOnline_showplan,
+            "can_viewAll_showplan": permissions.can_viewAll_showplan,
+            "can_acces_users_section": permissions.can_acces_users_section,
+            "can_view_users": permissions.can_view_users,
+            "can_edit_users": permissions.can_edit_users,
+            "can_desable_users": permissions.can_desable_users,
+            "can_delete_users": permissions.can_delete_users,
+            "can_manage_roles": permissions.can_manage_roles,
+            "can_assign_roles": permissions.can_assign_roles,
+            "can_acces_guests_section": permissions.can_acces_guests_section,
+            "can_view_guests": permissions.can_view_guests,
+            "can_edit_guests": permissions.can_edit_guests,
+            "can_delete_guests": permissions.can_delete_guests,
+            "can_acces_presenters_section": permissions.can_acces_presenters_section,
+            "can_view_presenters": permissions.can_view_presenters,
+            "can_edit_presenters": permissions.can_edit_presenters,
+            "can_delete_presenters": permissions.can_delete_presenters,
+            "can_acces_emissions_section": permissions.can_acces_emissions_section,
+            "can_view_emissions": permissions.can_view_emissions,
+            "can_create_emissions": permissions.can_create_emissions,
+            "can_edit_emissions": permissions.can_edit_emissions,
+            "can_delete_emissions": permissions.can_delete_emissions,
+            "can_manage_emissions": permissions.can_manage_emissions,
+            "can_view_notifications": permissions.can_view_notifications,
+            "can_manage_notifications": permissions.can_manage_notifications,
+            "can_view_audit_logs": permissions.can_view_audit_logs,
+            "can_view_login_history": permissions.can_view_login_history,
+            "can_manage_settings": permissions.can_manage_settings,
+            "can_view_messages": permissions.can_view_messages,
+            "can_send_messages": permissions.can_send_messages,
+            "can_delete_messages": permissions.can_delete_messages,
+            "can_view_files": permissions.can_view_files,
+            "can_upload_files": permissions.can_upload_files,
+            "can_delete_files": permissions.can_delete_files,
+            "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
         }
 
+    except SQLAlchemyError as e:
+        raise SQLAlchemyError(f"Erreur de base de données lors de la récupération des permissions : {str(e)}") from e
+    except ValueError as e:
+        raise ValueError(f"Erreur de validation : {str(e)}") from e
     except Exception as e:
-        # Gestion des erreurs
-        raise Exception(f"Une erreur est survenue lors de la récupération des permissions : {str(e)}")
-
-
+        raise Exception(f"Une erreur inattendue est survenue : {str(e)}") from e
 
 def initialize_user_permissions(db: Session, user_id: int):
     """
@@ -260,62 +318,70 @@ def get_permission(id: int, db: Session) -> Permission:
 # //////////////////////////////////////////////////////////////////////////
 
 
-
-def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bool], userConnected: int) -> Dict[str, Any]:
+def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bool], user_connected_id: int) -> Dict[str, Any]:
     """
     Met à jour les permissions d'un utilisateur dans la table user_permissions.
-    
+
     Args:
         db (Session): Session de base de données SQLAlchemy.
-        user_id (int): Identifiant de l'utilisateur.
+        user_id (int): Identifiant de l'utilisateur dont les permissions doivent être mises à jour.
         permissions (Dict[str, bool]): Dictionnaire des permissions à modifier (clé: nom de la permission, valeur: booléen).
-    
+        user_connected_id (int): Identifiant de l'utilisateur connecté effectuant la mise à jour.
+
     Returns:
         Dict[str, Any]: Résultat de l'opération avec un message de succès ou d'erreur.
-    
+
     Raises:
         SQLAlchemyError: Si une erreur de base de données survient.
-        ValueError: Si l'utilisateur n'est pas trouvé ou si les permissions sont invalides.
+        ValueError: Si l'utilisateur n'est pas trouvé, si les permissions sont invalides, ou si l'utilisateur connecté n'a pas les droits.
     """
     try:
-        # Vérifier si l'utilisateur existe
+        # Vérifier si l'utilisateur connecté existe et a les droits nécessaires
+        connected_permissions = db.query(UserPermissions).options(load_only(
+            UserPermissions.can_edit_users, UserPermissions.can_manage_roles
+        )).filter(UserPermissions.user_id == user_connected_id).first()
+  
+
+        if not connected_permissions:
+            raise ValueError("Aucune permission trouvée pour l'utilisateur connecté.")
+        if not (connected_permissions.can_edit_users or connected_permissions.can_manage_roles):
+            raise ValueError("Vous n'avez pas les droits pour modifier les permissions.")
+
+        # Vérifier si l'utilisateur cible existe
         user_permission = db.query(UserPermissions).filter(UserPermissions.user_id == user_id).first()
+
         if not user_permission:
             raise ValueError(f"Aucun enregistrement de permissions trouvé pour l'utilisateur avec l'ID {user_id}")
 
         # Liste des permissions valides (basée sur le modèle UserPermissions)
         valid_permissions = {
-            'can_create_showplan', 'can_edit_showplan', 'can_archive_showplan', 'can_archiveStatusChange_showplan',
-            'can_delete_showplan', 'can_destroy_showplan', 'can_changestatus_showplan', 'can_changestatus_owned_showplan',
+            'can_acces_showplan_broadcast_section', 'can_acces_showplan_section', 'can_create_showplan',
+            'can_edit_showplan', 'can_archive_showplan', 'can_archiveStatusChange_showplan', 'can_delete_showplan',
+            'can_destroy_showplan', 'can_changestatus_showplan', 'can_changestatus_owned_showplan',
             'can_changestatus_archived_showplan', 'can_setOnline_showplan', 'can_viewAll_showplan',
-            'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
-            'can_manage_roles', 'can_assign_roles',
-            'can_view_guests', 'can_edit_guests', 'can_delete_guests',
-            'can_view_presenters', 'can_edit_presenters', 'can_delete_presenters',
-            'can_manage_emissions',
-            'can_view_notifications', 'can_manage_notifications',
-            'can_view_audit_logs', 'can_view_login_history',
-            'can_manage_settings',
-            'can_view_messages', 'can_send_messages', 'can_delete_messages',
-            'can_view_files', 'can_upload_files', 'can_delete_files',
-
-            "can_acces_users_section",   
-            "can_acces_emissions_section", "can_view_emissions", "can_create_emissions", "can_edit_emissions", "can_delete_emissions",
-            "can_acces_presenters_section",
-            "can_acces_guests_section",  "can_acces_showplan_section","can_acces_showplan_broadcast_section",
+            'can_acces_users_section', 'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
+            'can_manage_roles', 'can_assign_roles', 'can_acces_guests_section', 'can_view_guests',
+            'can_edit_guests', 'can_delete_guests', 'can_acces_presenters_section', 'can_view_presenters',
+            'can_edit_presenters', 'can_delete_presenters', 'can_acces_emissions_section', 'can_view_emissions',
+            'can_create_emissions', 'can_edit_emissions', 'can_delete_emissions', 'can_manage_emissions',
+            'can_view_notifications', 'can_manage_notifications', 'can_view_audit_logs', 'can_view_login_history',
+            'can_manage_settings', 'can_view_messages', 'can_send_messages', 'can_delete_messages',
+            'can_view_files', 'can_upload_files', 'can_delete_files'
         }
 
         # Vérifier les permissions fournies
         invalid_permissions = [perm for perm in permissions.keys() if perm not in valid_permissions]
+
         if invalid_permissions:
             raise ValueError(f"Permissions invalides : {', '.join(invalid_permissions)}")
 
         # Mettre à jour les permissions
         for perm, value in permissions.items():
+
             setattr(user_permission, perm, value)
 
         db.commit()
-        return {"message": f"Permissions mises à jour avec succès pour l'utilisateur"}
+        return {"message": f"Permissions mises à jour avec succès pour l'utilisateur {user_id}", "success": True}
 
     except SQLAlchemyError as e:
         db.rollback()
@@ -326,8 +392,6 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     except Exception as e:
         db.rollback()
         raise Exception(f"Erreur inattendue : {str(e)}") from e
-
-
 
 # # crud.py
 # from fastapi import HTTPException

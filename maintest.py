@@ -112,7 +112,9 @@ app.include_router(guest_route.router)  # Routes pour les invitations
 app.include_router(emission_route.router)  # Routes pour les émissions 
 app.include_router(show_route.router)  # Routes pour les émissions show_route
 app.include_router(search_show.router)  # Routes pour les recherches de conducteurs 
-app.include_router(dashbord_route.router) # Routes pour le tableau de bord
+app.include_router(dashbord_route.router) # Routes pour le tableau de bord 
+app.include_router(permissions_route.router)
+
 
 
 # Endpoint par défaut pour vérifier que l'API est opérationnelle

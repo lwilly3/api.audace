@@ -32,6 +32,7 @@ from .model_emissions import Emission
 from .model_show_presenter import ShowPresenter 
 from .model_show import Show
 from .model_user_permissions import UserPermissions
+from .model_RoleTemplate import RoleTemplate
 
 # from .model_show_segment import ShowSegment
 # from .model_show_presenter import ShowPresenter

@@ -1609,3 +1609,130 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-02-27 15:21:12,345 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/dashbord - Status: 307 - Time: 0.00s
 2025-02-27 15:21:12,355 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/dashbord/
 2025-02-27 15:21:13,210 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/dashbord/ - Status: 200 - Time: 0.86s
+2025-02-27 20:45:00,428 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/presenters/user/1
+2025-02-27 20:45:00,431 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/presenters/user/1 - Status: 404 - Time: 0.00s
+2025-02-27 20:45:18,907 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/users/1
+2025-02-27 20:45:18,909 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/users/1 - Status: 404 - Time: 0.00s
+2025-02-27 20:48:59,675 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/users/1
+2025-02-27 20:48:59,677 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/users/1 - Status: 307 - Time: 0.00s
+2025-02-27 20:48:59,692 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/users/1/
+2025-02-27 20:48:59,694 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/users/1/ - Status: 405 - Time: 0.00s
+2025-02-27 20:49:17,093 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/users/1
+2025-02-27 20:49:17,095 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/users/1 - Status: 307 - Time: 0.00s
+2025-02-27 20:49:17,102 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/users/1/
+2025-02-27 20:49:17,746 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/users/1/ - Status: 200 - Time: 0.64s
+2025-02-27 21:12:32,076 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users/
+2025-02-27 21:12:32,084 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users/ - Status: 307 - Time: 0.01s
+2025-02-27 21:12:32,089 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-02-27 21:12:32,162 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 401 - Time: 0.07s
+2025-02-27 21:12:42,767 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-02-27 21:12:43,244 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-02-27 21:12:44,135 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 1.37s
+2025-02-27 21:12:53,730 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users/
+2025-02-27 21:12:53,731 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users/ - Status: 307 - Time: 0.00s
+2025-02-27 21:12:53,736 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-02-27 21:12:54,340 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.60s
+2025-02-27 21:18:47,166 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2025-02-27 21:18:47,212 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.05s
+2025-03-04 17:09:18,127 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-04 17:09:18,576 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-04 17:09:19,368 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 1.24s
+2025-03-04 17:09:27,135 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:09:27,178 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/permissions/templates - Status: 403 - Time: 0.04s
+2025-03-04 17:13:05,681 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:13:06,064 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/permissions/templates - Status: 500 - Time: 0.38s
+2025-03-04 17:15:49,091 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:15:49,116 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/permissions/templates - Status: 500 - Time: 0.03s
+2025-03-04 17:16:14,569 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:16:14,600 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/permissions/templates - Status: 500 - Time: 0.03s
+2025-03-04 17:19:03,245 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:25:30,729 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:25:31,100 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/permissions/templates - Status: 400 - Time: 0.37s
+2025-03-04 17:32:10,510 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:32:11,241 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/permissions/templates - Status: 200 - Time: 0.73s
+2025-03-04 17:39:11,931 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:39:11,941 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/templates - Status: 405 - Time: 0.01s
+2025-03-04 17:39:23,737 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:39:23,758 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/templates - Status: 401 - Time: 0.02s
+2025-03-04 17:39:31,010 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-04 17:39:31,781 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-04 17:39:32,518 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 1.51s
+2025-03-04 17:39:37,188 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:39:37,216 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/templates - Status: 200 - Time: 0.03s
+2025-03-04 17:41:20,371 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/templates/2
+2025-03-04 17:41:20,404 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/templates/2 - Status: 200 - Time: 0.03s
+2025-03-04 17:43:10,126 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/templates/2
+2025-03-04 17:43:10,212 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/templates/2 - Status: 200 - Time: 0.09s
+2025-03-04 17:44:14,126 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/permissions/templates/2
+2025-03-04 17:44:14,213 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/permissions/templates/2 - Status: 200 - Time: 0.09s
+2025-03-04 17:44:31,441 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/templates
+2025-03-04 17:44:31,475 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/templates - Status: 200 - Time: 0.03s
+2025-03-04 17:45:07,271 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/users/1
+2025-03-04 17:45:07,285 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/users/1 - Status: 200 - Time: 0.01s
+2025-03-04 17:49:41,765 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/users/1
+2025-03-04 17:49:41,787 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/users/1 - Status: 200 - Time: 0.02s
+2025-03-04 17:50:39,948 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?date_from=2021-01-01T00:00:00&keyword=segment&skip=0&limit=10
+2025-03-04 17:50:40,341 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?date_from=2021-01-01T00:00:00&keyword=segment&skip=0&limit=10 - Status: 404 - Time: 0.39s
+2025-03-04 17:51:37,067 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10
+2025-03-04 17:51:37,131 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_shows/?keyword=Musique&status=active&date_from=2025-01-01T00:00:00&date_to=2025-12-31T23:59:59&presenter_ids=1,2&guest_ids=3,4&skip=0&limit=10 - Status: 404 - Time: 0.06s
+2025-03-04 17:51:56,962 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users/
+2025-03-04 17:51:56,985 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users/ - Status: 307 - Time: 0.02s
+2025-03-04 17:51:57,017 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-04 17:51:57,088 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.07s
+2025-03-04 17:52:26,217 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/search?query=
+2025-03-04 17:52:26,232 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/search?query= - Status: 200 - Time: 0.02s
+2025-03-04 17:52:37,906 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/shows/new
+2025-03-04 17:52:37,992 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/shows/new - Status: 400 - Time: 0.09s
+2025-03-04 17:53:15,490 - hapson-api - INFO - Incoming Request: PATCH http://127.0.0.1:8000/shows/status/3
+2025-03-04 17:53:37,257 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/x
+2025-03-04 17:53:37,345 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/x - Status: 200 - Time: 0.09s
+2025-03-04 17:55:16,176 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-04 17:55:16,628 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.45s
+2025-03-04 18:01:12,825 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions//update_permissions/1
+2025-03-04 18:01:12,842 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions//update_permissions/1 - Status: 404 - Time: 0.02s
+2025-03-04 18:01:29,354 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions//update_permissions/1
+2025-03-04 18:01:29,380 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions//update_permissions/1 - Status: 404 - Time: 0.03s
+2025-03-04 18:01:33,497 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions//update_permissions/1
+2025-03-04 18:01:33,499 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions//update_permissions/1 - Status: 404 - Time: 0.00s
+2025-03-04 18:01:52,269 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:01:52,297 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.03s
+2025-03-04 18:03:44,638 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:03:44,719 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.08s
+2025-03-04 18:34:16,107 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-04 18:34:17,023 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.92s
+2025-03-04 18:35:14,440 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:35:14,465 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.03s
+2025-03-04 18:36:23,317 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:36:23,334 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.02s
+2025-03-04 18:42:44,681 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:42:45,026 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.35s
+2025-03-04 18:46:51,261 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:46:51,633 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.37s
+2025-03-04 18:48:01,400 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:48:01,722 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.32s
+2025-03-04 18:49:50,878 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:49:51,392 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.51s
+2025-03-04 18:50:49,838 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:50:50,154 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 500 - Time: 0.32s
+2025-03-04 18:55:05,255 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:55:05,763 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 200 - Time: 0.51s
+2025-03-04 18:58:11,760 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:58:13,462 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 200 - Time: 1.70s
+2025-03-04 18:58:42,377 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:58:42,399 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 200 - Time: 0.02s
+2025-03-04 18:58:56,669 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1
+2025-03-04 18:58:56,715 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/permissions/update_permissions/1 - Status: 200 - Time: 0.05s
+2025-03-04 19:01:00,843 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/permissions/users/1
+2025-03-04 19:01:00,855 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/permissions/users/1 - Status: 200 - Time: 0.01s
