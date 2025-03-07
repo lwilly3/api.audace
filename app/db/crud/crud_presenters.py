@@ -8,6 +8,8 @@ from app.schemas import PresenterCreate, PresenterUpdate,PresenterResponsePaged
 from app.models import User  # Si vous avez un modèle User pour gérer les permissions
 from app.db.crud.crud_check_permission import check_permission
 from sqlalchemy.orm import joinedload
+from sqlalchemy import select
+from sqlalchemy.orm import aliased
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
@@ -140,41 +142,38 @@ def get_all_presenters(db: Session, skip: int = 0, limit: int = 10):
         total_presenters = db.query(Presenter).filter(Presenter.is_deleted == False).count()
 
         # Récupérer les présentateurs avec pagination
-        presenters_and_counts = (
-            db.query(Presenter)
-            .options(joinedload(Presenter.user))
-            .filter(Presenter.is_deleted == False)  # Si vous utilisez une suppression logique
+# Alias pour éviter les conflits
+        UserAlias = aliased(User, name="user_alias")
+        stmt = (
+            select(Presenter, UserAlias)
+            .join(UserAlias, Presenter.users_id == UserAlias.id)
+            .filter(Presenter.is_deleted == False)
             .offset(skip)
             .limit(limit)
-            .all()
         )
+        results = db.execute(stmt).all()
 
         # Sérialiser chaque résultat
         serialized_results = []
-        for presenter in presenters_and_counts:
-            user = presenter.user
+        for presenter , user in results:
+            # user = presenter.user
             # presenter = presenter_and_count
 
             # Créer un dictionnaire pour chaque résultat
-            serialized_presenter = {
-                    "username": user.username,
-                    "name_utilisateur": user.name ,
-                    "family_name": user.family_name,
-                
-                    "id": presenter.id,
-                    "name": presenter.name,
-                    "biography": presenter.biography,
-                    "is_deleted": presenter.is_deleted,
-                    "deleted_at": presenter.deleted_at,
-                    "users_id": presenter.users_id,
-                    "contact_info": presenter.contact_info,
-                    "profilePicture": presenter.profilePicture,
-                    # "shows": [show.title for show in presenter.shows]
-                    "shows_presented": len(presenter.shows)
-
-
-                
-                       }
+            serialized_presenter ={
+                "id": presenter.id,
+                "presenter_name": presenter.name,
+                "biography": presenter.biography,
+                "is_deleted": presenter.is_deleted,
+                "deleted_at": presenter.deleted_at,
+                "users_id": presenter.users_id,
+                "contact_info": presenter.contact_info,
+                "profilePicture": presenter.profilePicture,
+                "shows_presented": len(presenter.shows),
+                "username": user.username if user else None,
+                "user_name": user.name if user else None,
+                "family_name": user.family_name if user else None,
+            }
             serialized_results.append(serialized_presenter)
            
             
