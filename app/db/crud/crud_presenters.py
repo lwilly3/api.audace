@@ -124,6 +124,7 @@ def get_presenter(db: Session, presenter_id: int):
             "username": user.username if user else None,
             "user_name": user.name if user else None,
             "family_name": user.family_name if user else None,
+            "user_id": user.id if user else None,
         }
 
         return serialized_presenter
@@ -184,6 +185,7 @@ def get_all_presenters(db: Session, skip: int = 0, limit: int = 10):
                 "presenter_name": presenter.name,
                 "user_name": user.name if user else None,
                 "family_name": user.family_name if user else None,
+                "user_id": user.id if user else None,
             }
             serialized_results.append(serialized_presenter)
            
