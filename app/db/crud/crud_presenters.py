@@ -162,7 +162,7 @@ def get_all_presenters(db: Session, skip: int = 0, limit: int = 10):
             # Créer un dictionnaire pour chaque résultat
             serialized_presenter ={
                 "id": presenter.id,
-                "presenter_name": presenter.name,
+                "presenter_name": user.username + " " + user.family_name,
                 "biography": presenter.biography,
                 "is_deleted": presenter.is_deleted,
                 "deleted_at": presenter.deleted_at,
@@ -171,6 +171,7 @@ def get_all_presenters(db: Session, skip: int = 0, limit: int = 10):
                 "profilePicture": presenter.profilePicture,
                 "shows_presented": len(presenter.shows),
                 "username": user.username if user else None,
+                "presenter_name2": presenter.name,
                 "user_name": user.name if user else None,
                 "family_name": user.family_name if user else None,
             }
