@@ -95,27 +95,36 @@ def get_presenter(db: Session, presenter_id: int):
     - HTTPException: Si le présentateur n'est pas trouvé.
     """
     try:
-        presenter = db.query(Presenter).filter(Presenter.id == presenter_id).first()
+        # Récupérer le présentateur avec la relation "user" chargée
+        presenter = (
+            db.query(Presenter)
+            .options(joinedload(Presenter.user))
+            .filter(Presenter.id == presenter_id)
+            .first()
+        )
+
         if not presenter:
             raise PresenterNotFoundError()
-        
+
+        # Accéder à l'utilisateur associé
+        user = presenter.user
+
+        # Sérialiser les données
         serialized_presenter = {
-                
-                    "id": presenter.id,
-                    "name": presenter.name,
-                    "biography": presenter.biography,
-                    "is_deleted": presenter.is_deleted,
-                    "deleted_at": presenter.deleted_at,
-                    "users_id": presenter.users_id,
-                    "contact_info": presenter.contact_info,
-                    "profilePicture": presenter.profilePicture,
-                    # "shows": [show.title for show in presenter.shows]
-                    "shows_presented": len(presenter.shows)
+            "id": presenter.id,
+            "presenter_name": presenter.name,
+            "biography": presenter.biography,
+            "is_deleted": presenter.is_deleted,
+            "deleted_at": presenter.deleted_at,
+            "users_id": presenter.users_id,
+            "contact_info": presenter.contact_info,
+            "profilePicture": presenter.profilePicture,
+            "shows_presented": len(presenter.shows),
+            "username": user.username if user else None,
+            "user_name": user.name if user else None,
+            "family_name": user.family_name if user else None,
+        }
 
-
-                
-                       }
-        
         return serialized_presenter
     except Exception as e:
         print({e})
