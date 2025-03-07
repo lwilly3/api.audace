@@ -7,6 +7,7 @@ from app.models import Presenter,User
 from app.schemas import PresenterCreate, PresenterUpdate,PresenterResponsePaged
 from app.models import User  # Si vous avez un modèle User pour gérer les permissions
 from app.db.crud.crud_check_permission import check_permission
+from sqlalchemy.orm import joinedload
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
@@ -122,9 +123,9 @@ def get_presenter(db: Session, presenter_id: int):
 
 
 
-def get_all_presenters(db: Session, skip: int = 0, limit: int = 10) -> PresenterResponsePaged:
+def get_all_presenters(db: Session, skip: int = 0, limit: int = 10):
     """
-    Récupérer tous les présentateurs de la base de données avec pagination.
+    Récupérer tous les présentateurs de la base de données avec pagination.  -> PresenterResponsePaged
     
     Args:
     - db (Session): La session de la base de données.
@@ -141,6 +142,7 @@ def get_all_presenters(db: Session, skip: int = 0, limit: int = 10) -> Presenter
         # Récupérer les présentateurs avec pagination
         presenters_and_counts = (
             db.query(Presenter)
+            .options(joinedload(Presenter.user))
             .filter(Presenter.is_deleted == False)  # Si vous utilisez une suppression logique
             .offset(skip)
             .limit(limit)
@@ -150,10 +152,14 @@ def get_all_presenters(db: Session, skip: int = 0, limit: int = 10) -> Presenter
         # Sérialiser chaque résultat
         serialized_results = []
         for presenter in presenters_and_counts:
+            user = presenter.user
             # presenter = presenter_and_count
 
             # Créer un dictionnaire pour chaque résultat
             serialized_presenter = {
+                    "username": user.username,
+                    "name_utilisateur": user.name ,
+                    "family_name": user.family_name,
                 
                     "id": presenter.id,
                     "name": presenter.name,
