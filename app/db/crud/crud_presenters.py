@@ -112,6 +112,7 @@ def get_presenter(db: Session, presenter_id: int):
         # Sérialiser les données
         serialized_presenter = {
             "id": presenter.id,
+            "name": user.username + " " + user.family_name,
             "presenter_name": presenter.name,
             "biography": presenter.biography,
             "is_deleted": presenter.is_deleted,
