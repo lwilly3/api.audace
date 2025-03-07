@@ -89,6 +89,9 @@ def create_user(db: Session, user_data: dict) -> User:
     try:
         new_user = User(
             username=user_data['username'],
+            name=user_data['name'],
+            family_name=user_data['family_name'],
+            # roles=user_data['roles'],
             email=user_data['email'],
             password=user_data['password'],
             is_active=True,  # L'utilisateur est actif par défaut

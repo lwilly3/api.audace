@@ -44,4 +44,10 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
 
    permissions= get_user_permissions(db, user_to_log_on_db.id)
    
-   return{"access_token" :access_token, "token_type":"bearer" , "permissions":permissions}
+   return{"access_token" :access_token, "token_type":"bearer" ,
+           "username":user_to_log_on_db.username,
+             "email":user_to_log_on_db.email,
+             "family_name":user_to_log_on_db.family_name,
+             "name":user_to_log_on_db.name,
+             "phone_number":user_to_log_on_db.phone_number,
+               "permissions":permissions}

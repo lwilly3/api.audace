@@ -26,6 +26,9 @@ class User(BaseModel):
 
     id = Column(Integer, primary_key=True)  # Identifiant unique pour chaque utilisateur
     username = Column(String, nullable=False, unique=True, index=True)  # Nom d'utilisateur unique
+    name = Column(String, nullable=True, index=True)  # prenomNom du présentateur
+    family_name = Column(String, nullable=True, index=True,) # Nom famille du présentateur
+    # roles = Column(String, nullable=True, index=True)  #  # role gest, admin, presenter, user, viewer, superadmin, technicien
     email = Column(String, nullable=False, unique=True, index=True)  # Email unique de l'utilisateur
     password = Column(String, nullable=False)  # Mot de passe de l'utilisateur
     is_active = Column(Boolean, default=True)  # Indique si l'utilisateur est actif

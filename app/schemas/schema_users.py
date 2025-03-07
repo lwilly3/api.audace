@@ -110,6 +110,11 @@ class UserSearch(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: EmailStr
+    name: Optional[str]=""
+    family_name: Optional[str] =""
+    # roles: Optional[str]=""
+    phone_number: Optional[str] =""
+   
 
     model_config = {
         "from_attributes": True,  # Remplace orm_mode
