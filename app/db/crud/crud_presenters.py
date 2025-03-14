@@ -136,6 +136,64 @@ def get_presenter(db: Session, presenter_id: int):
 
 
 
+def get_presenter_by_user(db: Session, users_id: int):
+    """
+    Récupérer un présentateur spécifique de la base de données par son users_id.
+    
+    Args:
+        db (Session): La session de la base de données.
+        users_id (int): L'ID de l'utilisateur associé au présentateur.
+    
+    Returns:
+        dict: Le présentateur sérialisé avec les détails de l'utilisateur associé.
+    
+    Raises:
+        HTTPException: Si le présentateur n'est pas trouvé ou en cas d'erreur serveur.
+    """
+    try:
+        # Récupérer le présentateur avec la relation "user" chargée, filtré par users_id
+        presenter = (
+            db.query(Presenter)
+            .options(joinedload(Presenter.user))
+            .filter(Presenter.users_id == users_id)
+            .first()
+        )
+
+        if not presenter:
+            raise HTTPException(status_code=404, detail="Presenter not found for this user")
+
+        # Accéder à l'utilisateur associé
+        user = presenter.user
+
+        # Sérialiser les données
+        serialized_presenter = {
+            "id": presenter.id,
+            "name": f"{user.username} {user.family_name}" if user else presenter.name,
+            "presenter_name": presenter.name,
+            "biography": presenter.biography,
+            "is_deleted": presenter.is_deleted,
+            "deleted_at": presenter.deleted_at,
+            "users_id": presenter.users_id,
+            "contact_info": presenter.contact_info,
+            "profilePicture": presenter.profilePicture,
+            "shows_presented": len(presenter.shows) if presenter.shows else 0,
+            "username": user.username if user else None,
+            "user_name": user.name if user else None,
+            "family_name": user.family_name if user else None,
+            "user_id": user.id if user else None,
+        }
+
+        return serialized_presenter
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error fetching presenter by user_id: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching presenter")
+
+
+
+
+
 def get_all_presenters(db: Session, skip: int = 0, limit: int = 10):
     """
     Récupérer tous les présentateurs de la base de données avec pagination.  -> PresenterResponsePaged

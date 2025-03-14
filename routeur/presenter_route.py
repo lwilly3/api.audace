@@ -33,6 +33,33 @@ def get_presenter_route(presenter_id: int, db: Session = Depends(get_db), curren
     return presenter
 
 
+@router.get("/by-user/{users_id}")
+def get_presenter_by_user_route(
+    users_id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
+    """
+    Récupérer un présentateur par son users_id.
+    
+    Args:
+        users_id (int): L'ID de l'utilisateur associé au présentateur.
+        db (Session): Session de la base de données.
+        current_user (int): ID de l'utilisateur authentifié (via OAuth2).
+    
+    Returns:
+        dict: Les détails du présentateur sérialisé.
+    
+    Raises:
+        HTTPException: 404 si aucun présentateur n'est trouvé, 500 pour une erreur serveur.
+    """
+    presenter = get_presenter_by_user(db, users_id)
+    if presenter is None:
+        raise HTTPException(status_code=404, detail="Presenter not found for this user")
+    return presenter
+
+
+
 # Mettre à jour un présentateur
 @router.put("/update/{presenter_id}")
 def update_presenter_route(presenter_id: int, presenter_to_update: PresenterUpdate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
