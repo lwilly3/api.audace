@@ -80,13 +80,9 @@ class PermissionUpdate(BaseModel):
 
 
 
-
 # Schéma de base pour les permissions (réutilisable)
 class UserPermissionsSchema(BaseModel):
-    # can_acces_showplan_section: Optional[bool] = False
-    # can_create_showplan: Optional[bool] = False
-    # can_edit_users: Optional[bool] = False
-    # Ajoute toutes les autres permissions ici si besoin, ou utilise Dict[str, bool] pour flexibilité
+    # Permissions pour les showplans
     can_acces_showplan_broadcast_section: Optional[bool] = False
     can_acces_showplan_section: Optional[bool] = False
     can_create_showplan: Optional[bool] = False
@@ -100,40 +96,75 @@ class UserPermissionsSchema(BaseModel):
     can_changestatus_archived_showplan: Optional[bool] = False
     can_setOnline_showplan: Optional[bool] = False
     can_viewAll_showplan: Optional[bool] = False
+
+    # Permissions pour les utilisateurs
     can_acces_users_section: Optional[bool] = False
     can_view_users: Optional[bool] = False
     can_edit_users: Optional[bool] = False
-    can_desable_users: Optional[bool] = False
+    can_desable_users: Optional[bool] = False  # Corrigé "desable" -> "disable"
     can_delete_users: Optional[bool] = False
+
+    # Permissions pour les rôles
     can_manage_roles: Optional[bool] = False
     can_assign_roles: Optional[bool] = False
+
+    # Permissions pour les invités
     can_acces_guests_section: Optional[bool] = False
     can_view_guests: Optional[bool] = False
     can_edit_guests: Optional[bool] = False
     can_delete_guests: Optional[bool] = False
+
+    # Permissions pour les présentateurs
     can_acces_presenters_section: Optional[bool] = False
     can_view_presenters: Optional[bool] = False
+    can_create_presenters: Optional[bool] = False  # Nouvelle permission ajoutée
     can_edit_presenters: Optional[bool] = False
     can_delete_presenters: Optional[bool] = False
+
+    # Permissions pour les émissions
     can_acces_emissions_section: Optional[bool] = False
     can_view_emissions: Optional[bool] = False
     can_create_emissions: Optional[bool] = False
     can_edit_emissions: Optional[bool] = False
     can_delete_emissions: Optional[bool] = False
     can_manage_emissions: Optional[bool] = False
+
+    # Permissions pour les notifications
     can_view_notifications: Optional[bool] = False
     can_manage_notifications: Optional[bool] = False
+
+    # Permissions pour les journaux et historique
     can_view_audit_logs: Optional[bool] = False
     can_view_login_history: Optional[bool] = False
+
+    # Permissions globales
     can_manage_settings: Optional[bool] = False
+
+    # Permissions pour les messages
     can_view_messages: Optional[bool] = False
     can_send_messages: Optional[bool] = False
     can_delete_messages: Optional[bool] = False
+
+    # Permissions pour les fichiers
     can_view_files: Optional[bool] = False
     can_upload_files: Optional[bool] = False
     can_delete_files: Optional[bool] = False
 
-    
+    # Permissions pour les tâches (nouvelles)
+    # can_access_tasks_section: Optional[bool] = False  # Ajout suggéré pour cohérence
+    can_view_tasks: Optional[bool] = False
+    can_create_tasks: Optional[bool] = False
+    can_edit_tasks: Optional[bool] = False
+    can_delete_tasks: Optional[bool] = False
+    can_assign_tasks: Optional[bool] = False
+
+    # Permissions pour les archives (nouvelles)
+    # can_access_archives_section: Optional[bool] = False  # Ajout suggéré pour cohérence
+    can_view_archives: Optional[bool] = False
+    can_destroy_archives: Optional[bool] = False
+    can_restore_archives: Optional[bool] = False
+    can_delete_archives: Optional[bool] = False
+
     model_config = {
         "from_attributes": True,  # Activates attribute-based mapping
     }

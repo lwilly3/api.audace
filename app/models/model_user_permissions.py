@@ -47,6 +47,7 @@ class UserPermissions(Base):
     # Permissions pour les présentateurs  
     can_acces_presenters_section= Column(Boolean, default=False, nullable=False)
     can_view_presenters = Column(Boolean, default=False, nullable=False)
+    can_create_presenters = Column(Boolean, default=False, nullable=True)  # Ajout suggéré
     can_edit_presenters = Column(Boolean, default=False, nullable=False)
     can_delete_presenters = Column(Boolean, default=False, nullable=False)
 
@@ -91,10 +92,36 @@ class UserPermissions(Base):
     can_delete_files = Column(Boolean, default=False, nullable=False)
 
 
+
     # Timestamp
     granted_at = Column(DateTime, server_default=func.now(), nullable=False)
 
+     # Permissions pour les tâches
+    can_view_tasks = Column(Boolean, default=False, nullable=True)
+    can_create_tasks = Column(Boolean, default=False, nullable=True)
+    can_edit_tasks = Column(Boolean, default=False, nullable=True)
+    can_delete_tasks = Column(Boolean, default=False, nullable=True)
+    can_assign_tasks = Column(Boolean, default=False, nullable=True)
 
+
+    # Permissions pour les archives
+    can_view_archives = Column(Boolean, default=False, nullable=True)
+    can_destroy_archives = Column(Boolean, default=False, nullable=True)
+    can_restore_archives = Column(Boolean, default=False, nullable=True)
+    can_delete_archives = Column(Boolean, default=False, nullable=True)  
 
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
+
+
+
+
+#1 can_access_showplan_section - Section "Show Plans"
+#2 can_access_emissions_section - Section "Shows" (Émissions)
+#3 can_access_guests_section - Section "Guests" (Invités)
+#4 can_view_users - Section "Team" (Équipe)
+#5 can_manage_roles - Section "Users" (Utilisateurs, probablement pour la gestion des rôles)
+#6 can_view_messages - Section "Chat" (Messagerie)
+#7 can_manage_settings - Section "Settings" (Paramètres)
+#8 can_view_tasks - Section "Tasks" (Tâches)
+#9 can_view_archives - Section "Archives"

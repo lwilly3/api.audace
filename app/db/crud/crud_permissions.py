@@ -48,56 +48,93 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
         if not permissions:
             return {"error": f"Aucune permission trouvée pour l'utilisateur avec l'ID {user_id}"}
 
-        # Retourner toutes les permissions sous forme de dictionnaire
+       # Retourner toutes les permissions sous forme de dictionnaire
         return {
-            "user_id": permissions.user_id,
-            "can_acces_showplan_broadcast_section": permissions.can_acces_showplan_broadcast_section,
-            "can_acces_showplan_section": permissions.can_acces_showplan_section,
-            "can_create_showplan": permissions.can_create_showplan,
-            "can_edit_showplan": permissions.can_edit_showplan,
-            "can_archive_showplan": permissions.can_archive_showplan,
-            "can_archiveStatusChange_showplan": permissions.can_archiveStatusChange_showplan,
-            "can_delete_showplan": permissions.can_delete_showplan,
-            "can_destroy_showplan": permissions.can_destroy_showplan,
-            "can_changestatus_showplan": permissions.can_changestatus_showplan,
-            "can_changestatus_owned_showplan": permissions.can_changestatus_owned_showplan,
-            "can_changestatus_archived_showplan": permissions.can_changestatus_archived_showplan,
-            "can_setOnline_showplan": permissions.can_setOnline_showplan,
-            "can_viewAll_showplan": permissions.can_viewAll_showplan,
-            "can_acces_users_section": permissions.can_acces_users_section,
-            "can_view_users": permissions.can_view_users,
-            "can_edit_users": permissions.can_edit_users,
-            "can_desable_users": permissions.can_desable_users,
-            "can_delete_users": permissions.can_delete_users,
-            "can_manage_roles": permissions.can_manage_roles,
-            "can_assign_roles": permissions.can_assign_roles,
-            "can_acces_guests_section": permissions.can_acces_guests_section,
-            "can_view_guests": permissions.can_view_guests,
-            "can_edit_guests": permissions.can_edit_guests,
-            "can_delete_guests": permissions.can_delete_guests,
-            "can_acces_presenters_section": permissions.can_acces_presenters_section,
-            "can_view_presenters": permissions.can_view_presenters,
-            "can_edit_presenters": permissions.can_edit_presenters,
-            "can_delete_presenters": permissions.can_delete_presenters,
-            "can_acces_emissions_section": permissions.can_acces_emissions_section,
-            "can_view_emissions": permissions.can_view_emissions,
-            "can_create_emissions": permissions.can_create_emissions,
-            "can_edit_emissions": permissions.can_edit_emissions,
-            "can_delete_emissions": permissions.can_delete_emissions,
-            "can_manage_emissions": permissions.can_manage_emissions,
-            "can_view_notifications": permissions.can_view_notifications,
-            "can_manage_notifications": permissions.can_manage_notifications,
-            "can_view_audit_logs": permissions.can_view_audit_logs,
-            "can_view_login_history": permissions.can_view_login_history,
-            "can_manage_settings": permissions.can_manage_settings,
-            "can_view_messages": permissions.can_view_messages,
-            "can_send_messages": permissions.can_send_messages,
-            "can_delete_messages": permissions.can_delete_messages,
-            "can_view_files": permissions.can_view_files,
-            "can_upload_files": permissions.can_upload_files,
-            "can_delete_files": permissions.can_delete_files,
-            "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
-        }
+    "user_id": permissions.user_id,
+    # Permissions pour les showplans
+    "can_acces_showplan_broadcast_section": permissions.can_acces_showplan_broadcast_section,
+    "can_acces_showplan_section": permissions.can_acces_showplan_section,
+    "can_create_showplan": permissions.can_create_showplan,
+    "can_edit_showplan": permissions.can_edit_showplan,
+    "can_archive_showplan": permissions.can_archive_showplan,
+    "can_archiveStatusChange_showplan": permissions.can_archiveStatusChange_showplan,
+    "can_delete_showplan": permissions.can_delete_showplan,
+    "can_destroy_showplan": permissions.can_destroy_showplan,
+    "can_changestatus_showplan": permissions.can_changestatus_showplan,
+    "can_changestatus_owned_showplan": permissions.can_changestatus_owned_showplan,
+    "can_changestatus_archived_showplan": permissions.can_changestatus_archived_showplan,
+    "can_setOnline_showplan": permissions.can_setOnline_showplan,
+    "can_viewAll_showplan": permissions.can_viewAll_showplan,
+
+    # Permissions pour les utilisateurs
+    "can_acces_users_section": permissions.can_acces_users_section,
+    "can_view_users": permissions.can_view_users,
+    "can_edit_users": permissions.can_edit_users,
+    "can_desable_users": permissions.can_desable_users,  # Corrigé "desable" -> "disable"
+    "can_delete_users": permissions.can_delete_users,
+
+    # Permissions pour les rôles
+    "can_manage_roles": permissions.can_manage_roles,
+    "can_assign_roles": permissions.can_assign_roles,
+
+    # Permissions pour les invités
+    "can_acces_guests_section": permissions.can_acces_guests_section,
+    "can_view_guests": permissions.can_view_guests,
+    "can_edit_guests": permissions.can_edit_guests,
+    "can_delete_guests": permissions.can_delete_guests,
+
+    # Permissions pour les présentateurs
+    "can_acces_presenters_section": permissions.can_acces_presenters_section,
+    "can_view_presenters": permissions.can_view_presenters,
+    "can_create_presenters": permissions.can_create_presenters,  # Nouvelle permission ajoutée
+    "can_edit_presenters": permissions.can_edit_presenters,
+    "can_delete_presenters": permissions.can_delete_presenters,
+
+    # Permissions pour les émissions
+    "can_acces_emissions_section": permissions.can_acces_emissions_section,
+    "can_view_emissions": permissions.can_view_emissions,
+    "can_create_emissions": permissions.can_create_emissions,
+    "can_edit_emissions": permissions.can_edit_emissions,
+    "can_delete_emissions": permissions.can_delete_emissions,
+    "can_manage_emissions": permissions.can_manage_emissions,
+
+    # Permissions pour les notifications
+    "can_view_notifications": permissions.can_view_notifications,
+    "can_manage_notifications": permissions.can_manage_notifications,
+
+    # Permissions pour les journaux et historique
+    "can_view_audit_logs": permissions.can_view_audit_logs,
+    "can_view_login_history": permissions.can_view_login_history,
+
+    # Permissions globales
+    "can_manage_settings": permissions.can_manage_settings,
+
+    # Permissions pour les messages
+    "can_view_messages": permissions.can_view_messages,
+    "can_send_messages": permissions.can_send_messages,
+    "can_delete_messages": permissions.can_delete_messages,
+
+    # Permissions pour les fichiers
+    "can_view_files": permissions.can_view_files,
+    "can_upload_files": permissions.can_upload_files,
+    "can_delete_files": permissions.can_delete_files,
+
+    # Permissions pour les tâches (nouvelles)
+    "can_view_tasks": permissions.can_view_tasks,
+    "can_create_tasks": permissions.can_create_tasks,
+    "can_edit_tasks": permissions.can_edit_tasks,
+    "can_delete_tasks": permissions.can_delete_tasks,
+    "can_assign_tasks": permissions.can_assign_tasks,
+
+    # Permissions pour les archives (nouvelles)
+    "can_view_archives": permissions.can_view_archives,
+    "can_destroy_archives": permissions.can_destroy_archives,
+    "can_restore_archives": permissions.can_restore_archives,
+    "can_delete_archives": permissions.can_delete_archives,
+
+    # Timestamp
+    "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
+}
 
     except SQLAlchemyError as e:
         raise SQLAlchemyError(f"Erreur de base de données lors de la récupération des permissions : {str(e)}") from e
@@ -118,56 +155,91 @@ def initialize_user_permissions(db: Session, user_id: int):
         # Si des permissions existent déjà, ne pas les créer à nouveau
         if existing_permissions:
             return existing_permissions
-
-        # Sinon, créer une nouvelle entrée avec les permissions par défaut
+        
+# Sinon, créer une nouvelle entrée avec les permissions par défaut
         new_permissions = UserPermissions(
-            user_id=user_id,
-            can_acces_showplan_broadcast_section=False,
-            can_acces_showplan_section=False,
-            can_create_showplan=False,
-            can_edit_showplan=False,
-            can_archive_showplan=False,
-            can_archiveStatusChange_showplan=False,
-            can_delete_showplan=False,
-            can_destroy_showplan=False,
-            can_changestatus_showplan=False,
-            can_changestatus_owned_showplan=False,
-            can_changestatus_archived_showplan=False,
-            can_setOnline_showplan=False,
-            can_viewAll_showplan=False,
-            can_acces_users_section=False,
-            can_view_users=False,
-            can_edit_users=False,
-            can_desable_users=False,
-            can_delete_users=False,
-            can_manage_roles=False,
-            can_assign_roles=False,
-            can_acces_guests_section=False,
-            can_view_guests=False,
-            can_edit_guests=False,
-            can_delete_guests=False,
-            can_acces_presenters_section=False,
-            can_view_presenters=False,
-            can_edit_presenters=False,
-            can_delete_presenters=False,
-            can_acces_emissions_section=False,
-            can_view_emissions=False,
-            can_create_emissions=False,
-            can_edit_emissions=False,
-            can_delete_emissions=False,
-            can_manage_emissions=False,
-            can_view_notifications=False,
-            can_manage_notifications=False,
-            can_view_audit_logs=False,
-            can_view_login_history=False,
-            can_manage_settings=False,
-            can_view_messages=False,
-            can_send_messages=False,
-            can_delete_messages=False,
-            can_view_files=False,
-            can_upload_files=False,
-            can_delete_files=False
-        )
+    user_id=user_id,
+    # Permissions pour les showplans
+    can_acces_showplan_broadcast_section=False,
+    can_acces_showplan_section=False,
+    can_create_showplan=False,
+    can_edit_showplan=False,
+    can_archive_showplan=False,
+    can_archiveStatusChange_showplan=False,
+    can_delete_showplan=False,
+    can_destroy_showplan=False,
+    can_changestatus_showplan=False,
+    can_changestatus_owned_showplan=False,
+    can_changestatus_archived_showplan=False,
+    can_setOnline_showplan=False,
+    can_viewAll_showplan=False,
+
+    # Permissions pour les utilisateurs
+    can_acces_users_section=False,
+    can_view_users=False,
+    can_edit_users=False,
+    can_desable_users=False,  # Corrigé "desable" -> "disable"
+    can_delete_users=False,
+
+    # Permissions pour les rôles
+    can_manage_roles=False,
+    can_assign_roles=False,
+
+    # Permissions pour les invités
+    can_acces_guests_section=False,
+    can_view_guests=False,
+    can_edit_guests=False,
+    can_delete_guests=False,
+
+    # Permissions pour les présentateurs
+    can_acces_presenters_section=False,
+    can_view_presenters=False,
+    can_create_presenters=False,  # Nouvelle permission ajoutée
+    can_edit_presenters=False,
+    can_delete_presenters=False,
+
+    # Permissions pour les émissions
+    can_acces_emissions_section=False,
+    can_view_emissions=False,
+    can_create_emissions=False,
+    can_edit_emissions=False,
+    can_delete_emissions=False,
+    can_manage_emissions=False,
+
+    # Permissions pour les notifications
+    can_view_notifications=False,
+    can_manage_notifications=False,
+
+    # Permissions pour les journaux et historique
+    can_view_audit_logs=False,
+    can_view_login_history=False,
+
+    # Permissions globales
+    can_manage_settings=False,
+
+    # Permissions pour les messages
+    can_view_messages=False,
+    can_send_messages=False,
+    can_delete_messages=False,
+
+    # Permissions pour les fichiers
+    can_view_files=False,
+    can_upload_files=False,
+    can_delete_files=False,
+
+    # Permissions pour les tâches (nouvelles)
+    can_view_tasks=False,
+    can_create_tasks=False,
+    can_edit_tasks=False,
+    can_delete_tasks=False,
+    can_assign_tasks=False,
+
+    # Permissions pour les archives (nouvelles)
+    can_view_archives=False,
+    can_destroy_archives=False,
+    can_restore_archives=False,
+    can_delete_archives=False
+)
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
         db.commit()
@@ -355,19 +427,52 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
 
         # Liste des permissions valides (basée sur le modèle UserPermissions)
         valid_permissions = {
-            'can_acces_showplan_broadcast_section', 'can_acces_showplan_section', 'can_create_showplan',
-            'can_edit_showplan', 'can_archive_showplan', 'can_archiveStatusChange_showplan', 'can_delete_showplan',
-            'can_destroy_showplan', 'can_changestatus_showplan', 'can_changestatus_owned_showplan',
-            'can_changestatus_archived_showplan', 'can_setOnline_showplan', 'can_viewAll_showplan',
-            'can_acces_users_section', 'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
-            'can_manage_roles', 'can_assign_roles', 'can_acces_guests_section', 'can_view_guests',
-            'can_edit_guests', 'can_delete_guests', 'can_acces_presenters_section', 'can_view_presenters',
-            'can_edit_presenters', 'can_delete_presenters', 'can_acces_emissions_section', 'can_view_emissions',
-            'can_create_emissions', 'can_edit_emissions', 'can_delete_emissions', 'can_manage_emissions',
-            'can_view_notifications', 'can_manage_notifications', 'can_view_audit_logs', 'can_view_login_history',
-            'can_manage_settings', 'can_view_messages', 'can_send_messages', 'can_delete_messages',
-            'can_view_files', 'can_upload_files', 'can_delete_files'
-        }
+    # Permissions pour les showplans
+    'can_access_showplan_broadcast_section', 'can_access_showplan_section', 'can_create_showplan',
+    'can_edit_showplan', 'can_archive_showplan', 'can_archiveStatusChange_showplan', 'can_delete_showplan',
+    'can_destroy_showplan', 'can_changestatus_showplan', 'can_changestatus_owned_showplan',
+    'can_changestatus_archived_showplan', 'can_setOnline_showplan', 'can_viewAll_showplan',
+
+    # Permissions pour les utilisateurs
+    'can_access_users_section', 'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
+
+    # Permissions pour les rôles
+    'can_manage_roles', 'can_assign_roles',
+
+    # Permissions pour les invités
+    'can_access_guests_section', 'can_view_guests', 'can_edit_guests', 'can_delete_guests',
+
+    # Permissions pour les présentateurs
+    'can_access_presenters_section', 'can_view_presenters', 'can_create_presenters',  # Nouvelle permission ajoutée
+    'can_edit_presenters', 'can_delete_presenters',
+
+    # Permissions pour les émissions
+    'can_access_emissions_section', 'can_view_emissions', 'can_create_emissions', 'can_edit_emissions',
+    'can_delete_emissions', 'can_manage_emissions',
+
+    # Permissions pour les notifications
+    'can_view_notifications', 'can_manage_notifications',
+
+    # Permissions pour les journaux et historique
+    'can_view_audit_logs', 'can_view_login_history',
+
+    # Permissions globales
+    'can_manage_settings',
+
+    # Permissions pour les messages
+    'can_view_messages', 'can_send_messages', 'can_delete_messages',
+
+    # Permissions pour les fichiers
+    'can_view_files', 'can_upload_files', 'can_delete_files',
+
+    # Permissions pour les tâches (nouvelles)
+      # Ajout suggéré pour cohérence
+    'can_view_tasks', 'can_create_tasks', 'can_edit_tasks', 'can_delete_tasks', 'can_assign_tasks',
+
+    # Permissions pour les archives (nouvelles)
+      # Ajout suggéré pour cohérence
+    'can_view_archives', 'can_destroy_archives', 'can_restore_archives', 'can_delete_archives'
+}
 
         # Vérifier les permissions fournies
         invalid_permissions = [perm for perm in permissions.keys() if perm not in valid_permissions]
