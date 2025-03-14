@@ -1,5 +1,6 @@
 
 from datetime import datetime, timezone
+import logging
 from typing import List
 from sqlalchemy.orm import Session,joinedload
 from sqlalchemy.exc import SQLAlchemyError
@@ -7,9 +8,66 @@ from app.models import User, LoginHistory, Notification, AuditLog, Presenter, Gu
 from sqlalchemy.orm.exc import NoResultFound
 from fastapi import HTTPException
 from app.db.crud.crud_permissions import initialize_user_permissions
-from sqlalchemy import exc
+from sqlalchemy import exc, not_
 from typing import Optional
 from app.schemas import UserUpdate
+
+
+
+logger = logging.getLogger(__name__)
+
+def get_non_presenters(db: Session):
+    """
+    Récupérer la liste des utilisateurs qui ne sont pas des présentateurs.
+
+    Args:
+        db (Session): Session de la base de données.
+
+    Returns:
+        list: Liste des utilisateurs non présentateurs sérialisés.
+
+    Raises:
+        Exception: En cas d'erreur lors de l'exécution de la requête.
+    """
+    try:
+        # Sous-requête pour obtenir les users_id des présentateurs
+        presenter_users_subquery = (
+            db.query(Presenter.users_id)
+            .filter(Presenter.is_deleted == False)  # Exclure les présentateurs supprimés
+            .subquery()
+        )
+
+        # Requête pour récupérer les utilisateurs qui ne sont pas dans la sous-requête
+        non_presenters = (
+            db.query(User)
+            .filter(
+                User.is_deleted == False,  # Exclure les utilisateurs supprimés
+                not_(User.id.in_(presenter_users_subquery))  # Exclure les utilisateurs qui sont présentateurs
+            )
+            .all()
+        )
+
+        # Sérialisation des données
+        serialized_users = [
+            {
+                "id": user.id,
+                "username": user.username,
+                "name": user.name,
+                "family_name": user.family_name,
+                "email": user.email,
+                "phone_number": user.phone_number,
+                "profilePicture": user.profilePicture,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+            }
+            for user in non_presenters
+        ]
+
+        return serialized_users
+
+    except Exception as e:
+        logger.error(f"Error fetching non-presenters in CRUD: {e}")
+        raise
 
 # -------------------------
 # Fonction utilitaire pour récupérer un utilisateur avec leurs permissions

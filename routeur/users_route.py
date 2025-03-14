@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
@@ -17,6 +18,7 @@ from app.db.crud.crud_users import (
     get_user_notifications,
     get_user_audit_logs,
     get_user_or_404_with_permissions,
+    get_non_presenters
 )
 from app.db.database import get_db
 # from app.db.init_db_rolePermissions import create_default_role_and_permission
@@ -26,6 +28,37 @@ router = APIRouter(
      tags=['USERS']
 )
 
+logger = logging.getLogger(__name__)
+
+
+@router.get("/non-presenters")
+def get_non_presenters_route(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
+    """
+    Récupérer la liste des utilisateurs qui ne sont pas des présentateurs.
+
+    Args:
+        db (Session): Session de la base de données.
+        current_user (int): ID de l'utilisateur authentifié (via OAuth2).
+
+    Returns:
+        dict: Liste des utilisateurs non présentateurs avec leurs détails.
+
+    Raises:
+        HTTPException: 500 en cas d'erreur serveur.
+    """
+    try:
+        non_presenters = get_non_presenters(db)
+        return {
+            "total": len(non_presenters),
+            "users": non_presenters
+        }
+    except Exception as e:
+        logger.error(f"Error in route get_non_presenters: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching non-presenters")
+    
 
 #//////////////////////////// Fonstions pour ajouter les roles par defaut //////////////////////////////
 

@@ -2031,3 +2031,16 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-03-13 17:17:04,559 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/docs - Status: 200 - Time: 0.06s
 2025-03-13 17:17:06,519 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/openapi.json
 2025-03-13 17:17:06,625 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/openapi.json - Status: 200 - Time: 0.11s
+2025-03-14 19:15:02,630 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/non-presenters
+2025-03-14 19:15:02,639 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/non-presenters - Status: 401 - Time: 0.01s
+2025-03-14 19:15:12,360 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-14 19:15:13,030 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-14 19:15:14,026 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 1.67s
+2025-03-14 19:15:24,109 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/non-presenters
+2025-03-14 19:15:24,210 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/non-presenters - Status: 200 - Time: 0.10s
+2025-03-14 19:16:03,932 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2025-03-14 19:16:04,102 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.17s
