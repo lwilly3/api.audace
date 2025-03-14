@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware  # Middleware pour la gestion
 
 # from app.db.database import get_db
 from routeur.search_route import (
-    search_show
+    search_show,
+    search_user_route
 
 )
 
@@ -25,7 +26,7 @@ from routeur import (
      guest_route,
      emission_route,
      show_route, 
-     dashbord_route,
+     dashbord_route,role_route,
 
    
 )  # Importation des routeurs de l'application
@@ -112,8 +113,10 @@ app.include_router(guest_route.router)  # Routes pour les invitations
 app.include_router(emission_route.router)  # Routes pour les émissions 
 app.include_router(show_route.router)  # Routes pour les émissions show_route
 app.include_router(search_show.router)  # Routes pour les recherches de conducteurs 
-app.include_router(dashbord_route.router) # Routes pour le tableau de bord 
-app.include_router(permissions_route.router)
+app.include_router(dashbord_route.router) # Routes pour le tableau de bord  search_user_route
+app.include_router(permissions_route.router) # Routes pour les permissions
+app.include_router(search_user_route.router) # Routes pour les recherches d'utilisateurs role_route
+app.include_router(role_route.router) # Routes pour les roles
 
 
 

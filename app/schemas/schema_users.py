@@ -1,6 +1,6 @@
 
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional,List
 from datetime import datetime
 
 class User(BaseModel):
@@ -120,6 +120,38 @@ class UserBase(BaseModel):
         "from_attributes": True,  # Remplace orm_mode
     }
 
+
+    
+
+# Schéma de base pour les rôles (si applicable)
+class UserRoleRead(BaseModel):
+    id: int
+    name: str
+
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    } # Remplace orm_mode dans Pydantic v2
+
+
+class UserSrearchResponse(UserBase):
+    id: int
+    created_at:Optional[ datetime]
+    profilePicture: Optional[str] 
+    roles: Optional[List[UserRoleRead] ] # Liste des rôles associés à l'utilisateur
+
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    } # Remplace orm_mode dans Pydantic v2
+
+
+
+
+
+
+
+
+
+
 class UserCreate(UserBase):
     password: str
 
@@ -136,9 +168,17 @@ class UserRead(UserBase):
     }
 
 class UserUpdate(BaseModel):
-    username: Optional[str]
-    email: Optional[EmailStr]
-    is_active: Optional[bool]
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    name: Optional[str] = None
+    family_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    profilePicture: Optional[str] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_deleted: Optional[bool] = None
+    deleted_at: Optional[datetime] = None
+    roles: Optional[List[int]] = None
     
     model_config = {
         "from_attributes": True,  # Remplace orm_mode
@@ -159,7 +199,6 @@ class UserLogin(BaseModel):
     model_config = {
         "from_attributes": True,  # Remplace orm_mode
     }
-    
 
 
 

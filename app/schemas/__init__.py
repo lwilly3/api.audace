@@ -1,9 +1,9 @@
 
 
 
-from .schema_users import UserCreate, UserRead, UserUpdate, UserInDB, LoginLog,NotificationUser,AuditLogUser,UserSearch,UserLogin,UserBase,UserWithPermissionsResponse
+from .schema_users import UserCreate, UserRead, UserUpdate, UserInDB, LoginLog,NotificationUser,AuditLogUser,UserSearch,UserLogin,UserBase,UserWithPermissionsResponse,UserSrearchResponse,UserUpdate
 from .schema_permissions import PermissionCreate, PermissionRead, PermissionUpdate, Permission, RoleTemplateCreate, RoleTemplateUpdate, UserPermissionsSchema,RoleTemplateResponse
-from .schema_roles import RoleCreate, RoleRead, RoleUpdate
+from .schema_roles import RoleCreate, RoleRead, RoleUpdate,UserRoleAssign
 from .schema_role_permissions import RolePermissionCreate, RolePermissionRead
 from .schema_login_history import LoginHistoryCreate, LoginHistoryRead
 from .schema_audit_logs import AuditLogCreate, AuditLogRead, AuditLogBase, AuditLog, AuditLogSearch

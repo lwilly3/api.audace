@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
 # from app.models import UserInDB, LoginLog, Notification, AuditLog
-from app.schemas import UserRead, UserInDB, LoginHistoryRead, NotificationRead, AuditLog,UserLogin,UserBase,UserCreate, UserWithPermissionsResponse
+from app.schemas import UserRead, UserInDB, LoginHistoryRead, NotificationRead, AuditLog,UserLogin,UserBase,UserCreate, UserWithPermissionsResponse,UserUpdate,UserSrearchResponse
 from app.models import Role, UserRole, Permission,RolePermission
 from app.utils import utils
 from core.auth import oauth2
@@ -86,10 +86,10 @@ def assign_default_role_to_user(user_id: int, db: Session):
 
 #////////////////////// fin des fonctions pour ajouter les roles par defaut /////////////////////////////
 
+# , response_model=List[UserRead]   response_model=UserSrearchResponse
 
 
-
-@router.get("/users", response_model=List[UserRead])
+@router.get("/users",response_model=List[UserSrearchResponse] )
 def get_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
     Récupérer tous les utilisateurs actifs.
@@ -130,12 +130,32 @@ def create_new_user(user_to_create: UserCreate, db: Session = Depends(get_db), c
     return created_user
 
 
+# Route pour mettre à jour un utilisateur
+@router.put("/updte/{user_id}", response_model=UserSrearchResponse)
+def update_user_route(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
+    """
+    Mettre à jour un utilisateur par son ID.
+    
+    Args:
+        user_id (int): ID de l'utilisateur à mettre à jour.
+        user_update (UserUpdate): Données de mise à jour.
+        db (Session): Session SQLAlchemy.
+    
+    Returns:
+        UserRead: Utilisateur mis à jour.
+    
+    Raises:
+        HTTPException: 404 si l'utilisateur n'est pas trouvé.
+    """
+    updated_user = update_user(db, user_id, user_update)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
 
 
 
 
-
-@router.put("/users/{id}", response_model=UserInDB)
+@router.put("/upd_date/{id}", response_model=UserInDB)
 def update_user_info(id: int, user: UserInDB, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
     Mettre à jour un utilisateur existant.
@@ -145,7 +165,7 @@ def update_user_info(id: int, user: UserInDB, db: Session = Depends(get_db), cur
         raise HTTPException(status_code=404, detail="User not found")
     return updated_user
 
-@router.delete("/users/{id}")
+@router.delete("/del/{id}")
 def delete_user_info(id: int, db: Session = Depends(get_db)):
     """
     Supprimer un utilisateur (soft delete).

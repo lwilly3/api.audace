@@ -1810,3 +1810,224 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-03-07 21:00:35,182 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 2.04s
 2025-03-07 21:00:44,788 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
 2025-03-07 21:00:44,914 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.13s
+2025-03-11 17:49:34,475 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/search?name=zizou
+2025-03-11 17:49:34,482 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/search?name=zizou - Status: 404 - Time: 0.01s
+2025-03-11 17:57:05,080 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/search?name=zizou
+2025-03-11 18:00:04,013 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-11 18:00:05,187 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-11 18:00:05,841 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 1.83s
+2025-03-11 18:24:59,623 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/
+2025-03-11 18:24:59,627 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/ - Status: 404 - Time: 0.00s
+2025-03-11 18:25:42,738 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/?keyword=kam
+2025-03-11 18:25:42,774 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/?keyword=kam - Status: 404 - Time: 0.04s
+2025-03-11 18:25:54,196 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/?keyword=wil
+2025-03-11 18:25:54,198 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/?keyword=wil - Status: 404 - Time: 0.00s
+2025-03-11 18:26:21,699 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/?keyword=wil
+2025-03-11 18:26:22,193 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/?keyword=wil - Status: 200 - Time: 0.49s
+2025-03-11 18:36:04,471 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/?keyword=wil
+2025-03-11 18:36:05,362 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/?keyword=wil - Status: 200 - Time: 0.89s
+2025-03-11 18:38:31,010 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/?keyword=wil
+2025-03-11 18:38:31,416 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/?keyword=wil - Status: 200 - Time: 0.41s
+2025-03-11 18:52:18,374 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/users/1
+2025-03-11 18:52:18,376 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/users/1 - Status: 404 - Time: 0.00s
+2025-03-11 18:52:27,474 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/users/2
+2025-03-11 18:52:27,476 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/users/2 - Status: 404 - Time: 0.00s
+2025-03-11 18:52:35,417 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 18:52:36,256 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.84s
+2025-03-11 19:12:11,802 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/users/del/5
+2025-03-11 19:12:11,817 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/users/del/5 - Status: 404 - Time: 0.02s
+2025-03-11 19:12:43,102 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/users/del/5
+2025-03-11 19:12:43,466 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/users/del/5 - Status: 404 - Time: 0.36s
+2025-03-11 19:37:26,991 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/users/updte/1
+2025-03-11 19:37:27,002 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/users/updte/1 - Status: 404 - Time: 0.01s
+2025-03-11 19:38:22,840 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/users/updte/1
+2025-03-11 19:38:23,507 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/users/updte/1 - Status: 200 - Time: 0.67s
+2025-03-11 19:39:20,481 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/users/updte/1
+2025-03-11 19:39:20,548 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/users/updte/1 - Status: 200 - Time: 0.07s
+2025-03-11 19:39:41,549 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/users/updte/1
+2025-03-11 19:39:41,631 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/users/updte/1 - Status: 200 - Time: 0.08s
+2025-03-11 19:40:08,641 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/users/updte/1
+2025-03-11 19:40:08,712 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/users/updte/1 - Status: 200 - Time: 0.07s
+2025-03-11 20:26:38,069 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/
+2025-03-11 20:26:38,072 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/ - Status: 404 - Time: 0.00s
+2025-03-11 20:26:52,912 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/
+2025-03-11 20:26:52,916 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/ - Status: 404 - Time: 0.00s
+2025-03-11 20:27:55,447 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/
+2025-03-11 20:27:55,465 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/ - Status: 404 - Time: 0.02s
+2025-03-11 20:28:31,103 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/
+2025-03-11 20:28:31,107 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/ - Status: 404 - Time: 0.00s
+2025-03-11 20:29:48,871 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles
+2025-03-11 20:29:48,886 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles - Status: 404 - Time: 0.02s
+2025-03-11 20:29:51,212 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles
+2025-03-11 20:29:51,228 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles - Status: 404 - Time: 0.02s
+2025-03-11 20:33:01,895 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles
+2025-03-11 20:33:01,906 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles - Status: 307 - Time: 0.01s
+2025-03-11 20:33:01,910 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/
+2025-03-11 20:33:02,576 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/ - Status: 201 - Time: 0.67s
+2025-03-11 20:34:46,880 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-11 20:34:57,018 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all?skip=0&limit=10
+2025-03-11 20:36:37,209 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-11 20:36:49,624 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 20:36:49,827 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.20s
+2025-03-11 20:36:58,636 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-11 20:38:46,420 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-11 20:38:46,763 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all - Status: 200 - Time: 0.34s
+2025-03-11 20:40:58,885 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/id/1
+2025-03-11 20:41:44,623 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/id/1
+2025-03-11 20:41:44,946 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/id/1 - Status: 200 - Time: 0.32s
+2025-03-11 20:43:04,155 - hapson-api - INFO - Incoming Request: PUT http://127.0.0.1:8000/roles/update/2
+2025-03-11 20:43:04,537 - hapson-api - INFO - Completed Request: PUT http://127.0.0.1:8000/roles/update/2 - Status: 200 - Time: 0.38s
+2025-03-11 20:44:33,274 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/roles/del/2
+2025-03-11 20:44:33,395 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/roles/del/2 - Status: 204 - Time: 0.12s
+2025-03-11 20:44:52,643 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-11 20:44:52,661 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all - Status: 200 - Time: 0.02s
+2025-03-11 20:47:53,499 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles
+2025-03-11 20:47:53,503 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles - Status: 307 - Time: 0.00s
+2025-03-11 20:47:53,552 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/
+2025-03-11 20:47:53,964 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/ - Status: 201 - Time: 0.40s
+2025-03-11 20:48:07,468 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/roles/del/3
+2025-03-11 20:48:07,567 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/roles/del/3 - Status: 204 - Time: 0.10s
+2025-03-11 20:53:09,400 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 20:53:10,739 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 1.34s
+2025-03-11 21:42:03,942 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/assign/1
+2025-03-11 21:42:04,438 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/assign/1 - Status: 404 - Time: 0.50s
+2025-03-11 21:42:45,002 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-11 21:42:45,018 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all - Status: 200 - Time: 0.02s
+2025-03-11 21:42:55,110 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles
+2025-03-11 21:42:55,124 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles - Status: 307 - Time: 0.01s
+2025-03-11 21:42:55,129 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/
+2025-03-11 21:42:55,382 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/ - Status: 201 - Time: 0.25s
+2025-03-11 21:43:02,998 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-11 21:43:03,003 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all - Status: 200 - Time: 0.00s
+2025-03-11 21:43:15,249 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 21:43:15,336 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.09s
+2025-03-11 21:43:38,993 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/assign/2
+2025-03-11 21:43:39,164 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/assign/2 - Status: 200 - Time: 0.17s
+2025-03-11 21:44:07,007 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 21:44:07,087 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.08s
+2025-03-11 21:47:09,112 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/unassign
+2025-03-11 21:47:09,119 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/unassign - Status: 404 - Time: 0.01s
+2025-03-11 21:47:21,274 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/unassign/2
+2025-03-11 21:47:21,293 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/unassign/2 - Status: 404 - Time: 0.02s
+2025-03-11 21:47:25,605 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/unassign/2
+2025-03-11 21:47:25,638 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/unassign/2 - Status: 404 - Time: 0.03s
+2025-03-11 21:47:59,802 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 21:47:59,875 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.07s
+2025-03-11 21:48:17,919 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/unassign/2
+2025-03-11 21:48:17,930 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/unassign/2 - Status: 404 - Time: 0.01s
+2025-03-11 21:48:42,532 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/unassign/2
+2025-03-11 21:48:43,052 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/unassign/2 - Status: 200 - Time: 0.52s
+2025-03-11 21:48:56,701 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 21:48:56,738 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.04s
+2025-03-11 21:50:53,941 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/all_assigned/2
+2025-03-11 21:50:53,989 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/all_assigned/2 - Status: 405 - Time: 0.06s
+2025-03-11 21:51:59,464 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all_assigned/2
+2025-03-11 21:51:59,516 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all_assigned/2 - Status: 200 - Time: 0.05s
+2025-03-11 21:58:20,156 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users
+2025-03-11 21:58:20,172 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users - Status: 404 - Time: 0.02s
+2025-03-11 21:58:31,101 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/
+2025-03-11 21:58:31,103 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/ - Status: 404 - Time: 0.00s
+2025-03-11 21:58:56,274 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 21:58:56,351 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 401 - Time: 0.08s
+2025-03-11 21:59:12,548 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-11 21:59:12,633 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-11 21:59:13,404 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.86s
+2025-03-11 21:59:21,859 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 21:59:21,889 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.03s
+2025-03-11 22:00:32,584 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 22:00:32,601 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.02s
+2025-03-11 22:03:33,987 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:03:34,785 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.80s
+2025-03-11 22:04:28,500 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:04:28,896 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.40s
+2025-03-11 22:10:40,877 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:10:41,439 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.56s
+2025-03-11 22:10:59,542 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-11 22:10:59,836 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.29s
+2025-03-11 22:34:23,901 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/?keyword=wil
+2025-03-11 22:34:24,344 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/?keyword=wil - Status: 200 - Time: 0.44s
+2025-03-11 22:36:08,978 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:36:09,001 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 401 - Time: 0.02s
+2025-03-11 22:36:20,654 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-11 22:36:21,340 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-11 22:36:22,224 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 1.57s
+2025-03-11 22:36:27,733 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:39:15,028 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:39:35,032 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:39:35,367 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.33s
+2025-03-11 22:41:37,943 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:42:43,425 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:44:36,332 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:45:28,856 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:47:04,539 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:48:14,923 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-11 22:49:50,611 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:31:09,026 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:31:09,073 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 401 - Time: 0.05s
+2025-03-12 14:31:19,326 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-03-12 14:31:21,225 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-03-12 14:31:22,085 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 2.76s
+2025-03-12 14:31:39,829 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all_assigned/2
+2025-03-12 14:31:39,901 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all_assigned/2 - Status: 200 - Time: 0.07s
+2025-03-12 14:31:51,362 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles
+2025-03-12 14:31:51,366 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles - Status: 307 - Time: 0.00s
+2025-03-12 14:31:51,395 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/
+2025-03-12 14:31:51,532 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/ - Status: 400 - Time: 0.14s
+2025-03-12 14:32:10,830 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-12 14:32:10,901 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all - Status: 200 - Time: 0.07s
+2025-03-12 14:32:32,876 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:33:49,480 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:33:49,940 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.46s
+2025-03-12 14:34:27,188 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/assign/2
+2025-03-12 14:34:27,439 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/assign/2 - Status: 200 - Time: 0.25s
+2025-03-12 14:34:42,774 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:34:42,807 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.03s
+2025-03-12 14:37:52,166 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:38:24,636 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:39:42,729 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:39:42,731 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:39:45,799 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:40:19,727 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:41:31,395 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:44:20,432 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:48:46,190 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:48:47,087 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.90s
+2025-03-12 14:50:31,469 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all
+2025-03-12 14:50:31,499 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all - Status: 200 - Time: 0.03s
+2025-03-12 14:50:41,395 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-03-12 14:50:41,517 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 0.12s
+2025-03-12 14:50:55,415 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-12 14:50:55,444 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.03s
+2025-03-12 14:51:16,490 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/roles/all_assigned/2
+2025-03-12 14:51:16,508 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/roles/all_assigned/2 - Status: 200 - Time: 0.02s
+2025-03-12 14:51:37,587 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/assign/2
+2025-03-12 14:51:37,609 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/assign/2 - Status: 200 - Time: 0.02s
+2025-03-12 14:53:38,822 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/assign/2
+2025-03-12 14:54:03,903 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/roles/assign/2
+2025-03-12 14:54:04,491 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/roles/assign/2 - Status: 200 - Time: 0.59s
+2025-03-12 15:45:39,659 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/docs
+2025-03-12 15:45:39,683 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/docs - Status: 200 - Time: 0.03s
+2025-03-12 15:45:44,286 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/openapi.json
+2025-03-12 15:45:44,822 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/openapi.json - Status: 200 - Time: 0.54s
+2025-03-12 15:57:47,120 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/search_users/id/2
+2025-03-12 15:57:47,208 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/search_users/id/2 - Status: 200 - Time: 0.09s
+2025-03-13 17:17:04,508 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/docs
+2025-03-13 17:17:04,559 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/docs - Status: 200 - Time: 0.06s
+2025-03-13 17:17:06,519 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/openapi.json
+2025-03-13 17:17:06,625 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/openapi.json - Status: 200 - Time: 0.11s

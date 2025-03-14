@@ -7,7 +7,9 @@ from app.models import User, LoginHistory, Notification, AuditLog, Presenter, Gu
 from sqlalchemy.orm.exc import NoResultFound
 from fastapi import HTTPException
 from app.db.crud.crud_permissions import initialize_user_permissions
-
+from sqlalchemy import exc
+from typing import Optional
+from app.schemas import UserUpdate
 
 # -------------------------
 # Fonction utilitaire pour récupérer un utilisateur avec leurs permissions
@@ -73,8 +75,9 @@ def get_all_users(db: Session) -> List[User]:
     """
     Récupérer tous les utilisateurs actifs dans la base de données.
     """
-    try:
-        return db.query(User).filter(User.is_active == True).all()
+    try:  
+        query = db.query(User).options(joinedload(User.roles)).filter(User.is_active == True)
+        return query.all()
     except SQLAlchemyError as e:
         print(f"Error retrieving all users: {e}")
         return []
@@ -109,22 +112,44 @@ def create_user(db: Session, user_data: dict) -> User:
 # -------------------------
 # Mettre à jour un utilisateur existant
 # -------------------------
-def update_user(db: Session, user_id: int, user_data: dict) -> User:
+def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[User]:
     """
-    Mettre à jour un utilisateur existant.
+    Mettre à jour un utilisateur dans la base de données.
+    
+    Args:
+        db (Session): Session SQLAlchemy.
+        user_id (int): ID de l'utilisateur à mettre à jour.
+        user_update (UserUpdate): Données de mise à jour.
+    
+    Returns:
+        Optional[User]: L'utilisateur mis à jour ou None si non trouvé.
     """
     try:
-        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
-        if user:
-            for key, value in user_data.items():
+        # Récupérer l'utilisateur existant
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+
+        # Mettre à jour les champs fournis
+        update_data = user_update.dict(exclude_unset=True)  # Exclut les champs non définis
+        for key, value in update_data.items():
+            if key == "roles":
+                # Mettre à jour les rôles (supprimer les anciens, ajouter les nouveaux)
+                if value is not None:
+                    user.roles = [db.query(Role).get(role_id) for role_id in value if db.query(Role).get(role_id)]
+            else:
                 setattr(user, key, value)
-            db.commit()
-            db.refresh(user)
-            return user
-        return None
-    except SQLAlchemyError as e:
+
+        # Si is_deleted est True, mettre à jour deleted_at
+        if user_update.is_deleted and not user.deleted_at:
+            user.deleted_at = datetime.utcnow()
+
+        db.commit()
+        db.refresh(user)
+        return user
+    except exc.SQLAlchemyError as e:
+        print(f"Erreur lors de la mise à jour de l'utilisateur : {e}")
         db.rollback()
-        print(f"Error updating user with ID {user_id}: {e}")
         return None
 
 # -------------------------
