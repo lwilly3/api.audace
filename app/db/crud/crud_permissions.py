@@ -428,26 +428,26 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
         # Liste des permissions valides (basée sur le modèle UserPermissions)
         valid_permissions = {
     # Permissions pour les showplans
-    'can_access_showplan_broadcast_section', 'can_access_showplan_section', 'can_create_showplan',
+    'can_acces_showplan_broadcast_section', 'can_acces_showplan_section', 'can_create_showplan',
     'can_edit_showplan', 'can_archive_showplan', 'can_archiveStatusChange_showplan', 'can_delete_showplan',
     'can_destroy_showplan', 'can_changestatus_showplan', 'can_changestatus_owned_showplan',
     'can_changestatus_archived_showplan', 'can_setOnline_showplan', 'can_viewAll_showplan',
 
     # Permissions pour les utilisateurs
-    'can_access_users_section', 'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
+    'can_acces_users_section', 'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
 
     # Permissions pour les rôles
     'can_manage_roles', 'can_assign_roles',
 
     # Permissions pour les invités
-    'can_access_guests_section', 'can_view_guests', 'can_edit_guests', 'can_delete_guests',
+    'can_acces_guests_section', 'can_view_guests', 'can_edit_guests', 'can_delete_guests',
 
     # Permissions pour les présentateurs
-    'can_access_presenters_section', 'can_view_presenters', 'can_create_presenters',  # Nouvelle permission ajoutée
+    'can_acces_presenters_section', 'can_view_presenters', 'can_create_presenters',  # Nouvelle permission ajoutée
     'can_edit_presenters', 'can_delete_presenters',
 
     # Permissions pour les émissions
-    'can_access_emissions_section', 'can_view_emissions', 'can_create_emissions', 'can_edit_emissions',
+    'can_acces_emissions_section', 'can_view_emissions', 'can_create_emissions', 'can_edit_emissions',
     'can_delete_emissions', 'can_manage_emissions',
 
     # Permissions pour les notifications
