@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.config.config import settings
 from app.models import table_models
 from app.models import model_user
+from app.db.crud.crud_auth import is_token_revoked
 # from app.models.model_auth_token import AuthToken  # Import des modèles de la base de données
 # from app.db.crud.crud_auth import validate_token, delete_expired_tokens
 
@@ -39,53 +40,6 @@ ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRATION_MINUTE
 
 
-#////////////
-
-
-# # Fonction de validation des tokens
-# def validate_token(db: Session, token: str):
-#     try:
-#         # Décodage du token JWT
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         user_id = payload.get("user_id")
-
-#         # Recherche du token dans la base de données
-#         db_token = db.query(AuthToken).filter(AuthToken.user_id == user_id, AuthToken.access_token == token).first()
-
-#         if not db_token:
-#             return {"error": "Invalid token"}
-
-#         # Vérification de l'expiration
-#         if db_token.expires_at < datetime.utcnow():
-#             # Suppression du token expiré
-#             db.delete(db_token)
-#             db.commit()
-#             return {"error": "Token expired and removed from database"}
-
-#         return {"user_id": user_id, "valid": True}
-
-#     except ExpiredSignatureError:
-#         return {"error": "Token expired (ExpiredSignatureError)"}
-#     except JWTError:
-#         return {"error": "Invalid token (JWTError)"}
-
-# # Fonction pour supprimer les tokens expirés de la base de données
-# def delete_expired_tokens(db: Session):
-#     now = datetime.utcnow()
-#     expired_tokens = db.query(AuthToken).filter(AuthToken.expires_at < now).all()
-
-#     if expired_tokens:
-#         for token in expired_tokens:
-#             db.delete(token)  # Supprime le token
-#         db.commit()  # Commit les changements
-#         return {"message": f"{len(expired_tokens)} expired tokens deleted."}
-#     return {"message": "No expired tokens found."}
-
-
-
-
-
-#///////////////  db: Session = Depends(get_db)
 
 
 def create_acces_token(data: dict):
@@ -100,10 +54,19 @@ def create_acces_token(data: dict):
 
     return encoded_jwt 
 
-
+# Vérifie la validité d'un token JWT et si il n'est pas révoqué
 # extrait l'id du token en vue deventuelle traitement a base de l'id de lutilisateur
-def verify_access_token(token: str, credentials_exception):
+def verify_access_token(token: str, credentials_exception, db: Session):
+    #  db: Session = Depends(database.get_db)
     try:
+        
+        
+        
+        # Vérifie si le token est dans la liste noire
+        if is_token_revoked( db,token):
+            raise credentials_exception
+        
+
         # decodage
         token_payload=jwt.decode(token, SECRET_KEY,algorithms= ALGORITHM )
         # extraction
@@ -148,7 +111,7 @@ def verify_access_token(token: str, credentials_exception):
 def get_current_user(token: str= Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     exception=HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"identification non valide,", headers={"WWW-Authentificate": "Bearer"})
 
-    contenue_token=verify_access_token(token, credentials_exception=exception  )
+    contenue_token=verify_access_token(token, credentials_exception=exception, db=db) 
 
     # reourne l'id du l'utilisateur courant
     # current_user_info=db.query(table_models.User).filter(table_models.User.id==contenue_token.id).first()

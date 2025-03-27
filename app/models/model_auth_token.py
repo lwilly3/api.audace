@@ -1,11 +1,10 @@
-# from sqlalchemy import Column, Integer, String, DateTime
-# from app.db.database import Base #metadata
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.sql import func
+from app.db.database import Base
 
-# # Modèle représentant un token d'authentification
-# class AuthToken(Base):
-#     __tablename__ = "auth_tokens"
+# Modèle pour stocker les tokens invalidés
+class RevokedToken(Base):
+    __tablename__ = "revoked_tokens"
 
-#     id = Column(Integer, primary_key=True, index=True)
-#     user_id = Column(Integer, index=True)
-#     access_token = Column(String, unique=True, index=True)
-#     expires_at = Column(DateTime)
+    token = Column(String, primary_key=True, index=True)  # Le token JWT invalidé
+    revoked_at = Column(DateTime(timezone=True), server_default=func.now())  # Date de révocation du token

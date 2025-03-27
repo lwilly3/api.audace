@@ -7,9 +7,12 @@ from app.models import table_models
 from app.models import model_user
 from core.auth import oauth2
 from app.db import database
+from app.db.database import get_db  # Cette fonction obtient une session de base de données
+
 from app.schemas import schemas
 from app.utils import utils
 from app.db.crud.crud_permissions import get_user_permissions
+from app.db.crud.crud_auth import revoke_token
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -51,3 +54,14 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
              "name":user_to_log_on_db.name,
              "phone_number":user_to_log_on_db.phone_number,
                "permissions":permissions}
+
+
+
+# Endpoint pour déconnecter un utilisateur
+@router.post('/logout', status_code=status.HTTP_204_NO_CONTENT)
+def logout(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get_db), current_user: model_user.User = Depends(oauth2.get_current_user)):
+    # Ajoute le token à la liste noire pour l'invalider
+    revoke_token(db, token)
+
+    # Retourne une réponse 204 (No Content) pour indiquer que la déconnexion a réussi
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

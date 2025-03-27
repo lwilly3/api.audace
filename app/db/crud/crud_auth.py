@@ -1,49 +1,116 @@
+
+from datetime import datetime, timezone
+from sqlalchemy.orm import Session
+from app.models.model_auth_token import RevokedToken
+from jose import JWTError, jwt
+from app.config.config import settings
+
+# Ajoute un token à la liste noire
+def revoke_token(db: Session, token: str) -> RevokedToken:
+    """
+    Ajoute un token à la table RevokedToken pour l'invalider.
+
+    Args:
+        db (Session): Session SQLAlchemy pour accéder à la base de données.
+        token (str): Token JWT à révoquer.
+
+    Returns:
+        RevokedToken: Objet représentant le token révoqué.
+    """
+    revoked_token = RevokedToken(token=token)
+    db.add(revoked_token)
+    db.commit()
+    db.refresh(revoked_token)
+    return revoked_token
+
+# Vérifie si un token est dans la liste noire
+def is_token_revoked(db: Session, token: str) -> bool:
+    """
+    Vérifie si un token a été révoqué (présent dans la table RevokedToken).
+
+    Args:
+        db (Session): Session SQLAlchemy pour accéder à la base de données.
+        token (str): Token JWT à vérifier.
+
+    Returns:
+        bool: True si le token est révoqué, False sinon.
+    """
+    return db.query(RevokedToken).filter(RevokedToken.token == token).first() is not None
+
+# Supprime les tokens révoqués qui sont expirés
+def delete_expired_tokens(db: Session, current_time: datetime) -> None:
+    """
+    Supprime les tokens révoqués qui sont expirés (basé sur le payload JWT et la date de révocation).
+
+    Args:
+        db (Session): Session SQLAlchemy pour accéder à la base de données.
+        current_time (datetime): Date actuelle pour comparaison.
+
+    Note:
+        Cette fonction peut être appelée périodiquement pour nettoyer la table RevokedToken.
+    """
+    revoked_tokens = db.query(RevokedToken).all()
+    for revoked_token in revoked_tokens:
+        try:
+            # Décode le token pour vérifier sa date d'expiration
+            payload = jwt.decode(revoked_token.token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            exp = datetime.fromtimestamp(payload['exp'], tz=timezone.utc)
+
+            # Si le token est expiré ou si sa date de révocation est antérieure à current_time
+            if exp < current_time or revoked_token.revoked_at < current_time:
+                db.delete(revoked_token)
+        except JWTError:
+            # Si le token est invalide, on le supprime
+            db.delete(revoked_token)
+    db.commit()
+
+
+
+
+
+
+
+
+
+
+
+
+# from datetime import datetime, timezone
 # from sqlalchemy.orm import Session
-# from datetime import datetime
-# from app.models.model_auth_token import AuthToken  # Import des modèles de la base de données
-# from jose import JWTError, jwt, ExpiredSignatureError, InvalidTokenError
+# from app.models.model_auth_token import RevokedToken
+
+# from jose import JWTError, jwt
 # from app.config.config import settings
 
 
-# SECRET_KEY = settings.SECRET_KEY
-# ALGORITHM = settings.ALGORITHM
-# ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRATION_MINUTE
+# def delete_expired_tokens(db: Session, current_time: datetime):
+#     revoked_tokens = db.query(RevokedToken).all()
+#     for revoked_token in revoked_tokens:
+#         try:
+#             payload = jwt.decode(revoked_token.token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+#             exp = datetime.fromtimestamp(payload['exp'], tz=timezone.utc)
 
-# # Fonction de validation des tokens
-# def validate_token(db: Session, token: str):
-#     try:
-#         # Décodage du token JWT
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         user_id = payload.get("user_id")
+#             # exp = datetime.utcfromtimestamp(payload['exp'])
+#             if exp < current_time:
+#                 db.delete(revoked_token)
+#         except JWTError:
+#             # Si le token est invalide, on peut le supprimer
+#             db.delete(revoked_token)
+#     db.commit()
 
-#         # Recherche du token dans la base de données
-#         db_token = db.query(AuthToken).filter(AuthToken.user_id == user_id, AuthToken.access_token == token).first()
+# # Ajoute un token à la liste noire
+# def revoke_token(db: Session, token: str):
+#     revoked_token = RevokedToken(token=token)
+#     db.add(revoked_token)
+#     db.commit()
+#     db.refresh(revoked_token)
+#     return revoked_token
 
-#         if not db_token:
-#             return {"error": "Invalid token"}
+# # Vérifie si un token est dans la liste noire
+# def is_token_revoked(db: Session, token: str) -> bool:
+#     return db.query(RevokedToken).filter(RevokedToken.token == token).first() is not None
 
-#         # Vérification de l'expiration
-#         if db_token.expires_at < datetime.utcnow():
-#             # Suppression du token expiré
-#             db.delete(db_token)
-#             db.commit()
-#             return {"error": "Token expired and removed from database"}
-
-#         return {"user_id": user_id, "valid": True}
-
-#     except ExpiredSignatureError:
-#         return {"error": "Token expired"}
-#     except JWTError:
-#         return {"error": "JWTError -> Invalid token"}
-
-# # Fonction pour supprimer les tokens expirés de la base de données
-# def delete_expired_tokens(db: Session):
-#     now = datetime.utcnow()
-#     expired_tokens = db.query(AuthToken).filter(AuthToken.expires_at < now).all()
-
-#     if expired_tokens:
-#         for token in expired_tokens:
-#             db.delete(token)  # Supprime le token
-#         db.commit()  # Commit les changements
-#         return {"message": f"{len(expired_tokens)} expired tokens deleted."}
-#     return {"message": "No expired tokens found."}
+# # Supprime les tokens révoqués qui sont expirés (optionnel, pour nettoyer la base)
+# def delete_expired_tokens(db: Session, current_time: datetime):
+#     db.query(RevokedToken).filter(RevokedToken.revoked_at < current_time).delete()
+#     db.commit()
