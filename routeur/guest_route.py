@@ -1,8 +1,3 @@
-# # routes.py
-# from fastapi import APIRouter, HTTPException
-# from typing import List, Optional
-# from app.db.crud.crud_guests import get_all_active_guests, get_guest_by_id, create_guest, update_guest, soft_delete_guest
-# from app.schemas import GuestInDB,GuestCreate,GuestUpdate
 
 
 
@@ -14,6 +9,14 @@ from app.schemas import GuestResponse, GuestCreate, GuestUpdate
 from app.db.database import get_db
 from typing import List
 from core.auth import oauth2
+from app.db.crud.crud_guests import GuestService
+from app.schemas.schema_guests import GuestResponseWithAppearances
+from app.exceptions.guest_exceptions import GuestNotFoundException, DatabaseQueryException
+
+
+
+
+
 # current_user: int = Depends(oauth2.get_current_user)
 router = APIRouter(
 
@@ -61,6 +64,7 @@ def get_guests_route(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des invités: {str(e)}")
 
+
 @router.put("/{guest_id}", response_model=GuestResponse)
 def update_guest_route(
     guest_id: int,
@@ -92,165 +96,50 @@ def delete_guest_route(
 
 
 
+# //////////////////////////// recuperation des invite avec leurs details//////////
+
+
+@router.get("/details/{guest_id}",
+    response_model=GuestResponseWithAppearances,
+    summary="Récupérer les détails d'un invité",
+    description="Retourne les informations d'un invité ainsi que ses participations aux émissions."
+)
+async def get_guest_details_with_appearances(guest_id: int, db: Session = Depends(get_db)):
+    """
+    Endpoint pour récupérer les détails d'un invité avec ses apparitions.
+    
+    Args:
+        guest_id (int): Identifiant de l'invité à récupérer.
+        db (Session): Session SQLAlchemy injectée via dépendance.
+    
+    Returns:
+        GuestResponseWithAppearances: Détails de l'invité et liste de ses participations.
+    
+    Raises:
+        HTTPException: 404 si l'invité n'est pas trouvé, 500 en cas d'erreur serveur.
+    """
+    try:
+        # Étape 1 : Récupérer l'invité
+        guest = GuestService.get_guest_by_id_allinfo(db, guest_id)
+        
+        # Étape 2 : Récupérer les participations
+        appearances = GuestService.get_guest_appearances(db, guest_id)
+        
+        # Étape 3 : Construire et retourner la réponse
+        response = GuestService.build_guest_response(guest, appearances)
+        return response
+    
+    except GuestNotFoundException as e:
+        # Erreur 404 pour un invité non trouvé
+        raise HTTPException(status_code=404, detail=str(e))
+    except DatabaseQueryException as e:
+        # Erreur 500 pour une erreur de base de données
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        # Gestion des erreurs inattendues
+        raise HTTPException(status_code=500, detail=f"Erreur inattendue: {str(e)}")
 
 
 
 
 
-
-
-# @router.post("/guests", response_model=GuestInDB)
-# def create_guest_route(guest: Guest):
-#     """
-#     Ajouter un nouvel invité.
-#     """
-#     new_guest = create_guest(guest.name, guest.contact_info, guest.details)
-#     return new_guest
-
-
-
-
-# @router.put("/guests/{id}", response_model=GuestInDB)
-# def update_guest_route(id: int, guest: Guest):
-#     """
-#     Mettre à jour un invité existant.
-#     """
-#     updated_guest = update_guest(id, guest.name, guest.contact_info, guest.details)
-#     if not updated_guest:
-#         raise HTTPException(status_code=404, detail="Guest not found")
-#     return updated_guest
-
-# @router.put("/guests/{id}", response_model=GuestInDB)
-# def update_guest_route(id: int, guest: GuestUpdate):
-#     """
-#     Mettre à jour un invité existant.
-#     """
-#     updated_guest = update_guest(id, guest.name, guest.contact_info, guest.details)
-#     if not updated_guest:
-#         raise HTTPException(status_code=404, detail="Guest not found")
-#     return updated_guest
-
-
-
-# @router.delete("/guests/{id}")
-# def delete_guest_route(id: int):
-#     """
-#     Supprimer (soft delete) un invité.
-#     """
-#     success = soft_delete_guest(id)
-#     if not success:
-#         raise HTTPException(status_code=404, detail="Guest not found")
-#     return {"detail": "Guest soft-deleted successfully"}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# from fastapi import FastAPI, HTTPException
-# from typing import List, Optional
-# from pydantic import BaseModel
-# from datetime import datetime
-
-
-# app = FastAPI()
-
-
-# # Simulated database for guests
-# guests_db = {}  # Dictionnaire pour stocker les invités actifs/inactifs
-
-
-# # Modèles pour les données des invités
-# class Guest(BaseModel):
-#     """
-#     Modèle de base pour créer ou mettre à jour un invité.
-#     """
-#     name: str
-#     contact_info: str
-#     details: Optional[str] = None
-#     is_active: bool = True  # Indique si l'invité est actif
-
-
-# class GuestInDB(Guest):
-#     """
-#     Modèle étendu pour inclure des informations supplémentaires stockées en base.
-#     """
-#     id: int
-#     created_at: datetime
-#     updated_at: Optional[datetime] = None
-
-
-# # Fonction utilitaire pour récupérer un invité, ou lever une erreur 404
-# def get_guest_or_404(guest_id: int) -> GuestInDB:
-#     if guest_id not in guests_db or not guests_db[guest_id].is_active:
-#         raise HTTPException(status_code=404, detail="Guest not found")
-#     return guests_db[guest_id]
-
-
-# # Routes
-# @app.get("/guests", response_model=List[GuestInDB])
-# def get_all_guests():
-#     """
-#     Récupérer tous les invités actifs.
-#     """
-#     return [g for g in guests_db.values() if g.is_active]
-
-
-# @app.get("/guests/{id}", response_model=GuestInDB)
-# def get_guest(id: int):
-#     """
-#     Récupérer un invité spécifique par son ID.
-#     Lève une erreur 404 si l'invité n'existe pas ou est inactif.
-#     """
-#     return get_guest_or_404(id)
-
-
-# @app.post("/guests", response_model=GuestInDB)
-# def create_guest(guest: Guest):
-#     """
-#     Ajouter un nouvel invité.
-#     Attribue automatiquement un ID unique.
-#     """
-#     guest_id = len(guests_db) + 1  # Génération d'un nouvel ID
-#     new_guest = GuestInDB(
-#         **guest.dict(), id=guest_id, created_at=datetime.utcnow()
-#     )
-#     guests_db[guest_id] = new_guest  # Ajout dans la base simulée
-#     return new_guest
-
-
-# @app.put("/guests/{id}", response_model=GuestInDB)
-# def update_guest(id: int, guest: Guest):
-#     """
-#     Mettre à jour un invité existant.
-#     """
-#     existing_guest = get_guest_or_404(id)  # Vérifie si l'invité existe
-#     updated_guest = existing_guest.copy(
-#         update={**guest.dict(), "updated_at": datetime.utcnow()}
-#     )
-#     guests_db[id] = updated_guest  # Mise à jour dans la base simulée
-#     return updated_guest
-
-
-# @app.delete("/guests/{id}")
-# def delete_guest(id: int):
-#     """
-#     Supprimer (soft delete) un invité.
-#     Marque l'invité comme inactif et enregistre l'heure de suppression.
-#     """
-#     guest = get_guest_or_404(id)  # Vérifie si l'invité existe
-#     guest.is_active = False  # Marque comme inactif
-#     guest.updated_at = datetime.utcnow()  # Date de suppression
-#     guests_db[id] = guest  # Mise à jour dans la base simulée
-#     return {"detail": "Guest soft-deleted successfully"}

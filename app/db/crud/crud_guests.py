@@ -7,6 +7,12 @@ from app.schemas import GuestCreate, GuestUpdate,GuestResponse
 from typing import List
 from sqlalchemy import or_
 from typing import Dict, Any
+from app.models.model_guest import Guest  # Modèle SQLAlchemy pour la table guests
+from app.models.model_segment import Segment  # Modèle SQLAlchemy pour la table segments
+from app.models.model_show import Show  # Modèle SQLAlchemy pour la table shows
+from app.schemas.schema_guests import GuestResponseWithAppearances
+from app.exceptions.guest_exceptions import GuestNotFoundException, DatabaseQueryException
+
 
 def create_guest(db: Session, guest: GuestCreate) -> GuestResponse:
     """Créer un nouvel invité."""
@@ -181,183 +187,105 @@ def search_guest(session: Session, query: str) -> Dict[str, Any]:
 
 
 
-# from typing import Optional
+
+# /////////////////////// service pour recuperer un invite avec ses detailles/////////////////
+
 # from sqlalchemy.orm import Session
-# from datetime import datetime, timezone
-# from app.schemas import GuestInDB
-# from app.schemas.schema_guests import GuestCreate, GuestUpdate
 # from sqlalchemy.exc import SQLAlchemyError
-
-# # CRUD pour les invités
-# def get_guest_by_id(db: Session, guest_id: int) -> GuestInDB:
-#     """Récupérer un invité par son ID"""
-#     try:
-#         return db.query(GuestInDB).filter(GuestInDB.id == guest_id).first()
-#     except SQLAlchemyError as e:
-#         raise Exception(f"Erreur lors de la récupération de l'invité avec ID {guest_id} : {str(e)}")
-
-# def get_all_active_guests(db: Session) -> list:
-#     """Récupérer tous les invités actifs"""
-#     try:
-#         return db.query(GuestInDB).filter(GuestInDB.is_active == True).all()
-#     except SQLAlchemyError as e:
-#         raise Exception(f"Erreur lors de la récupération des invités actifs : {str(e)}")
-
-# def create_guest(db: Session, name: str, contact_info: str, details: Optional[str]) -> GuestInDB:
-#     """Créer un nouvel invité"""
-#     try:
-#         guest_id = len(db.query(GuestInDB).all()) + 1  # Génération d'un nouvel ID basé sur la taille actuelle
-#         new_guest = GuestInDB(
-#             id=guest_id,
-#             name=name,
-#             contact_info=contact_info,
-#             details=details,
-#             is_active=True,
-#             created_at=datetime.now(timezone.utc)  # Utilisation de datetime avec timezone
-#         )
-#         db.add(new_guest)
-#         db.commit()
-#         db.refresh(new_guest)
-#         return new_guest
-#     except SQLAlchemyError as e:
-#         db.rollback()  # Annule la transaction en cas d'erreur
-#         raise Exception(f"Erreur lors de la création de l'invité : {str(e)}")
-
-# def update_guest(db: Session, guest_id: int, name: Optional[str], contact_info: Optional[str], details: Optional[str]) -> GuestInDB:
-#     """Mettre à jour un invité existant"""
-#     try:
-#         guest = db.query(GuestInDB).filter(GuestInDB.id == guest_id).first()
-#         if guest:
-#             if name:
-#                 guest.name = name
-#             if contact_info:
-#                 guest.contact_info = contact_info
-#             if details:
-#                 guest.details = details
-#             guest.updated_at = datetime.now(timezone.utc)  # Utilisation de datetime avec timezone
-#             db.commit()
-#             db.refresh(guest)
-#         return guest
-#     except SQLAlchemyError as e:
-#         db.rollback()  # Annule la transaction en cas d'erreur
-#         raise Exception(f"Erreur lors de la mise à jour de l'invité avec ID {guest_id} : {str(e)}")
-
-# def soft_delete_guest(db: Session, guest_id: int) -> bool:
-#     """Supprimer un invité (soft delete)"""
-#     try:
-#         guest = db.query(GuestInDB).filter(GuestInDB.id == guest_id).first()
-#         if guest:
-#             guest.is_active = False
-#             guest.updated_at = datetime.now(timezone.utc)  # Utilisation de datetime avec timezone
-#             db.commit()
-#             db.refresh(guest)
-#             return True
-#         return False
-#     except SQLAlchemyError as e:
-#         db.rollback()  # Annule la transaction en cas d'erreur
-#         raise Exception(f"Erreur lors de la suppression de l'invité avec ID {guest_id} : {str(e)}")
+# from typing import List
 
 
 
 
 
+class GuestService:
+    """Service contenant la logique métier pour la gestion des invités."""
 
+    @staticmethod
+    def get_guest_by_id_allinfo(db: Session, guest_id: int) -> Guest:
+        """
+        Récupère un invité par son ID depuis la base de données.
+        
+        Args:
+            db (Session): Session SQLAlchemy pour interagir avec la DB.
+            guest_id (int): Identifiant de l'invité à récupérer.
+        
+        Returns:
+            Guest: Objet Guest correspondant à l'invité trouvé.
+        
+        Raises:
+            GuestNotFoundException: Si l'invité n'existe pas ou est supprimé.
+            DatabaseQueryException: En cas d'erreur lors de la requête SQL.
+        """
+        try:
+            guest = db.query(Guest).filter(
+                Guest.id == guest_id,
+                Guest.is_deleted.is_(False)  # Exclut les invités marqués comme supprimés
+            ).first()
+            if not guest:
+                raise GuestNotFoundException(guest_id)
+            return guest
+        except SQLAlchemyError as e:
+            raise DatabaseQueryException(f"Erreur lors de la récupération de l'invité: {str(e)}")
 
+    @staticmethod
+    def get_guest_appearances(db: Session, guest_id: int) -> List[Show]:
+        """
+        Récupère la liste des émissions auxquelles un invité a participé.
+        
+        Args:
+            db (Session): Session SQLAlchemy pour interagir avec la DB.
+            guest_id (int): Identifiant de l'invité.
+        
+        Returns:
+            List[Show]: Liste des objets Show représentant les émissions.
+        
+        Raises:
+            DatabaseQueryException: En cas d'erreur lors de la requête SQL.
+        """
+        try:
+            # Jointure entre Show, Segment et la relation many-to-many segment_guests
+            appearances = (
+                db.query(Show)
+                .join(Segment, Show.id == Segment.show_id)
+                .join(Segment.guests)  # Relation many-to-many avec Guest
+                .filter(Segment.guests.any(id=guest_id))
+                .all()
+            )
+            return appearances
+        except SQLAlchemyError as e:
+            raise DatabaseQueryException(f"Erreur lors de la récupération des participations: {str(e)}")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # # database.py
-# # from models import GuestInDB
-# # from datetime import datetime, timezone
-
-# # # Base de données simulée
-# # guests_db = {}
-
-# # def get_guest_by_id(guest_id: int) -> GuestInDB:
-# #     """Récupérer un invité par son ID"""
-# #     return guests_db.get(guest_id)
-
-# # def get_all_active_guests() -> list:
-# #     """Récupérer tous les invités actifs"""
-# #     return [g for g in guests_db.values() if g.is_active]
-
-# # def create_guest(name: str, contact_info: str, details: Optional[str]) -> GuestInDB:
-# #     """Créer un nouvel invité"""
-# #     guest_id = len(guests_db) + 1  # Génération d'un nouvel ID
-# #     new_guest = GuestInDB(
-# #         id=guest_id,
-# #         name=name,
-# #         contact_info=contact_info,
-# #         details=details,
-# #         is_active=True,
-# #         created_at=datetime.now(timezone.utc)  # Utilisation de timezone-aware datetime
-# #     )
-# #     guests_db[guest_id] = new_guest
-# #     return new_guest
-
-# # def update_guest(guest_id: int, name: Optional[str], contact_info: Optional[str], details: Optional[str]) -> GuestInDB:
-# #     """Mettre à jour un invité existant"""
-# #     guest = guests_db.get(guest_id)
-# #     if guest:
-# #         if name:
-# #             guest.name = name
-# #         if contact_info:
-# #             guest.contact_info = contact_info
-# #         if details:
-# #             guest.details = details
-# #         guest.updated_at = datetime.now(timezone.utc)  # Utilisation de timezone-aware datetime
-# #         guests_db[guest_id] = guest
-# #     return guest
-
-# # def soft_delete_guest(guest_id: int) -> bool:
-# #     """Supprimer un invité (soft delete)"""
-# #     guest = guests_db.get(guest_id)
-# #     if guest:
-# #         guest.is_active = False
-# #         guest.updated_at = datetime.now(timezone.utc)  # Utilisation de timezone-aware datetime
-# #         guests_db[guest_id] = guest
-# #         return True
-# #     return False
-
-
-
-
-
-
-
-
-
-
-# # from sqlalchemy.orm import Session
-# # from app.models.model_guest import Guest
-# # from app.schemas.schema_guests import GuestCreate, GuestUpdate
-
-# # def create_guest(db: Session, guest: GuestCreate):
-# #     new_guest = Guest(**guest.dict())
-# #     db.add(new_guest)
-# #     db.commit()
-# #     db.refresh(new_guest)
-# #     return new_guest
-
-# # def get_guest(db: Session, guest_id: int):
-# #     return db.query(Guest).filter(Guest.id == guest_id).first()
-
-# # def update_guest(db: Session, guest_id: int, guest_update: GuestUpdate):
-# #     guest = db.query(Guest).filter(Guest.id == guest_id).first()
-# #     for key, value in guest_update.dict(exclude_unset=True).items():
-# #         setattr(guest, key, value)
-# #     db.commit()
-# #     db.refresh(guest)
-# #     return guest
+    @staticmethod
+    def build_guest_response(guest: Guest, appearances: List[Show]) -> GuestResponseWithAppearances:
+        """
+        Construit une réponse structurée avec les détails de l'invité et ses participations.
+        
+        Args:
+            guest (Guest): Objet Guest contenant les informations de base.
+            appearances (List[Show]): Liste des émissions associées.
+        
+        Returns:
+            GuestResponseWithAppearances: Réponse formatée pour l'API, incluant l'ID du conducteur.
+        """
+        return GuestResponseWithAppearances(
+            id=guest.id,
+            name=guest.name,
+            role=guest.role,
+            avatar=guest.avatar,
+            created_at=guest.created_at,
+            biography=guest.biography,
+            contact={
+                "email": guest.email,
+                "phone": guest.phone
+            },
+            appearances=[
+                {
+                    "show_id": show.id,  # Ajout de l'ID du conducteur
+                    "show_title": show.title,
+                    "broadcast_date": show.broadcast_date
+                }
+                for show in appearances
+                if show.broadcast_date  # Exclut les émissions sans date de diffusion
+            ]
+        )

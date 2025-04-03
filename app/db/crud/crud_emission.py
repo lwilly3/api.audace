@@ -122,13 +122,6 @@ def update_emission(db: Session, emission_id: int, emission_update: EmissionCrea
             )
         
 
-        #     title=emission_create.title,  # Titre de l'émission
-        #     synopsis=emission_create.synopsis,  # Synopsis de l'émission (peut être vide)
-        #     type=emission_create.type if hasattr(emission_create, 'type') else None,  # Optionnel
-        #     duration=emission_create.duration if hasattr(emission_create, 'duration') else None,  # Optionnel
-        #     frequency=emission_create.frequency if hasattr(emission_create, 'frequency') else None,  # Optionnel
-        #     description=emission_create.description if hasattr(emission_create, 'description') else None  # Optionnel
-        
         # Appliquer les modifications, si elles sont fournies
         if emission_update.title:
             emission.title = emission_update.title

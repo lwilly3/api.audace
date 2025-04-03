@@ -48,117 +48,34 @@ class GuestResponse(BaseModel):
 
 
 
+class Contact(BaseModel):
+    """Représente les informations de contact d'un invité."""
+    email: Optional[str] = None  # Adresse email de l'invité, peut être nulle
+    phone: Optional[str] = None  # Numéro de téléphone de l'invité, peut être nul
 
 
+class Appearance(BaseModel):
+    """Représente une apparition d'un invité dans une émission."""
+    show_id: int  # Identifiant unique du conducteur (Show)
+    show_title: str  # Titre de l'émission
+    broadcast_date: datetime  # Date de diffusion de l'émission
 
 
-
-
-
-
-
-
-
-
-
-
-
-# from datetime import datetime
-# from pydantic import BaseModel
-# from typing import Optional
-
-# class GuestCreate(BaseModel):
-#     """Modèle de validation pour la création d'un invité"""
-#     name: str
-#     contact_info: str
-#     details: Optional[str] = None
-#     is_active: bool = True  # Par défaut, un invité est actif
-
-#     model_config = {
-#         "from_attributes": True,  # Remplace orm_mode
-#     }
-
-# class GuestUpdate(BaseModel):
-#     """Modèle de validation pour la mise à jour d'un invité"""
-#     name: Optional[str] = None
-#     contact_info: Optional[str] = None
-#     details: Optional[str] = None
-#     is_active: Optional[bool] = None  # Peut être mis à jour pour désactiver un invité
-
+# class GuestResponse(BaseModel):
+#     """Schéma de réponse de base pour les détails d'un invité."""
+#     id: int  # Identifiant unique de l'invité
+#     name: str  # Nom de l'invité
+#     role: Optional[str] = None  # Rôle de l'invité (ex. journaliste, expert)
+#     avatar: Optional[str] = None  # URL de l'avatar de l'invité
+#     created_at: datetime  # Date de création de l'invité
+#     biography: Optional[str] = None  # Biographie de l'invité
+#     contact: Contact  # Informations de contact
 
 #     model_config = {
 #         "from_attributes": True,  # Remplace orm_mode
 #     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# # # models.py
-# # from pydantic import BaseModel
-# # from datetime import datetime
-# # from typing import Optional
-
-
-# class Guest(BaseModel):
-#     """
-#     Modèle de base pour créer ou mettre à jour un invité.
-#     """
-#     name: str
-#     contact_info: str
-#     details: Optional[str] = None
-#     is_active: bool = True  # Indique si l'invité est actif
-
-
-# class GuestInDB(Guest):
-#     """
-#     Modèle étendu pour inclure des informations supplémentaires stockées en base.
-#     """
-#     id: int
-#     created_at: datetime
-#     updated_at: Optional[datetime] = None
-
-
-
-
-
-
-
-
-
-
-
-
-# # # from pydantic import BaseModel
-# # # from typing import Optional
-
-# # # # Base Guest Schema
-# # # class GuestBase(BaseModel):
-# # #     name: str
-# # #     biography: Optional[str]
-
-# # # # Schema for Creating a Guest
-# # # class GuestCreate(GuestBase):
-# # #     pass
-
-# # # # Schema for Reading a Guest
-# # # class GuestRead(GuestBase):
-# # #     id: int
-
-# # #     model_config = {
-# # #         "from_attributes": True,  # Activates attribute-based mapping
-# # #     }
-
-# # # # Schema for Updating a Guest
-# # # class GuestUpdate(BaseModel):
-# # #     name: Optional[str]
-# # #     biography: Optional[str]
+class GuestResponseWithAppearances(GuestResponse):
+    """Schéma de réponse étendu incluant les apparitions de l'invité."""
+    appearances: List[Appearance] = []  # Liste des participations de l'invité
