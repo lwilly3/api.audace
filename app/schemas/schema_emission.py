@@ -33,7 +33,7 @@ class EmissionUpdate(BaseModel):
     title: Optional[str] = Field(None, max_length=255, description="Titre de l'émission")
     synopsis: Optional[str] = Field(None, max_length=1000, description="Synopsis de l'émission")
     type : Optional[str] = Field(None, max_length=1000, description="Type de l'émission")
-    duration :Optional[int] = Field(None, max_length=1000, description="Durée de l'émission")
+    duration :Optional[int] = Field(None,  description="Durée de l'émission")
     frequency : Optional[str] = Field(None, max_length=1000, description="Fréquence de l'émission")
     description : Optional[str] = Field(None, max_length=1000, description="Description de l'émission")
 
