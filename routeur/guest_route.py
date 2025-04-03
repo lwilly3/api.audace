@@ -36,7 +36,7 @@ def create_guest_route(
 
 @router.get("/search")
 def search_guests(query: str, db: Session = Depends(get_db)):
-    response = search_guest(db, query)
+    response = GuestService.search_guest_detailed(db, query)
     return response
 
 

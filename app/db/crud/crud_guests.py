@@ -291,3 +291,66 @@ class GuestService:
                 if show.broadcast_date  # Exclut les émissions sans date de diffusion
             ]
         )
+    
+    @staticmethod
+    def search_guest_detailed(db: Session, query: str) -> Dict[str, Any]:
+        """
+        Recherche des invités dans la base de données en fonction d'un mot-clé.
+        
+        Args:
+            db (Session): Session SQLAlchemy pour interagir avec la DB.
+            query (str): Chaîne de recherche (nom, email, téléphone, rôle, etc.).
+        
+        Returns:
+            Dict[str, Any]: Dictionnaire contenant le statut, un message et les résultats formatés.
+        
+        Raises:
+            DatabaseQueryException: En cas d'erreur lors de la requête SQL.
+        """
+        try:
+            # Vérifier si le mot-clé de recherche est vide
+            if not query.strip():
+                return {
+                    "status_code": 400,
+                    "message": "Le mot-clé de recherche ne peut pas être vide.",
+                    "data": []
+                }
+
+            # Recherche dans la base de données avec filtrage insensible à la casse
+            results = db.query(Guest).filter(
+                Guest.is_deleted.is_(False),
+                or_(
+                    Guest.name.ilike(f"%{query}%"),
+                    Guest.email.ilike(f"%{query}%"),
+                    Guest.phone.ilike(f"%{query}%"),
+                    Guest.role.ilike(f"%{query}%"),
+                    Guest.contact_info.ilike(f"%{query}%"),
+                    Guest.biography.ilike(f"%{query}%")
+                )
+            ).all()
+
+            # Vérifier si des résultats ont été trouvés
+            if not results:
+                return {
+                    "status_code": 404,
+                    "message": "Aucun invité correspondant trouvé.",
+                    "data": []
+                }
+
+            # Structurer les résultats avec les participations
+            guests_data = []
+            for guest in results:
+                appearances = GuestService.get_guest_appearances(db, guest.id)
+                guest_response = GuestService.build_guest_response(guest, appearances)
+                guests_data.append(guest_response)
+
+            return {
+                "status_code": 200,
+                "message": "Recherche effectuée avec succès.",
+                "data": guests_data
+            }
+
+        except SQLAlchemyError as e:
+            raise DatabaseQueryException(f"Erreur interne de la base de données : {str(e)}")
+        except Exception as e:
+            raise DatabaseQueryException(f"Une erreur inattendue s'est produite : {str(e)}")
