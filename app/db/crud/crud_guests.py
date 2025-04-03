@@ -275,6 +275,8 @@ class GuestService:
             avatar=guest.avatar,
             created_at=guest.created_at,
             biography=guest.biography,
+            contact_info=guest.contact_info,
+            
             contact={
                 "email": guest.email,
                 "phone": guest.phone

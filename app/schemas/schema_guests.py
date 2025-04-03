@@ -20,6 +20,12 @@ class GuestCreate(BaseModel):
     email: Optional[str] = Field(None, description="email", example="Marie@gmail.com")
     avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
 
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    }
+
+
+
 
 
 class GuestUpdate(BaseModel):
@@ -31,6 +37,10 @@ class GuestUpdate(BaseModel):
     phone: Optional[str] = Field(None, description="phone")
     email: Optional[str] = Field(None, description="email")
     avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
+
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    }
 
 
 
@@ -46,12 +56,20 @@ class GuestResponse(BaseModel):
 
     segments: List[str] = Field(default=[], description="Liste des segments associés")
 
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    }
+
 
 
 class Contact(BaseModel):
     """Représente les informations de contact d'un invité."""
     email: Optional[str] = None  # Adresse email de l'invité, peut être nulle
     phone: Optional[str] = None  # Numéro de téléphone de l'invité, peut être nul
+
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    }
 
 
 class Appearance(BaseModel):
@@ -60,22 +78,31 @@ class Appearance(BaseModel):
     show_title: str  # Titre de l'émission
     broadcast_date: datetime  # Date de diffusion de l'émission
 
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    }
 
-# class GuestResponse(BaseModel):
-#     """Schéma de réponse de base pour les détails d'un invité."""
-#     id: int  # Identifiant unique de l'invité
-#     name: str  # Nom de l'invité
-#     role: Optional[str] = None  # Rôle de l'invité (ex. journaliste, expert)
-#     avatar: Optional[str] = None  # URL de l'avatar de l'invité
-#     created_at: datetime  # Date de création de l'invité
-#     biography: Optional[str] = None  # Biographie de l'invité
-#     contact: Contact  # Informations de contact
 
-#     model_config = {
-#         "from_attributes": True,  # Remplace orm_mode
-#     }
+class GuestResponseAndDetails(BaseModel):
+    """Schéma de réponse de base pour les détails d'un invité."""
+    id: int  # Identifiant unique de l'invité
+    name: str  # Nom de l'invité
+    role: Optional[str] = None  # Rôle de l'invité (ex. journaliste, expert)
+    avatar: Optional[str] = None  # URL de l'avatar de l'invité
+    created_at: datetime  # Date de création de l'invité
+    biography: Optional[str] = None  # Biographie de l'invité
+    contact: Contact  # Informations de contact
+    contact_info: Optional[str] = None  # Ajout de contact_info, optionnel
+
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    }
 
 
 class GuestResponseWithAppearances(GuestResponse):
     """Schéma de réponse étendu incluant les apparitions de l'invité."""
     appearances: List[Appearance] = []  # Liste des participations de l'invité
+
+    model_config = {
+        "from_attributes": True,  # Remplace orm_mode
+    }

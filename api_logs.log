@@ -2207,3 +2207,18 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-04-03 21:46:47,243 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.54s
 2025-04-03 21:48:18,763 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/guests/
 2025-04-03 21:48:19,254 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.49s
+2025-04-03 21:59:53,561 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-04-03 21:59:54,198 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-04-03 21:59:54,841 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 1.28s
+2025-04-03 22:00:00,768 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests
+2025-04-03 22:00:00,771 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests - Status: 307 - Time: 0.00s
+2025-04-03 22:00:00,796 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/
+2025-04-03 22:00:00,894 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/ - Status: 200 - Time: 0.10s
+2025-04-03 22:00:15,836 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/details/1
+2025-04-03 22:00:15,931 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/details/1 - Status: 500 - Time: 0.10s
+2025-04-03 22:09:44,960 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/guests/details/1
+2025-04-03 22:09:45,355 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/guests/details/1 - Status: 200 - Time: 0.39s
