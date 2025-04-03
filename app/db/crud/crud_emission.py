@@ -58,8 +58,11 @@ def get_emissions(db: Session, skip: int = 0, limit: int = 10) -> list[EmissionR
     Elle renvoie les émissions paginées selon les paramètres `skip` et `limit`.
     """
     try:
-        # Interroger la base de données pour récupérer les émissions avec un décalage (skip) et une limite (limit)
-        emissions = db.query(Emission).offset(skip).limit(limit).all()
+        # # Interroger la base de données pour récupérer les émissions avec un décalage (skip) et une limite (limit)
+        # emissions = db.query(Emission).offset(skip).limit(limit).all()
+    # Interroger la base de données pour récupérer les émissions non supprimées
+        # avec un décalage (skip) et une limite (limit)
+        emissions = db.query(Emission).filter(Emission.is_deleted == False).offset(skip).limit(limit).all()
         
         # Retourner les émissions sous forme de liste d'objets Pydantic
         return [EmissionResponse.from_orm(emission) for emission in emissions]
