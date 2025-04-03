@@ -2155,3 +2155,32 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-03-27 20:35:38,790 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.05s
 2025-03-27 20:35:38,900 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
 2025-03-27 20:35:40,056 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 401 - Time: 1.16s
+2025-04-03 14:59:49,506 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2025-04-03 14:59:49,519 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.01s
+2025-04-03 14:59:49,524 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2025-04-03 14:59:50,367 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 401 - Time: 0.84s
+2025-04-03 14:59:56,500 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/login
+2025-04-03 14:59:56,580 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-04-03 14:59:57,223 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/login - Status: 200 - Time: 0.72s
+2025-04-03 15:00:05,525 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2025-04-03 15:00:05,531 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.01s
+2025-04-03 15:00:05,546 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2025-04-03 15:00:05,627 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 422 - Time: 0.08s
+2025-04-03 15:00:37,510 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2025-04-03 15:00:37,520 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.01s
+2025-04-03 15:00:37,531 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2025-04-03 15:00:37,745 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 422 - Time: 0.21s
+2025-04-03 15:02:01,661 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2025-04-03 15:02:01,663 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2025-04-03 15:02:01,674 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2025-04-03 15:02:09,078 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2025-04-03 15:02:09,080 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2025-04-03 15:02:09,097 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2025-04-03 15:02:59,997 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions
+2025-04-03 15:02:59,999 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions - Status: 307 - Time: 0.00s
+2025-04-03 15:03:00,002 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/emissions/
+2025-04-03 15:03:00,617 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/emissions/ - Status: 200 - Time: 0.62s
