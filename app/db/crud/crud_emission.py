@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models import Emission
 from sqlalchemy.exc import SQLAlchemyError
 from pydantic import ValidationError
@@ -18,7 +18,11 @@ def create_emission(db: Session, emission_create: EmissionCreate) -> EmissionRes
         new_emission = Emission(
             title=emission_create.title,  # Titre de l'émission
             synopsis=emission_create.synopsis,  # Synopsis de l'émission (peut être vide)
-            created_at=datetime.utcnow()  # Date et heure de création (UTC)
+            created_at=datetime.now(timezone.utc),  # Date et heure de création (UTC)
+            type=emission_create.type if hasattr(emission_create, 'type') else None,  # Optionnel
+            duration=emission_create.duration if hasattr(emission_create, 'duration') else None,  # Optionnel
+            frequency=emission_create.frequency if hasattr(emission_create, 'frequency') else None,  # Optionnel
+            description=emission_create.description if hasattr(emission_create, 'description') else None  # Optionnel
         )
         
         # Ajouter l'objet Emission à la session de base de données
