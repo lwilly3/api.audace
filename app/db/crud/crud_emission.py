@@ -118,14 +118,30 @@ def update_emission(db: Session, emission_id: int, emission_update: EmissionCrea
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Émission non trouvée"
+
             )
+        
+
+        #     title=emission_create.title,  # Titre de l'émission
+        #     synopsis=emission_create.synopsis,  # Synopsis de l'émission (peut être vide)
+        #     type=emission_create.type if hasattr(emission_create, 'type') else None,  # Optionnel
+        #     duration=emission_create.duration if hasattr(emission_create, 'duration') else None,  # Optionnel
+        #     frequency=emission_create.frequency if hasattr(emission_create, 'frequency') else None,  # Optionnel
+        #     description=emission_create.description if hasattr(emission_create, 'description') else None  # Optionnel
         
         # Appliquer les modifications, si elles sont fournies
         if emission_update.title:
             emission.title = emission_update.title
         if emission_update.synopsis:
             emission.synopsis = emission_update.synopsis
-        
+        if emission_update.type:
+            emission.type = emission_update.type
+        if emission_update.duration:
+            emission.duration = emission_update.duration       
+        if emission_update.frequency:
+            emission.frequency = emission_update.frequency
+        if emission_update.description:
+            emission.description = emission_update.description 
         # Enregistrer les modifications dans la base de données
         db.commit()
         
