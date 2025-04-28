@@ -9,6 +9,20 @@ on:
 jobs:
   Test-process:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d testdb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       DATABASE_HOSTNAME: localhost
       DATABASE_PORT: "5432"
@@ -35,6 +49,16 @@ jobs:
 
       - name: Install All Dependencies
         run: pip install -r requirements.txt
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..10}; do
+            pg_isready -h localhost -U user -d testdb && break
+            sleep 2
+          done
+
+      - name: Run Migrations
+        run: alembic upgrade head
 
       # Run unit tests
       - name: Run Tests
