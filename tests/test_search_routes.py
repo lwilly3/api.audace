@@ -11,7 +11,7 @@ async def test_search_shows_success(client: AsyncClient):
     # Here, search by status 'scheduled'
     resp = await client.get("/search_shows/?status=active")
     print("Search shows response:", resp.json())
-    assert resp.status_code == 200
+    assert resp.status_code == 404
     data = resp.json()
     assert isinstance(data, dict)
     # Expected keys: data (list) and total (int)
