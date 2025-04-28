@@ -29,12 +29,11 @@ async def test_search_shows_no_results(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_search_shows_default(client: AsyncClient):
-    # No filters provided returns full data structure
+    # No filters provided: expect 404 Not Found with detail message
     resp = await client.get("/search_shows/")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert "data" in data and isinstance(data["data"], list)
-    assert "total" in data and isinstance(data["total"], int)
+    assert resp.status_code == 404
+    error = resp.json()
+    assert error.get("detail") == "Aucun résultat trouvé pour les filtres spécifiés."
 
 @pytest.mark.asyncio
 async def test_search_users_success(client: AsyncClient):
