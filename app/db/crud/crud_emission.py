@@ -35,7 +35,7 @@ def create_emission(db: Session, emission_create: EmissionCreate) -> EmissionRes
         db.refresh(new_emission)
         
         # Retourner la nouvelle émission au format de réponse Pydantic
-        return EmissionResponse.from_orm(new_emission)
+        return EmissionResponse.model_validate(new_emission)
     
     except SQLAlchemyError as e:
         db.rollback()  # Annuler la transaction en cas d'erreur SQL
@@ -65,7 +65,7 @@ def get_emissions(db: Session, skip: int = 0, limit: int = 10) -> list[EmissionR
         emissions = db.query(Emission).filter(Emission.is_deleted == False).offset(skip).limit(limit).all()
         
         # Retourner les émissions sous forme de liste d'objets Pydantic
-        return [EmissionResponse.from_orm(emission) for emission in emissions]
+        return [EmissionResponse.model_validate(emission) for emission in emissions]
     
     except SQLAlchemyError as e:
         # En cas d'erreur SQL, on lève une exception HTTP 500
@@ -93,7 +93,7 @@ def get_emission_by_id(db: Session, emission_id: int) -> EmissionResponse:
             )
         
         # Retourner l'émission trouvée sous forme de réponse Pydantic
-        return EmissionResponse.from_orm(emission)
+        return EmissionResponse.model_validate(emission)
     
     except SQLAlchemyError as e:
         # En cas d'erreur SQL, on lève une exception HTTP 500
@@ -142,7 +142,7 @@ def update_emission(db: Session, emission_id: int, emission_update: EmissionCrea
         db.refresh(emission)
         
         # Retourner l'émission mise à jour au format de réponse Pydantic
-        return EmissionResponse.from_orm(emission)
+        return EmissionResponse.model_validate(emission)
     
     except SQLAlchemyError as e:
         db.rollback()  # Annuler la transaction en cas d'erreur SQL

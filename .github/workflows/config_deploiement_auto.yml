@@ -27,6 +27,10 @@ jobs:
       - name: Install All Dependencies
         run: pip install -r requirements.txt
 
+      # Run unit tests
+      - name: Run Tests
+        run: pytest --maxfail=1 --disable-warnings -q
+
   processus_de_deploiement:
     runs-on: ubuntu-latest
     needs:

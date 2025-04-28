@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import Query
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 from pydantic.fields import Field
@@ -41,9 +41,7 @@ from pydantic.fields import Field
 class ShowStatuslUpdate(BaseModel):
     status: Optional[str] = None
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 
@@ -54,9 +52,7 @@ class SegmentDetailCreate(BaseModel):
     duration: Optional[int]
     description: Optional[str]
     guest_ids: Optional[List[int]]  # Liste des IDs des invités
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ShowCreateWithDetail(BaseModel):
@@ -71,10 +67,7 @@ class ShowCreateWithDetail(BaseModel):
     presenter_ids: Optional[List[int]]  # Liste des IDs des présentateurs
     segments: Optional[List[SegmentDetailCreate]]
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SegmentUpdateWithDetails(BaseModel):
@@ -86,9 +79,7 @@ class SegmentUpdateWithDetails(BaseModel):
     description: Optional[str] = None
     guest_ids: Optional[List[int]] = []
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ShowUpdateWithDetails(BaseModel):
@@ -98,9 +89,7 @@ class ShowUpdateWithDetails(BaseModel):
     presenter_ids: List[int]
     segments: List[SegmentUpdateWithDetails]
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Schéma pour créer un show
@@ -114,10 +103,7 @@ class ShowCreate(BaseModel):
     status: str
     emission_id: Optional[int] = None
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Schéma pour la mise à jour d'un show
@@ -131,10 +117,7 @@ class ShowUpdate(BaseModel):
     status: Optional[str] = None
     emission_id: Optional[int] = None
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Schéma pour la réponse (montrer les données d'un show)
@@ -143,16 +126,14 @@ class ShowOut(ShowCreate):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {
-        "from_attributes": True,
-    }
-
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ShowWithdetailResponse(BaseModel):
     message: str
     show: 'ShowDetails'
+
+    model_config = ConfigDict(from_attributes=True)
 
 class ShowDetails(BaseModel):
     id: int
@@ -167,18 +148,13 @@ class ShowDetails(BaseModel):
     status: str
     # status: Literal['active', 'inactive']  # Assuming these are the possible values
     updated_at: datetime
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
     # class Config:
     #     # To make Pydantic work with datetime formats
     #     json_encoders = {
     #         datetime: lambda v: v.isoformat()  # Convert datetime to ISO format
     #     }
-
-
-
 
 
 #////// pour la creation et la lecture des conjucteurs detailler
@@ -211,6 +187,8 @@ class ShowBase_jsonShow(BaseModel):
     presenters: List[PresenterBase_jsonShow]
     segments: List[SegmentBase_jsonShow]
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class SearchShowFilters(BaseModel):
     keywords: Optional[str] = None
@@ -221,3 +199,5 @@ class SearchShowFilters(BaseModel):
     guest: Optional[List[int]] = None
     skip: int = Query(0, ge=0, description="Nombre d'éléments à sauter (pagination)")
     limit: int = Query(10, ge=1, le=100, description="Nombre maximum d'éléments à retourner")
+
+    model_config = ConfigDict(from_attributes=True)

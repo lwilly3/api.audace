@@ -9,16 +9,20 @@ from core.auth import oauth2
 from app.db import database
 from app.db.database import get_db  # Cette fonction obtient une session de base de données
 
-from app.schemas import schemas
+from app.schemas.schema_users import UserInDB
 from app.utils import utils
 from app.db.crud.crud_permissions import get_user_permissions
 from app.db.crud.crud_auth import revoke_token
+from pydantic import BaseModel, EmailStr
+from app.db.crud.crud_users import create_user
+from routeur.users_route import assign_default_role_to_user
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
 
 router=APIRouter(
-     tags=['Authentication']
+    prefix='/auth',
+    tags=['Authentication']
 )
 
 # response_model=schemas.Token
@@ -36,8 +40,19 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"authentification invalide")
    
 #    virification si le pass hacher et sauver en base de donnee est similaire a la version hash de celui fourni par lutilisateur
-   if not utils.verify(user_credentials_receved.password, user_to_log_on_db.password ):
-      raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"authentification invalide")
+   # Vérification du mot de passe avec fallback si le hash n'est pas au format bcrypt
+   stored_pw = user_to_log_on_db.password or ""
+   # Si le mot de passe en DB ne commence pas par prefixe bcrypt, comparer en clair
+   if not stored_pw.startswith("$2"):
+       valid = (user_credentials_receved.password == stored_pw)
+   else:
+       from passlib.exc import UnknownHashError
+       try:
+           valid = utils.verify(user_credentials_receved.password, stored_pw)
+       except UnknownHashError:
+           valid = False
+   if not valid:
+       raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="authentification invalide")
  
     
 # creation du token
@@ -48,6 +63,7 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
    permissions= get_user_permissions(db, user_to_log_on_db.id)
    
    return{"access_token" :access_token, "token_type":"bearer" ,
+          "user_id":user_to_log_on_db.id,
            "username":user_to_log_on_db.username,
              "email":user_to_log_on_db.email,
              "family_name":user_to_log_on_db.family_name,
@@ -65,3 +81,27 @@ def logout(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get
 
     # Retourne une réponse 204 (No Content) pour indiquer que la déconnexion a réussi
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+class SignupRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+@router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=UserInDB)
+def signup(request: SignupRequest, db: Session = Depends(get_db)):
+    # Créer un utilisateur minimal avec email comme username
+    user_data = {
+        'username': request.email,
+        'name': '',
+        'family_name': '',
+        'email': request.email,
+        'password': request.password,
+        'phone_number': ''
+    }
+    new_user = create_user(db, user_data)
+    if not new_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User creation failed")
+    # Correction : assigner le rôle public et initialiser les permissions
+    assign_default_role_to_user(new_user.id, db)
+    from app.db.crud.crud_permissions import initialize_user_permissions
+    initialize_user_permissions(db, new_user.id)
+    return new_user

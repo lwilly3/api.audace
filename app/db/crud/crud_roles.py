@@ -68,7 +68,9 @@ def get_all_roles(db: Session, skip: int = 0, limit: int = 100) -> List[Role]:
         List[Role]: Liste des rôles.
     """
     try:
-        return db.query(Role).offset(skip).limit(limit).all()
+        result= db.query(Role).offset(skip).limit(limit).all()
+        return result
+        
     except Exception as e:
         print(f"Erreur lors de la liste des rôles : {e}")
         db.rollback()
@@ -90,7 +92,7 @@ def update_role(db: Session, role_id: int, role_update: RoleUpdate) -> Optional[
         db_role = db.query(Role).filter(Role.id == role_id).first()
         if not db_role:
             return None
-        update_data = role_update.dict(exclude_unset=True)
+        update_data = role_update.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_role, key, value)
         db.commit()
@@ -268,35 +270,40 @@ def list_user_roles(db: Session, user_id: int) -> Optional[List[Role]]:
 #         )
 
 
-def get_role(db: Session, role_id: int):
+
+def get_role(role_id: int, db: Session):
     """
     Récupérer un rôle spécifique à partir de la base de données.
-    
+
     Args:
-    - db (Session): La session de la base de données.
-    - role_id (int): L'ID du rôle à récupérer.
-    
+        role_id (int): L'ID du rôle à récupérer.
+        db (Session): La session de la base de données.
+
     Returns:
-    - Role: Le rôle avec l'ID spécifié, ou None si non trouvé.
+        Role: Le rôle correspondant à l'ID fourni.
+
+    Raises:
+        HTTPException: 404 si le rôle n'existe pas.
+        HTTPException: 500 si une autre erreur survient.
     """
     try:
-        # Recherche du rôle par son ID
         role = db.query(Role).filter(Role.id == role_id).first()
-        
-        # Si le rôle n'existe pas, une exception est levée
+
         if not role:
+            # Exception explicite si le rôle n'existe pas
             raise HTTPException(status_code=404, detail="Role not found")
-        
-        # Retour du rôle trouvé
+
         return role
-    
+
+    except HTTPException:
+        # On relance telle quelle une HTTPException déjà levée (ex: 404)
+        raise
     except Exception as e:
-        # Si une erreur survient, une exception HTTP 500 est levée pour indiquer une erreur interne du serveur
+        # Toute autre exception imprévue déclenche une erreur 500
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching role: {str(e)}"
         )
-
 
 # def get_roles(db: Session, skip: int = 0, limit: int = 10):
 #     """

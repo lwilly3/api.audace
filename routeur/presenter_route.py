@@ -1,9 +1,10 @@
 
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.crud.crud_presenters import  create_presenter, get_all_presenters, get_presenter, update_presenter, delete_presenter
+from app.db.crud.crud_presenters import  create_presenter, get_all_presenters, get_presenter, get_presenter_by_user, update_presenter, delete_presenter
 from app.schemas.schema_presenters import PresenterCreate, PresenterResponse,PresenterResponsePaged, PresenterUpdate
 from core.auth import oauth2
 
@@ -16,6 +17,7 @@ router=APIRouter(
 @router.post("/")
 def create_presenter_route(presenter_to_create: PresenterCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     presenterCreated = create_presenter(db, presenter_to_create )
+    # return presenterCreated
     return presenterCreated
 
 
@@ -29,7 +31,11 @@ def list_presenters(skip: int = 0, limit: int = 10, db: Session = Depends(get_db
 def get_presenter_route(presenter_id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     presenter = get_presenter(db, presenter_id)
     if presenter is None:
-        raise HTTPException(status_code=404, detail="Presenter not found")
+        # raise HTTPException(status_code=404, detail="Presenter not found")
+        return JSONResponse(
+            status_code=404,
+            content={ "message": "Presenter not found" }
+        )
     return presenter
 
 
@@ -73,8 +79,17 @@ def update_presenter_route(presenter_id: int, presenter_to_update: PresenterUpda
 def delete_presenter_route(presenter_id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     presenter = delete_presenter(db, presenter_id)
     if presenter is None:
-        raise HTTPException(status_code=404, detail="Presenter not found")
-    return {"message": "Presenter deleted successfully"}
+        return JSONResponse(
+            status_code=404,
+            content={ "message": "Presenter not found" }
+        )
+        # raise HTTPException(status_code=404, detail="Presenter not found")
+    # return {"message": "Presenter deleted successfully"}
+    return JSONResponse(
+            status_code=204,
+            content={ "message": "Presenter deleted successfully" }
+        )
+
 
 
 
@@ -202,7 +217,6 @@ def delete_presenter_route(presenter_id: int, db: Session = Depends(get_db), cur
 #     if id not in presenters_history:
 #         raise HTTPException(status_code=404, detail="No history found for presenter")
 #     return presenters_history[id]
-
 
 
 

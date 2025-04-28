@@ -1,5 +1,4 @@
-
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 from pydantic.networks import EmailStr
@@ -10,9 +9,7 @@ class PresenterBase(BaseModel):
     profilePicture: Optional[str] = None
 
     
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 # class PresenterCreate(PresenterBase):
@@ -52,9 +49,7 @@ class PresenterHistory(BaseModel):
     changes: str
 
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 
@@ -71,9 +66,7 @@ class PresenterSearch(BaseModel):
     created_at: datetime
 
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
     class PresenterRead(BaseModel):
@@ -81,9 +74,7 @@ class PresenterSearch(BaseModel):
         name: str
         email: str
 
-        model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+        model_config = ConfigDict(from_attributes=True)
         
 
 
@@ -94,16 +85,14 @@ class PresenterSearch(BaseModel):
 
 class PresenterCreate(BaseModel):
     """Validation pour créer un nouveau présentateur."""
-    name: str = Field(..., max_length=100, description="Nom du présentateur", example="Jean Dupont")
-    contact_info: Optional[str] = Field("", max_length=255, description="Informations de contact", example="jean.dupont@email.com")
-    biography: Optional[str] = Field("", description="Biographie", example="Jean Dupont est un journaliste spécialisé en économie.")
+    name: str = Field(..., max_length=100, description="Nom du présentateur", json_schema_extra={"example": "Jean Dupont"})
+    contact_info: Optional[str] = Field("", max_length=255, description="Informations de contact", json_schema_extra={"example": "jean.dupont@email.com"})
+    biography: Optional[str] = Field("", description="Biographie", json_schema_extra={"example": "Jean Dupont est un journaliste spécialisé en économie."})
     users_id: int
     profilePicture: Optional[str] = None
     isMainPresenter: Optional[bool] = False
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PresenterUpdate(BaseModel):
@@ -114,9 +103,7 @@ class PresenterUpdate(BaseModel):
     profilePicture: Optional[str] = None
     isMainPresenter: Optional[bool] = False
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PresenterResponse(BaseModel):
@@ -129,9 +116,7 @@ class PresenterResponse(BaseModel):
     shows: List[str] = Field(default=[], description="Liste des émissions associées")
     isMainPresenter: Optional[bool] = False
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 
@@ -141,6 +126,4 @@ class PresenterResponsePaged(BaseModel):
     total: int
     presenters: List[PresenterResponse]
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)

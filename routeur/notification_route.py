@@ -7,23 +7,27 @@ from app.schemas import NotificationRead, NotificationCreate, NotificationUpdate
 from app.db.database import get_db
 from core.auth import oauth2
 from app.db.crud.crud_notifications import create_notification, get_user_notifications, update_notification, delete_notification, get_notification_by_id
+from app.models import model_user
 
 
 
 router = APIRouter(
-    prefix="/posts",
-    tags=['POST']
+    prefix="/notifications",
+    tags=["notifications"]
 )
 
-@router.get("/notifications", response_model=List[NotificationRead])
-def get_all_notifications_route(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+@router.get("/", response_model=List[NotificationRead])
+def get_all_notifications_route(db: Session = Depends(get_db), current_user: model_user.User = Depends(oauth2.get_current_user)):
     """
     Récupérer toutes les notifications non supprimées.
     """
-    return get_user_notifications(user_id=current_user.id, db=db)
+    result = get_user_notifications(user_id=current_user.id, db=db)
+    if not result:
+        raise HTTPException(status_code=404, detail="No notifications found")
+    return result
 
 
-@router.get("/notifications/{id}", response_model=NotificationRead)
+@router.get("/{id}", response_model=NotificationRead)
 def get_notification_route(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
     Récupérer une notification spécifique.
@@ -34,7 +38,7 @@ def get_notification_route(id: int, db: Session = Depends(get_db), current_user:
     return notification
 
 
-@router.post("/notifications", response_model=NotificationRead)
+@router.post("/", response_model=NotificationRead)
 def create_notification_route(
     notification: NotificationCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
 ):
@@ -45,7 +49,7 @@ def create_notification_route(
     return new_notification
 
 
-@router.put("/notifications/{id}", response_model=NotificationRead)
+@router.put("/{id}", response_model=NotificationRead)
 def update_notification_route(
     id: int, notification_update: NotificationUpdate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)
 ):
@@ -58,7 +62,7 @@ def update_notification_route(
     return updated_notification
 
 
-@router.delete("/notifications/{id}")
+@router.delete("/{id}")
 def delete_notification_route(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
     Supprimer une notification (soft delete).

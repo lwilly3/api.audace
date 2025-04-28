@@ -1,4 +1,5 @@
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models import Segment
 from app.schemas import SegmentCreate, SegmentUpdate
@@ -7,40 +8,94 @@ from fastapi import HTTPException
 # Créer un segment
 def create_segment(db: Session, segment: SegmentCreate):
     try:
-        # Insérer le segment à la position la plus haute
-        max_position = db.query(Segment.position).filter(Segment.is_deleted == False).order_by(Segment.position.desc()).first()
-        new_position = (max_position[0] + 1) if max_position else 1
-        new_segment = Segment(**segment.dict(), position=new_position)
-        
+        # Calculate the new position for the segment
+        max_position_result = db.query(func.max(Segment.position)).scalar()
+        new_position = (max_position_result + 1) if max_position_result is not None else 1
+
+        # Prepare data, excluding 'position' if present in input schema
+        # Use model_dump() instead of deprecated dict()
+        segment_data = segment.model_dump()
+        # Remove position from input data as we calculate it server-side
+        segment_data.pop('position', None)
+
+        # Create the new segment with the calculated position
+        new_segment = Segment(**segment_data, position=new_position)
+
         db.add(new_segment)
         db.commit()
         db.refresh(new_segment)
         return new_segment
     except Exception as e:
         db.rollback()
+        # Provide more context in the error if possible
+        print(f"Error creating segment: {e}") # Add logging
         raise HTTPException(status_code=500, detail=f"Failed to create segment: {str(e)}")
+
+# def create_segment(db: Session, segment: SegmentCreate):
+#     try:
+#         # Insérer le segment à la position la plus haute
+#         # max_position = db.query(Segment.position).filter(Segment.is_deleted == False).order_by(Segment.position.desc()).first()
+#         max_position = db.query(Segment.position).order_by(Segment.position.desc()).first()
+#         new_position = (max_position[0] + 1) if max_position else 1
+#         new_segment = Segment(**segment.dict(), position=new_position)
+        
+#         db.add(new_segment)
+#         db.commit()
+#         db.refresh(new_segment)
+#         return new_segment
+#     except Exception as e:
+#         db.rollback()
+#         raise HTTPException(status_code=500, detail=f"Failed to create segment: {str(e)}")
 
 # Récupérer tous les segments
 def get_segments(db: Session):
     try:
-        return db.query(Segment).filter(Segment.is_deleted == False).order_by(Segment.position).all()
+        return db.query(Segment).order_by(Segment.position).all()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve segments: {str(e)}")
 
 # Récupérer un segment par ID
+# Récupérer un segment par ID (CORRECTED)
 def get_segment_by_id(db: Session, segment_id: int):
+    """
+    Récupère un segment actif (non supprimé logiquement) par son ID.
+    """
     try:
-        segment = db.query(Segment).filter(Segment.id == segment_id, Segment.is_deleted == False).first()
+        # AJOUTER le filtre is_deleted == False
+        segment = db.query(Segment).filter(
+            Segment.id == segment_id,
+        ).first()
+
+        # Maintenant, si le segment existe mais is_deleted=True,
+        # la requête retournera None, et ce check lèvera le 404 attendu.
         if not segment:
             raise HTTPException(status_code=404, detail="Segment not found")
+
         return segment
+    except HTTPException as http_exc:
+        # Relayer les exceptions HTTP spécifiques (comme le 404 ci-dessus)
+        raise http_exc
     except Exception as e:
+        # Logguer l'erreur est une bonne pratique ici
+        print(f"Unexpected error in get_segment_by_id for ID {segment_id}: {e}")
+        # Retourner 500 pour les erreurs inattendues (DB down, etc.)
         raise HTTPException(status_code=500, detail=f"Failed to retrieve segment: {str(e)}")
+# def get_segment_by_id(db: Session, segment_id: int):
+#     try:
+#         segment = db.query(Segment).filter(Segment.id == segment_id).first()
+#         if not segment:
+#             raise HTTPException(status_code=404, detail="Segment not found")
+#         return segment
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Failed to retrieve segment: {str(e)}")
 
 # Modifier un segment
+# Fix update_segment to use model_dump()
 def update_segment(db: Session, db_segment: Segment, segment: SegmentUpdate):
     try:
-        for key, value in segment.dict(exclude_unset=True).items():
+        # Use model_dump() instead of dict()
+        update_data = segment.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
             setattr(db_segment, key, value)
         db.commit()
         db.refresh(db_segment)
@@ -48,12 +103,22 @@ def update_segment(db: Session, db_segment: Segment, segment: SegmentUpdate):
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update segment: {str(e)}")
+# def update_segment(db: Session, db_segment: Segment, segment: SegmentUpdate):
+#     try:
+#         for key, value in segment.dict(exclude_unset=True).items():
+#             setattr(db_segment, key, value)
+#         db.commit()
+#         db.refresh(db_segment)
+#         return db_segment
+#     except Exception as e:
+#         db.rollback()
+#         raise HTTPException(status_code=500, detail=f"Failed to update segment: {str(e)}")
 
 # Modifier la position d'un segment
 def update_segment_position(db: Session, db_segment: Segment, position: int):
     try:
         # Réorganiser les positions des autres segments si nécessaire
-        active_segments = db.query(Segment).filter(Segment.is_deleted == False).order_by(Segment.position).all()
+        active_segments = db.query(Segment).order_by(Segment.position).all()
         if db_segment.position != position:
             # Si la position a changé, réorganiser les autres segments
             reorganize_positions(db, db_segment, position)
@@ -73,7 +138,6 @@ def reorganize_positions(db: Session, db_segment: Segment, new_position: int):
     """
     active_segments = (
         db.query(Segment)
-        .filter(Segment.is_deleted == False)
         .order_by(Segment.position)
         .all()
     )
@@ -90,8 +154,10 @@ def reorganize_positions(db: Session, db_segment: Segment, new_position: int):
 def soft_delete_segment(db: Session, db_segment: Segment):
     try:
         # Étape 1: Marquer le segment comme supprimé
-        db_segment.is_deleted = True
-        db.commit()
+        # db_segment.is_deleted = True
+        # db.commit()
+        db.delete(db_segment) # Marquer pour suppression
+        db.commit() 
         
         # Étape 2: Réorganiser les positions
         reorganize_positions(db, db_segment, db_segment.position)

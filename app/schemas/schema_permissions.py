@@ -1,7 +1,6 @@
-
 # models.py
-from typing import List, Optional,Dict
-from pydantic import BaseModel
+from typing import List, Optional, Dict
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class Role(BaseModel):
@@ -14,10 +13,7 @@ class Role(BaseModel):
     permissions: List[int]  # Liste des IDs des permissions
     is_deleted: bool = False
 
-
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Permission(BaseModel):
@@ -26,20 +22,9 @@ class Permission(BaseModel):
     """
     id: int
     name: str
-    description: Optional[str] = None
+    # description: Optional[str] = None
 
-
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
-
-
-
-
-
-
-
-
+    model_config = ConfigDict(from_attributes=True)
 
 
 # from pydantic import BaseModel
@@ -47,37 +32,27 @@ class Permission(BaseModel):
 # Base Permission Schema
 class PermissionBase(BaseModel):
     name: str
-    
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 # Schema for Creating a Permission
 class PermissionCreate(PermissionBase):
     description: Optional[str] = None
 
-
-
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
-    
+    model_config = ConfigDict(from_attributes=True)
 
 # Schema for Reading a Permission
 class PermissionRead(PermissionBase):
     id: int
     description: Optional[str] = None
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 # Schema for Updating a Permission
 class PermissionUpdate(BaseModel):
     name: str
-    
 
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Schéma de base pour les permissions (réutilisable)
@@ -165,9 +140,7 @@ class UserPermissionsSchema(BaseModel):
     can_restore_archives: Optional[bool] = False
     can_delete_archives: Optional[bool] = False
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour créer un modèle de rôle
 class RoleTemplateCreate(BaseModel):
@@ -175,9 +148,7 @@ class RoleTemplateCreate(BaseModel):
     description: Optional[str] = None
     permissions: Dict[str, bool]  # Dictionnaire des permissions
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour mettre à jour un modèle de rôle
 class RoleTemplateUpdate(BaseModel):
@@ -185,9 +156,7 @@ class RoleTemplateUpdate(BaseModel):
     description: Optional[str] = None
     permissions: Optional[Dict[str, bool]] = None
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour retourner un modèle de rôle
 class RoleTemplateResponse(BaseModel):
@@ -198,6 +167,4 @@ class RoleTemplateResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {
-        "from_attributes": True,  # Activates attribute-based mapping
-    }
+    model_config = ConfigDict(from_attributes=True)

@@ -34,7 +34,11 @@ def get_user_notifications(
     """Récupérer toutes les notifications d'un utilisateur spécifique"""
     try:
         # Récupère les notifications de l'utilisateur spécifié, en s'assurant qu'elles ne sont pas supprimées (is_deleted == False)
-        notifications = db.query(Notification).filter(Notification.user_id == user_id, Notification.is_deleted == False).offset(skip).limit(limit).all()
+        notifications = db.query(Notification).filter(Notification.user_id == user_id).offset(skip).limit(limit).all()
+        if not notifications:
+            # Si aucune notification n'est trouvée, une exception HTTP 404 est levée
+            return None
+            # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No notifications found")
         return notifications  # Retourne la liste des notifications récupérées
     except Exception as e:
         # En cas d'erreur, une exception HTTP 500 est levée pour indiquer une erreur interne du serveur
@@ -54,7 +58,7 @@ def update_notification(
         # Si la notification est trouvée, on met à jour ses champs en fonction des données envoyées
         if notification:
             # Parcourt les clés et les valeurs des données envoyées et met à jour les champs correspondants
-            for key, value in notification_update.dict(exclude_unset=True).items():
+            for key, value in notification_update.model_dump(exclude_unset=True).items():
                 setattr(notification, key, value)
             
             # Sauvegarde les changements dans la base de données
@@ -100,7 +104,7 @@ def get_notification_by_id(
     """Récupérer une notification spécifique par son ID"""
     try:
         # Recherche de la notification dans la base de données
-        notification = db.query(Notification).filter(Notification.id == notification_id, Notification.is_deleted == False).first()
+        notification = db.query(Notification).filter(Notification.id == notification_id).first()
 
         # Si la notification est trouvée, elle est retournée
         if notification:
@@ -117,159 +121,3 @@ def get_notification_by_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching notification: {str(e)}"
         )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# from sqlalchemy.orm import Session
-# from app.models.model_notification import Notification
-# from app.schemas.schema_notifications import NotificationCreate, NotificationUpdate
-
-# # CRUD pour les notifications
-# def create_notification(db: Session, notification: NotificationCreate) -> Notification:
-#     """Créer une nouvelle notification"""
-#     new_notification = Notification(**notification.dict())  # Conversion du schéma en modèle
-#     db.add(new_notification)
-#     db.commit()
-#     db.refresh(new_notification)
-#     return new_notification
-
-# def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int = 10) -> list:
-#     """Récupérer toutes les notifications d'un utilisateur spécifique"""
-#     return db.query(Notification).filter(Notification.user_id == user_id, Notification.is_deleted == False).offset(skip).limit(limit).all()
-
-# def update_notification(db: Session, notification_id: int, notification_update: NotificationUpdate) -> Notification:
-#     """Mettre à jour une notification spécifique"""
-#     notification = db.query(Notification).filter(Notification.id == notification_id).first()
-#     if notification:
-#         for key, value in notification_update.dict(exclude_unset=True).items():
-#             setattr(notification, key, value)  # Mise à jour des champs
-#         db.commit()
-#         db.refresh(notification)
-#     return notification
-
-# def delete_notification(db: Session, notification_id: int) -> bool:
-#     """Supprimer une notification (soft delete)"""
-#     notification = db.query(Notification).filter(Notification.id == notification_id).first()
-#     if notification:
-#         notification.is_deleted = True  # Soft delete
-#         db.commit()
-#         return True
-#     return False
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # # database.py
-# # from models import Notification
-# # from datetime import datetime
-
-# # # Base de données simulée
-# # notifications_db = {}
-
-# # def get_notification_by_id(notification_id: int) -> Notification:
-# #     """Récupérer une notification par son ID"""
-# #     return notifications_db.get(notification_id)
-
-# # def get_all_notifications() -> list:
-# #     """Récupérer toutes les notifications non supprimées"""
-# #     return [notif for notif in notifications_db.values() if not notif.is_deleted]
-
-# # def create_notification(user_id: int, title: str, message: str) -> Notification:
-# #     """Créer une nouvelle notification"""
-# #     notif_id = len(notifications_db) + 1
-# #     new_notification = Notification(
-# #         id=notif_id,
-# #         user_id=user_id,
-# #         title=title,
-# #         message=message,
-# #         created_at=datetime.now(),
-# #     )
-# #     notifications_db[notif_id] = new_notification
-# #     return new_notification
-
-# # def update_notification(notification_id: int, title: str = None, message: str = None, read: bool = None) -> Notification:
-# #     """Mettre à jour une notification"""
-# #     notification = notifications_db.get(notification_id)
-# #     if notification:
-# #         if title:
-# #             notification.title = title
-# #         if message:
-# #             notification.message = message
-# #         if read is not None:
-# #             notification.read = read
-# #     return notification
-
-# # def delete_notification(notification_id: int) -> bool:
-# #     """Supprimer une notification (soft delete)"""
-# #     notification = notifications_db.get(notification_id)
-# #     if notification:
-# #         notification.is_deleted = True
-# #         return True
-# #     return False
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # # from sqlalchemy.orm import Session
-# # # from app.models.model_notification import Notification
-# # # from app.schemas.schema_notifications import NotificationCreate, NotificationUpdate
-
-# # # def create_notification(db: Session, notification: NotificationCreate):
-# # #     new_notification = Notification(**notification.dict())
-# # #     db.add(new_notification)
-# # #     db.commit()
-# # #     db.refresh(new_notification)
-# # #     return new_notification
-
-# # # def get_user_notifications(db: Session, user_id: int, skip: int = 0, limit: int = 10):
-# # #     return db.query(Notification).filter(Notification.user_id == user_id).offset(skip).limit(limit).all()
-
-# # # def update_notification(db: Session, notification_id: int, notification_update: NotificationUpdate):
-# # #     notification = db.query(Notification).filter(Notification.id == notification_id).first()
-# # #     for key, value in notification_update.dict(exclude_unset=True).items():
-# # #         setattr(notification, key, value)
-# # #     db.commit()
-# # #     db.refresh(notification)
-# # #     return notification

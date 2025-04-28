@@ -13,7 +13,7 @@ from routeur.search_route import (
 
 from routeur import (
     #  posts, 
-     users,
+     
        auth,
         #  votes,
        audit_log_route, 
@@ -27,9 +27,11 @@ from routeur import (
      emission_route,
      show_route, 
      dashbord_route,role_route,
+     segment_route # Ajout de l'importation du routeur de segments
+
 
    
-)  # Importation des routeurs de l'application
+)  # Importation des routeurs de l'appication
 
 
 from routeur.search_route import (
@@ -116,7 +118,11 @@ app.include_router(search_show.router)  # Routes pour les recherches de conducte
 app.include_router(dashbord_route.router) # Routes pour le tableau de bord  search_user_route
 app.include_router(permissions_route.router) # Routes pour les permissions
 app.include_router(search_user_route.router) # Routes pour les recherches d'utilisateurs role_route
-app.include_router(role_route.router) # Routes pour les roles
+app.include_router(role_route.router) # Routes pour les roles 
+app.include_router(segment_route.router) # Routes pour les segments
+
+# /// add pour test
+app.include_router(notification_route.router) # Routes pour les notifications
 
 
 

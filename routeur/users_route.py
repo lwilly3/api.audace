@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List
 # from app.models import UserInDB, LoginLog, Notification, AuditLog
@@ -7,6 +8,8 @@ from app.schemas import UserRead, UserInDB, LoginHistoryRead, NotificationRead, 
 from app.models import Role, UserRole, Permission,RolePermission
 from app.utils import utils
 from core.auth import oauth2
+from fastapi import Response
+
 
 from app.db.crud.crud_users import (
     get_user_or_404,
@@ -142,7 +145,12 @@ def get_user(id: int, db: Session = Depends(get_db), current_user: int = Depends
 
 @router.post("/users", response_model=UserBase)
 
-def create_new_user(user_to_create: UserCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+#####################
+###  a restituer la necessiter de se loguer pour cree un user
+###  aprest avoir fait les test.     
+##    , current_user: int = Depends(oauth2.get_current_user)
+#################
+def create_new_user(user_to_create: UserCreate, db: Session = Depends(get_db)):
     # hachage du mot de passe
     hashed_password=utils.hash(user_to_create.password)
     user_to_create.password=hashed_password
@@ -154,13 +162,25 @@ def create_new_user(user_to_create: UserCreate, db: Session = Depends(get_db), c
 
     # Créer l'utilisateur
     created_user = create_user(db, user_to_create.dict())
-    if not created_user:
-        raise HTTPException(status_code=500, detail="Failed to create user")
+    if created_user:
+        # Assigner le rôle "public"
+        assign_default_role_to_user(created_user.id, db)
 
-    # Assigner le rôle "public"
-    assign_default_role_to_user(created_user.id, db)
+        return JSONResponse(
+            status_code=201,
+            content={
+                "user_id": created_user.id,
+                "email": created_user.email,
+                "username": created_user.username,
+                "name": created_user.name,
+                "family_name": created_user.family_name,
+            }
+        )
+    return JSONResponse(status_code=400, content={"detail": "User creation failed"})
+    # # Assigner le rôle "public"
+    # assign_default_role_to_user(created_user.id, db)
 
-    return created_user
+    # return created_user
 
 
 # Route pour mettre à jour un utilisateur
@@ -204,8 +224,15 @@ def delete_user_info(id: int, db: Session = Depends(get_db)):
     Supprimer un utilisateur (soft delete).
     """
     if not delete_user(db, id):
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"detail": "User soft-deleted successfully"}
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "User non trouvé"}
+        )
+        # raise HTTPException(status_code=404, detail="User not found")
+    return JSONResponse(
+            status_code=204,
+            content={"detail": "User soft-deleted successfully"}
+        )
 
 @router.get("/users/{id}/logins", response_model=List[LoginHistoryRead])
 def get_logins(id: int, db: Session = Depends(get_db)):

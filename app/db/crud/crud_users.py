@@ -1,4 +1,3 @@
-
 from datetime import datetime, timezone
 import logging
 from typing import List
@@ -102,7 +101,7 @@ def get_user_or_404_with_permissions(db: Session, user_id: int) -> dict:
                 "can_delete_showplan": permissions.can_delete_showplan,
                 "can_destroy_showplan": permissions.can_destroy_showplan,
                 "can_changestatus_showplan": permissions.can_changestatus_showplan,                 
-        },
+        }
     except NoResultFound as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -189,7 +188,7 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[
             return None
 
         # Mettre à jour les champs fournis
-        update_data = user_update.dict(exclude_unset=True)  # Exclut les champs non définis
+        update_data = user_update.model_dump(exclude_unset=True)  # Remplace .dict() par .model_dump() pour Pydantic v2
         for key, value in update_data.items():
             if key == "roles":
                 # Mettre à jour les rôles (supprimer les anciens, ajouter les nouveaux)

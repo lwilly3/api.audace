@@ -6,7 +6,7 @@ from app.db.crud.crud_role_permissions import  get_role_permissions
 from app.db.crud.crud_roles import get_all_roles, get_role, create_role, update_role, delete_role
 from app.db.crud.crud_permissions import get_all_permissions, get_permission,get_user_permissions,check_permissions
 # from models.model_role import Role
-from app.schemas import RoleRead, Permission
+from app.schemas import RoleRead, Permission,RoleCreate,Role_Read,RoleUpdate
 from core.auth import oauth2
 from app.db.database import get_db
 from sqlalchemy.exc import SQLAlchemyError
@@ -73,69 +73,76 @@ def get_user_permissions_route(user_id: int, db: Session = Depends(get_db)):
 
 
 # Routes pour les rôles
-@router.get("/roles", response_model=List[RoleRead])
-def get_all_roles_route( current_user: int = Depends(oauth2.get_current_user)):
+@router.get("/roles", response_model=List[Role_Read])
+def get_all_roles_route( current_user: int = Depends(oauth2.get_current_user), db: Session = Depends(get_db)):
     """
     Récupérer tous les rôles non supprimés.
     """
-    return get_all_roles()
+    roles = get_all_roles(db)
+    return roles if roles is not None else []
 
 
 @router.get("/roles/{id}", response_model=RoleRead)
-def get_role_route(id: int,  current_user: int = Depends(oauth2.get_current_user)):
-    """
-    Récupérer un rôle spécifique.
-    """
-    return get_role(id)
+def get_role_route(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user)
+):
+    return get_role(id, db)
 
 
-@router.post("/roles", response_model=RoleRead)
-def create_role_route(name: str, description: Optional[str] = None, permissions: List[int] = [], current_user: int = Depends(oauth2.get_current_user)):
+@router.post("/roles", response_model=Role_Read)
+def create_role_route(
+    role: RoleCreate,
+    current_user: User = Depends(oauth2.get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Créer un nouveau rôle.
     """
-    return create_role(name, description, permissions)
+    return create_role(db, role)
 
 
-@router.put("/roles/{id}", response_model=RoleRead)
-def update_role_route(id: int, name: Optional[str] = None, description: Optional[str] = None, permissions: Optional[List[int]] = None,  current_user: int = Depends(oauth2.get_current_user)):
+@router.put("/roles/{id}", response_model=Role_Read)
+
+def update_role_route(id: int, role_update: RoleUpdate,  current_user: int = Depends(oauth2.get_current_user),db: Session = Depends(get_db)):
     """
     Mettre à jour un rôle existant.
     """
-    return update_role(id, name, description, permissions)
+    return update_role(db, id, role_update)
 
 
 @router.delete("/roles/{id}")
-def delete_role_route(id: int,  current_user: int = Depends(oauth2.get_current_user)):
+def delete_role_route(id: int,  current_user: int = Depends(oauth2.get_current_user),db: Session = Depends(get_db)):
     """
     Supprimer un rôle (soft delete).
     """
-    return delete_role(id)
+    return delete_role(db,id)
 
 
 @router.get("/roles/{id}/permissions", response_model=List[Permission])
-def get_role_permissions_route(id: int,  current_user: int = Depends(oauth2.get_current_user)):
+def get_role_permissions_route(id: int,  current_user: int = Depends(oauth2.get_current_user),db: Session = Depends(get_db)):
     """
     Récupérer les permissions associées à un rôle.
     """
-    return get_role_permissions(id)
+    return get_role_permissions(db,id)
 
 
 # Routes pour les permissions
 @router.get("/permissions", response_model=List[Permission])
-def get_all_permissions_route( current_user: int = Depends(oauth2.get_current_user)):
+def get_all_permissions_route( current_user: int = Depends(oauth2.get_current_user),db: Session = Depends(get_db)):
     """
     Récupérer toutes les permissions disponibles.
     """
-    return get_all_permissions()
+    return get_all_permissions(db)
 
 
 @router.get("/permissions/{id}", response_model=Permission)
-def get_permission_route(id: int,  current_user: int = Depends(oauth2.get_current_user)):
+def get_permission_route(id: int,  current_user: int = Depends(oauth2.get_current_user),db: Session = Depends(get_db)):
     """
     Récupérer une permission spécifique.
     """
-    return get_permission(id)
+    return get_permission(id,db)
 
 
 

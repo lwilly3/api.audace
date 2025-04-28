@@ -1,7 +1,6 @@
-
 from datetime import datetime
-from pydantic import BaseModel, Field
-from typing import Optional,List
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional, List
 
 
 
@@ -11,18 +10,16 @@ from typing import Optional,List
 
 class GuestCreate(BaseModel):
     """Validation pour créer un invité."""
-    name: str = Field(..., max_length=100, description="Nom de l'invité", example="Marie Claire")
-    contact_info: Optional[str] = Field(None, max_length=255, description="Informations de contact", example="vie a douala")
-    biography: Optional[str] = Field(None, description="Biographie", example="Marie Claire est une experte en développement durable.")
+    name: str = Field(..., max_length=100, description="Nom de l'invité", json_schema_extra={"example": "Marie Claire"})
+    contact_info: Optional[str] = Field(None, max_length=255, description="Informations de contact", json_schema_extra={"example": "vie a douala"})
+    biography: Optional[str] = Field(None, description="Biographie", json_schema_extra={"example": "Marie Claire est une experte en développement durable."})
      # role phone email
-    role: Optional[str] = Field(None, description="role", example="journalist")
-    phone: Optional[str] = Field(None, description="phone", example="+237 05 06 07 06")
-    email: Optional[str] = Field(None, description="email", example="Marie@gmail.com")
-    avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
+    role: Optional[str] = Field(None, description="role", json_schema_extra={"example": "journalist"})
+    phone: Optional[str] = Field(None, description="phone", json_schema_extra={"example": "+237 05 06 07 06"})
+    email: Optional[str] = Field(None, description="email", json_schema_extra={"example": "Marie@gmail.com"})
+    avart: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 
@@ -36,29 +33,26 @@ class GuestUpdate(BaseModel):
     role: Optional[str] = Field(None, description="role")
     phone: Optional[str] = Field(None, description="phone")
     email: Optional[str] = Field(None, description="email")
-    avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
+    avart: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 
 class GuestResponse(BaseModel):
     """Réponse après validation ou récupération d'un invité."""
+    id: int  # Expose l'identifiant de l'invité
     name: str
     contact_info: Optional[str]
     biography: Optional[str]
     role: Optional[str] = Field(None, description="role")
     phone: Optional[str] = Field(None, description="phone")
     email: Optional[str] = Field(None, description="email")
-    avart: Optional[str] = Field(None, description="avatar", example="https://www.google.com")
+    avart: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
 
     segments: List[str] = Field(default=[], description="Liste des segments associés")
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 

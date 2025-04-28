@@ -1,6 +1,7 @@
 # 
 import logging
 from datetime import datetime, timezone
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session, selectinload
 from fastapi import HTTPException, status
 from app.models import Presenter,User
@@ -39,37 +40,49 @@ def create_presenter(db: Session, presenter: PresenterCreate):
     Raises:
     - HTTPException: En cas d'erreur interne ou si un présentateur existe déjà avec ce nom.
     """
+
+
+        
+    # Vérification des permissions
+    # check_permission(user, "create_presenter")
+    
+    # Vérification si un présentateur avec ce nom existe déjà
+    existing_presenter = db.query(Presenter).filter(Presenter.name == presenter.name).first()
+    existing_presenter_userID = db.query(Presenter).filter(Presenter.users_id == presenter.users_id).first()
+
+    existing_UserId = db.query(User).filter(User.id == presenter.users_id).first()
+
+    if existing_presenter:
+        detail_error_message="Presenter with this name already exists"
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=detail_error_message)
+    
+    if  existing_presenter_userID:
+        detail_error_message="Presenter with this UserID already exists"
+        raise HTTPException(status_code=status.HTTP_402_PAYMENT_REQUIRED, detail=detail_error_message)
+    
+    if not existing_UserId:
+        detail_error_message="this UserID not exists"
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail_error_message)
+
+
     try:
-        
-        # Vérification des permissions
-        # check_permission(user, "create_presenter")
-        
-        # Vérification si un présentateur avec ce nom existe déjà
-        existing_presenter = db.query(Presenter).filter(Presenter.name == presenter.name).first()
-        existing_presenter_userID = db.query(Presenter).filter(Presenter.users_id == presenter.users_id).first()
-
-        existing_UserId = db.query(User).filter(User.id == presenter.users_id).first()
-
-        if existing_presenter:
-            detail_error_message="Presenter with this name already exists"
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail_error_message)
-        
-        if  existing_presenter_userID:
-            detail_error_message="Presenter with this UserID already exists"
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail_error_message)
-        
-        if not existing_UserId:
-            detail_error_message="this UserID not exists"
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail_error_message)
- 
 
         # Création d'un nouveau présentateur
-        presenter_db = Presenter(name=presenter.name, biography=presenter.biography, users_id=presenter.users_id)
+        # presenter_db = Presenter(name=presenter.name, biography=presenter.biography, users_id=presenter.users_id)
+        # Création d'un nouveau présentateur avec tous les champs
+        presenter_db = Presenter(
+            name=presenter.name,
+            biography=presenter.biography,
+            contact_info=presenter.contact_info,
+            users_id=presenter.users_id,
+            # profile_picture=presenter.profilePicture,
+            # is_main_presenter=presenter.isMainPresenter
+        )
         db.add(presenter_db)
         db.commit()
         db.refresh(presenter_db)
 
-        logger.info(f"Presenter '{presenter.name}' created successfully.")
+        # logger.info(f"Presenter '{presenter.name}' created successfully.")
         return presenter_db
     except Exception as e:
         db.rollback()  # Rollback en cas d'erreur
@@ -104,7 +117,12 @@ def get_presenter(db: Session, presenter_id: int):
         )
 
         if not presenter:
-            raise PresenterNotFoundError()
+            # raise PresenterNotFoundError()
+                # if presenter is None:
+            return JSONResponse(
+                    status_code=404,
+                    content={ "message": "Presenter not found" }
+                )
 
         # Accéder à l'utilisateur associé
         user = presenter.user

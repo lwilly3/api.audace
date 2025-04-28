@@ -1,10 +1,10 @@
-
 # crud_guest.py
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.model_guest import Guest
 from app.schemas import GuestCreate, GuestUpdate,GuestResponse
-from typing import List
+from typing import List, Optional
 from sqlalchemy import or_
 from typing import Dict, Any
 from app.models.model_guest import Guest  # Modèle SQLAlchemy pour la table guests
@@ -35,17 +35,30 @@ def create_guest(db: Session, guest: GuestCreate) -> GuestResponse:
         db.rollback()  # Annule la transaction en cas d'erreur
         raise Exception(f"Erreur lors de la création de l'invité : {str(e)}")
 
-def get_guest_by_id(db: Session, guest_id: int) -> GuestResponse:
+def get_guest_by_id(db: Session, guest_id: int) -> Optional[GuestResponse]:
     """Récupérer un invité par son ID."""
     try:
-        return db.query(Guest).filter(Guest.id == guest_id).first()
+        guest = db.query(Guest).filter(Guest.id == guest_id).first()
+        if guest is None:
+            return None
+        return guest
     except SQLAlchemyError as e:
-        raise Exception(f"Erreur lors de la récupération de l'invité avec ID {guest_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+
+# def get_guest_by_id(db: Session, guest_id: int) -> GuestResponse:
+#     """Récupérer un invité par son ID."""
+#     try:
+#         return db.query(Guest).filter(Guest.id == guest_id).first()
+#     except SQLAlchemyError as e:
+#         raise Exception(f"Erreur lors de la récupération de l'invité avec ID {guest_id}: {str(e)}")
 
 def get_guests(db: Session, skip: int = 0, limit: int = 10):
     """Récupérer tous les invités avec pagination."""
     try:
-        gest_result =  db.query(Guest).offset(skip).limit(limit).all()
+        # Ordonner par ID décroissant pour mettre les plus récents en tête
+        gest_result = db.query(Guest).order_by(Guest.id.desc()).offset(skip).limit(limit).all()
         serialized_guests = []
         for guest in gest_result:
             guests = {

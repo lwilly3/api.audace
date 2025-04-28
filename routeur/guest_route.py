@@ -3,6 +3,7 @@
 
 # guest.py
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.crud.crud_guests import get_guest_by_id, get_guests, create_guest, update_guest, delete_guest,search_guest
 from app.schemas import GuestResponse, GuestCreate, GuestUpdate
@@ -49,7 +50,10 @@ def get_guest_route(
     try:
         db_guest = get_guest_by_id(db=db, guest_id=guest_id)
         if db_guest is None:
-            raise HTTPException(status_code=404, detail="Invité non trouvé")
+            return JSONResponse(
+            status_code=404,
+            content={"detail": "Invité non trouvé"}
+        )
         return db_guest
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération de l'invité: {str(e)}")

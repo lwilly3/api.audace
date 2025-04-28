@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List 
 from datetime import datetime
 from pydantic import BaseModel, Field, constr
@@ -18,13 +18,7 @@ class SegmentBase(BaseModel):
     show_id: int
     startTime: Optional[str] = None
 
-    model_config = {
-        "from_attributes": True,
-    }
-
-
-
-
+    model_config = ConfigDict(from_attributes=True)
 
 class SegmentCreate(SegmentBase):
     pass
@@ -35,25 +29,21 @@ class SegmentUpdate(BaseModel):
     duration: Optional[int] = None
     description: Optional[str] = None
     technical_notes: Optional[str] = None
-    startTime: Optional[str] = None
+    startTime: Optional[datetime] = None
 
-
-
+    model_config = ConfigDict(from_attributes=True)
 
 class SegmentPositionUpdate(BaseModel):
     position: int
 
+    model_config = ConfigDict(from_attributes=True)
 
 class SegmentResponse(SegmentBase):
     id: int
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
 
-    model_config = {
-        "from_attributes": True,
-    }
-
-
+    model_config = ConfigDict(from_attributes=True)
 
 class SegmentSearchFilter(BaseModel):
     keyword: Optional[str] = Field(None, description="Recherche par mot-clé")
@@ -63,14 +53,7 @@ class SegmentSearchFilter(BaseModel):
     presenter_ids: Optional[List[int]] = Field(None, description="Liste des IDs des présentateurs")
     guest_ids: Optional[List[int]] = Field(None, description="Liste des IDs des invités")
 
-    model_config = {
-        "from_attributes": True,
-    }
-
-
-
-
-
+    model_config = ConfigDict(from_attributes=True)
 
 # class SegmentBase(BaseModel):
 #     """
@@ -99,13 +82,6 @@ class SegmentSearchFilter(BaseModel):
 #         None, description="Liste des IDs des invités associés au segment."
 #     )
 
-
-
-
-
-
-
-
 # class SegmentCreate(SegmentBase):
 #     """
 #     Classe utilisée pour valider les données nécessaires à la création d'un segment.
@@ -127,10 +103,6 @@ class SegmentSearchFilter(BaseModel):
 #         default_factory=list, description="Liste des IDs des invités associés au segment (facultatif)."
 #     )
 
-
-
-
-
 # class SegmentUpdate(SegmentBase):
 #     """
 #     Classe utilisée pour valider les données nécessaires à la mise à jour d'un segment.
@@ -151,13 +123,6 @@ class SegmentSearchFilter(BaseModel):
 #     guests: Optional[List[int]] = Field(
 #         None, description="Nouvelle liste d'IDs des invités associés (facultatif)."
 #     )
-
-
-
-
-
-
-
 
 # class SegmentResponse(BaseModel):
 #     """

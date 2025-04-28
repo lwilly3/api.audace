@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.schemas import SegmentCreate, SegmentUpdate, SegmentResponse, SegmentPositionUpdate
@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 # 1. Créer un segment
-@router.post("/", response_model=SegmentResponse)
+@router.post("/", response_model=SegmentResponse, status_code=status.HTTP_201_CREATED)
 def create_route(segment: SegmentCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     return create_segment(db, segment)
 

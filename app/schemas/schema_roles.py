@@ -1,33 +1,34 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 # app/schemas/role.py
 from typing import Optional, List
 
 class RoleBase(BaseModel):
     name: str
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
+
 
 class RoleCreate(RoleBase):
+    
     pass
+
+    model_config = ConfigDict(from_attributes=True)
+
+class Role_Read(RoleBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleRead(RoleBase):
     id: int
     users: Optional[List[int]] = None  # Liste des IDs des utilisateurs associés
 
-
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleUpdate(BaseModel):
     name: Optional[str]
 
-
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour assigner ou retirer des rôles
 class UserRoleAssign(BaseModel):

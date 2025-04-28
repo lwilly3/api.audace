@@ -28,13 +28,14 @@ router = APIRouter(
 
 # Route pour créer une émission avec ses segments et présentateurs
 @router.post("/new")
-async def create_show(
+async def create_show_new(
     shows_data: List[ShowBase_jsonShow], 
     db: Session = Depends(get_db),
     current_user: User = Depends(oauth2.get_current_user)
 ):
     try:
-        # Appel de la fonction pour insérer les données dans la base
+# Appel de la fonction pour insérer les données dans la base
+# Appel de la fonction pour insérer les données dans la base
         new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data, curent_user_id=current_user.id)
         return {"message": "Émission créée avec succès", "show_id": new_show.id}
     except Exception as e:
@@ -141,7 +142,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
 # ///////////////////////////////////
 
 @router.patch("/detail/{show_id}")
-async def update_show(
+async def update_show_details_route( # Renamed from update_show
     show_id: int, 
     show_data: ShowUpdate, 
     db: Session = Depends(get_db)
@@ -157,7 +158,9 @@ async def update_show(
     Returns:
         - ShowUpdate: Les détails du show mis à jour.
     """
-    updated_show = update_show_with_details(db, show_id, show_data.dict())
+    # Note: The original code called update_show_with_details here. 
+    # Assuming this is correct based on the function's purpose.
+    updated_show = update_show_with_details(db, show_id, show_data.dict()) 
     if not updated_show:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

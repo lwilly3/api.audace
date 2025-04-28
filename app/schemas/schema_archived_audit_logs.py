@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class ArchivedAuditLogBase(BaseModel):
@@ -8,12 +8,10 @@ class ArchivedAuditLogBase(BaseModel):
     record_id: int
 
 class ArchivedAuditLogCreate(ArchivedAuditLogBase):
-    pass
+    model_config = ConfigDict(from_attributes=True)
 
 class ArchivedAuditLogRead(ArchivedAuditLogBase):
     id: int
     timestamp: datetime
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)

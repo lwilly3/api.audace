@@ -949,7 +949,7 @@ def update_show(db: Session, show_id: int, show: ShowUpdate):
             )
 
         # Pour chaque champ qui a été renseigné dans le schéma ShowUpdate, on met à jour l'attribut du show
-        for key, value in show.dict(exclude_unset=True).items():
+        for key, value in show.model_dump(exclude_unset=True).items():
             setattr(db_show, key, value)  # Mise à jour de l'attribut
 
         # Engage la transaction de mise à jour dans la base de données

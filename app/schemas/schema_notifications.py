@@ -1,6 +1,6 @@
 # schemas.py
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -9,12 +9,10 @@ class NotificationCreate(BaseModel):
     Schéma pour la création d'une notification.
     """
     user_id: int
-    title: str
+    read: Optional[bool] = False
     message: str
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 class NotificationUpdate(BaseModel):
     """
@@ -24,9 +22,7 @@ class NotificationUpdate(BaseModel):
     message: Optional[str] = None
     read: Optional[bool] = None
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 class NotificationRead(BaseModel):
     """
@@ -34,15 +30,13 @@ class NotificationRead(BaseModel):
     """
     id: int
     user_id: int
-    title: str
+    # title: str
     message: str
     created_at: datetime
     read: bool = False
-    is_deleted: bool = False
+    # is_deleted: bool = False
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 

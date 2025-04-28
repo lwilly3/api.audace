@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -9,9 +9,7 @@ class PresenterHistoryBase(BaseModel):
     updated_by: int
 
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 class PresenterHistoryCreate(PresenterHistoryBase):
     pass
@@ -20,6 +18,4 @@ class PresenterHistoryRead(PresenterHistoryBase):
     id: int
     updated_at: datetime
 
-    model_config = {
-        "from_attributes": True,
-    }
+    model_config = ConfigDict(from_attributes=True)

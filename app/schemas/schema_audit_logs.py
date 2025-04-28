@@ -1,5 +1,4 @@
-
-from pydantic import BaseModel
+from pydantic import BaseModel,ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -12,10 +11,8 @@ class AuditLogBase(BaseModel):
     details: Optional[str] = None
     timestamp: datetime = datetime.utcnow()  # Par défaut, utilise l'heure actuelle
     is_archived: bool = False
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
+    model_config = ConfigDict(from_attributes=True)  # 💡 corrige l'avertissement
 
-    }
 
 
 
@@ -33,8 +30,8 @@ class AuditLog(AuditLogBase):
     id: int
 
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)  # 💡 corrige l'avertissement
+
 
  
 class AuditLogSearch(BaseModel):
@@ -47,9 +44,7 @@ class AuditLogSearch(BaseModel):
     table_name: str
     timestamp: datetime
 
-    model_config = {
-        "from_attributes": True,  # Remplace orm_mode
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
 
