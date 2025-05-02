@@ -144,7 +144,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
 @router.patch("/detail/{show_id}")
 async def update_show_details_route( # Renamed from update_show
     show_id: int, 
-    show_data: ShowUpdate, 
+    show_data: ShowUpdateWithDetails, 
     db: Session = Depends(get_db)
 ):
     """

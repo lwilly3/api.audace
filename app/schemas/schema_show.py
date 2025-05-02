@@ -83,11 +83,11 @@ class SegmentUpdateWithDetails(BaseModel):
 
 
 class ShowUpdateWithDetails(BaseModel):
-    title: str
-    type: str
-    duration: int
-    presenter_ids: List[int]
-    segments: List[SegmentUpdateWithDetails]
+    title: Optional[str] = None
+    type: Optional[str] = None
+    duration: Optional[int] = None
+    presenter_ids: Optional[List[int]] = []
+    segments: Optional[List[SegmentUpdateWithDetails]] = []
 
     model_config = ConfigDict(from_attributes=True)
 
