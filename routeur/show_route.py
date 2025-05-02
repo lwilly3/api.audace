@@ -260,7 +260,7 @@ def delete_all_shows_route(db: Session = Depends(get_db), current_user: User = D
     return {'deleted': count}
 
 # DELETE shows by creator
-@router.delete('/user/{user_id}', summary='Supprimer shows par utilisateur')
+@router.delete('/allofuser/{user_id}', summary='Supprimer shows par utilisateur')
 def delete_shows_by_user_route(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
     """Supprime tous les shows créés par un utilisateur donné"""
     count = delete_shows_by_user(db, user_id)

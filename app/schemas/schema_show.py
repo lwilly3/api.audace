@@ -104,7 +104,7 @@ class ShowCreate(BaseModel):
     emission_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
-
+    
 
 # Schéma pour la mise à jour d'un show
 class ShowUpdate(BaseModel):
@@ -116,6 +116,8 @@ class ShowUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = None
     emission_id: Optional[int] = None
+    presenter_ids: Optional[List[int]] = None # Liste des IDs des présentateurs
+    segments: Optional[List[SegmentDetailCreate]]= None
 
     model_config = ConfigDict(from_attributes=True)
 

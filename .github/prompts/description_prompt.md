@@ -316,6 +316,8 @@ curl -X POST http://localhost:8000/notifications \
 - POST `/shows` : planification d’un show
 - PUT `/shows/{show_id}` : mise à jour d’un show
 - DELETE `/shows/{show_id}` : suppression d’un show
+- DELETE `/shows/all` : suppression de tous les shows
+- DELETE `/shows/allofuser/{user_id}` : suppression des shows créés par un utilisateur donné
 
 ### 8.7 Segments (segment_route.py)
 - Prefixe: `/segments`
