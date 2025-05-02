@@ -116,8 +116,8 @@ class ShowUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[str] = None
     emission_id: Optional[int] = None
-    presenter_ids: Optional[List[int]] = None # Liste des IDs des présentateurs
-    segments: Optional[List[SegmentDetailCreate]]= None
+    presenter_ids: Optional[List[int]] = [] # Liste des IDs des présentateurs
+    segments: Optional[List[SegmentDetailCreate]]= []
 
     model_config = ConfigDict(from_attributes=True)
 
