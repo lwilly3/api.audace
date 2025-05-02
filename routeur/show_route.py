@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends,APIRouter,status
 from sqlalchemy.orm import Session
 from typing import List
 from app.schemas import ShowCreate, ShowUpdate,ShowCreateWithDetail,ShowUpdateWithDetails, SegmentUpdateWithDetails, ShowWithdetailResponse, ShowBase_jsonShow, ShowStatuslUpdate
-from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id,create_show_with_elements_from_json,update_show_status,get_production_show_details,get_show_details_owned
+from app.db.crud.crud_show import create_show, get_shows, get_show_by_id, update_show, delete_show, create_show_with_details,update_show_with_details, get_show_with_details,get_show_details_all,get_show_details_by_id,create_show_with_elements_from_json,update_show_status,get_production_show_details,get_show_details_owned, delete_all_shows, delete_shows_by_user
 from app.db.database import get_db # Assurez-vous d'avoir une fonction SessionLocal pour obtenir la session DB
 from app.schemas import ShowOut  # Modèle Show que vous avez défini précédemment
 from core.auth import oauth2
@@ -251,3 +251,19 @@ def delete_existing_show_route(show_id: int, db: Session = Depends(get_db), curr
 #     if not show:
 #         raise HTTPException(status_code=404, detail="Show not found")
 #     return show
+
+# DELETE all shows
+@router.delete('/all', summary='Supprimer tous les shows')
+def delete_all_shows_route(db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
+    """Supprime tous les shows et retourne le nombre supprimés"""
+    count = delete_all_shows(db)
+    return {'deleted': count}
+
+# DELETE shows by creator
+@router.delete('/user/{user_id}', summary='Supprimer shows par utilisateur')
+def delete_shows_by_user_route(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
+    """Supprime tous les shows créés par un utilisateur donné"""
+    count = delete_shows_by_user(db, user_id)
+    if count == 0:
+        raise HTTPException(status_code=404, detail=f"Aucun show trouvé pour l'utilisateur {user_id}")
+    return {'deleted': count}

@@ -33729,3 +33729,18 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-04-28 16:27:48,460 - hapson-api - INFO - Incoming Request: GET http://testserver/users/users/1732
 2025-04-28 16:27:48,473 - hapson-api - INFO - Completed Request: GET http://testserver/users/users/1732 - Status: 404 - Time: 0.01s
 2025-04-28 16:27:48,475 - httpx - INFO - HTTP Request: GET http://testserver/users/users/1732 "HTTP/1.1 404 Not Found"
+2025-05-02 10:31:16,461 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/auth/login
+2025-05-02 10:31:17,181 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-05-02 10:31:17,765 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/auth/login - Status: 200 - Time: 1.30s
+2025-05-02 10:32:10,381 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows
+2025-05-02 10:32:10,385 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows - Status: 307 - Time: 0.00s
+2025-05-02 10:32:10,392 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/shows/
+2025-05-02 10:32:10,440 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/shows/ - Status: 200 - Time: 0.05s
+2025-05-02 10:47:38,031 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/allofuser/7
+2025-05-02 10:47:38,034 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/allofuser/7 - Status: 404 - Time: 0.00s
+2025-05-02 10:48:10,257 - hapson-api - INFO - Incoming Request: DELETE http://127.0.0.1:8000/shows/all
+2025-05-02 10:48:10,670 - hapson-api - INFO - Completed Request: DELETE http://127.0.0.1:8000/shows/all - Status: 200 - Time: 0.41s

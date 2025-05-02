@@ -1010,3 +1010,37 @@ def delete_show(db: Session, show_id: int):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur lors de la suppression du show: {str(e)}"
         )
+
+
+def delete_all_shows(db: Session) -> int:
+    """
+    Supprime tous les shows de la base et retourne le nombre supprimé.
+    """
+    try:
+        count = db.query(Show).delete(synchronize_session=False)
+        db.commit()
+        return count
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la suppression de tous les shows : {e}"
+        )
+
+
+def delete_shows_by_user(db: Session, user_id: int) -> int:
+    """
+    Supprime tous les shows créés par un utilisateur donné et retourne le nombre supprimé.
+    """
+    try:
+        count = (db.query(Show)
+                   .filter(Show.created_by == user_id)
+                   .delete(synchronize_session=False))
+        db.commit()
+        return count
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la suppression des shows de l'utilisateur {user_id} : {e}"
+        )
