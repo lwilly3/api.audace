@@ -584,68 +584,102 @@ def create_show_with_details(db: Session, show_data: ShowCreateWithDetail,curent
 # //////////////////// update shw avec details////////////
 
 
-def update_show_with_details(db: Session, show_id: int, show_data: dict):
+def update_show_with_details(db: Session, show_id: int, show_data: Dict):
     """
-    Met à jour un show avec ses segments, présentateurs et invités.
+    Met à jour une émission avec ses segments, présentateurs et invités, en synchronisant les segments.
 
     Args:
-        - db (Session): La session de base de données.
-        - show_id (int): L'ID du show à mettre à jour.
-        - show_data (dict): Les nouvelles données pour le show.
+        db (Session): La session de base de données.
+        show_id (int): L'ID de l'émission à mettre à jour.
+        show_data (dict): Les nouvelles données pour l'émission.
 
     Returns:
-        - dict: Les détails du show mis à jour.
+        dict: Les détails de l'émission mise à jour.
     """
     try:
-        # Récupérer le show existant
+        print(f"Début de la mise à jour de l'émission {show_id} avec données : {show_data}")
+
+        # Récupérer l'émission existante
         show = db.query(Show).filter(Show.id == show_id).first()
         if not show:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Show with ID {show_id} not found."
+                detail=f"Émission avec l'ID {show_id} introuvable."
             )
-        
-        # Mettre à jour les champs du show
+        print(f"Émission trouvée : {show.id}, titre : {show.title}")
+
+        # Mettre à jour les champs de l'émission
         for key, value in show_data.items():
             if hasattr(show, key) and key not in ["segments", "presenter_ids"]:
+                print(f"Mise à jour du champ {key} avec la valeur {value}")
                 setattr(show, key, value)
 
-        # Mettre à jour les présentateurs (relation plusieurs-à-plusieurs)
+        # Mettre à jour les présentateurs
         if "presenter_ids" in show_data:
-            presenters = db.query(Presenter).filter(Presenter.id.in_(show_data["presenter_ids"])).all()
+            print(f"Mise à jour des présentateurs : {show_data['presenter_ids']}")
+            presenters = (
+                db.query(Presenter)
+                .filter(Presenter.id.in_(show_data["presenter_ids"]))
+                .all()
+                if show_data["presenter_ids"]
+                else []
+            )
             if len(presenters) != len(show_data["presenter_ids"]):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="One or more presenter IDs are invalid."
+                    detail="Un ou plusieurs IDs de présentateurs sont invalides."
                 )
             show.presenters = presenters
+            print(f"Présentateurs mis à jour : {[p.id for p in presenters]}")
 
-        # Mettre à jour les segments
+        # Synchroniser les segments
         if "segments" in show_data:
+            # Récupérer les IDs des segments envoyés
+            sent_segment_ids = {int(seg["id"]) for seg in show_data["segments"] if seg.get("id") is not None}
+            print(f"Segments envoyés (IDs) : {sent_segment_ids}")
+
+            # Supprimer les segments existants qui ne sont plus dans la payload
+            existing_segments = db.query(Segment).filter(Segment.show_id == show_id).all()
+            deleted_segment_ids = [seg.id for seg in existing_segments if seg.id not in sent_segment_ids]
+            print(f"Segments à supprimer (IDs) : {deleted_segment_ids}")
+            for segment in existing_segments:
+                if segment.id not in sent_segment_ids:
+                    print(f"Suppression du segment ID {segment.id}: {segment.title}")
+                    db.delete(segment)
+                    db.flush()  # Appliquer la suppression immédiatement
+
+            # Traiter les segments envoyés
             for segment_data in show_data["segments"]:
                 segment_id = segment_data.get("id")
-                if segment_id:  # Segment existant à mettre à jour
+                if segment_id is not None:  # Segment existant à mettre à jour
+                    segment_id = int(segment_id)
                     segment = db.query(Segment).filter(Segment.id == segment_id, Segment.show_id == show_id).first()
                     if not segment:
                         raise HTTPException(
                             status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Segment with ID {segment_id} not found for this show."
+                            detail=f"Segment avec l'ID {segment_id} introuvable pour cette émission."
                         )
-                    # Mettre à jour les champs du segment
+                    print(f"Mise à jour du segment ID {segment_id}: {segment_data['title']}")
                     for key, value in segment_data.items():
                         if hasattr(segment, key) and key != "guest_ids":
                             setattr(segment, key, value)
-                    
-                    # Mettre à jour les invités du segment
-                    if "guest_ids" in segment_data:
-                        guests = db.query(Guest).filter(Guest.id.in_(segment_data["guest_ids"])).all()
+                    if "guest_ids" in show_data:
+                        print(f"Guest IDs pour segment {segment_id} : {segment_data['guest_ids']}")
+                        guests = (
+                            db.query(Guest)
+                            .filter(Guest.id.in_(segment_data["guest_ids"]))
+                            .all()
+                            if segment_data["guest_ids"]
+                            else []
+                        )
                         if len(guests) != len(segment_data["guest_ids"]):
                             raise HTTPException(
                                 status_code=status.HTTP_400_BAD_REQUEST,
-                                detail=f"One or more guest IDs are invalid for segment '{segment.title}'."
+                                detail=f"Un ou plusieurs IDs d'invités sont invalides pour le segment '{segment.title}'."
                             )
                         segment.guests = guests
                 else:  # Nouveau segment à ajouter
+                    print(f"Ajout d'un nouveau segment : {segment_data['title']}")
                     new_segment = Segment(
                         title=segment_data["title"],
                         type=segment_data["type"],
@@ -656,33 +690,142 @@ def update_show_with_details(db: Session, show_id: int, show_data: dict):
                     )
                     db.add(new_segment)
                     db.flush()  # Générer un ID pour le nouveau segment
-
-                    # Ajouter les invités au nouveau segment
                     if "guest_ids" in segment_data:
-                        guests = db.query(Guest).filter(Guest.id.in_(segment_data["guest_ids"])).all()
+                        print(f"Guest IDs pour nouveau segment : {segment_data['guest_ids']}")
+                        guests = (
+                            db.query(Guest)
+                            .filter(Guest.id.in_(segment_data["guest_ids"]))
+                            .all()
+                            if segment_data["guest_ids"]
+                            else []
+                        )
                         if len(guests) != len(segment_data["guest_ids"]):
                             raise HTTPException(
                                 status_code=status.HTTP_400_BAD_REQUEST,
-                                detail=f"One or more guest IDs are invalid for new segment '{new_segment.title}'."
+                                detail=f"Un ou plusieurs IDs d'invités sont invalides pour le nouveau segment '{new_segment.title}'."
                             )
                         new_segment.guests = guests
 
         # Valider les changements dans la base de données
+        print("Validation des changements dans la base de données")
         db.commit()
         db.refresh(show)
+        print(f"Émission {show_id} mise à jour avec succès")
         return show
 
     except HTTPException as http_exc:
-        # Remonter les erreurs spécifiques levées
+        print(f"Erreur HTTP : {http_exc.detail}")
         raise http_exc
-
     except Exception as e:
-        # Gestion des erreurs inattendues
+        print(f"Erreur inattendue : {str(e)}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {str(e)}"
+            detail=f"Une erreur inattendue s'est produite : {str(e)}"
         )
+
+
+
+
+# def update_show_with_details(db: Session, show_id: int, show_data: dict):
+#     """
+#     Met à jour un show avec ses segments, présentateurs et invités.
+
+#     Args:
+#         - db (Session): La session de base de données.
+#         - show_id (int): L'ID du show à mettre à jour.
+#         - show_data (dict): Les nouvelles données pour le show.
+
+#     Returns:
+#         - dict: Les détails du show mis à jour.
+#     """
+#     try:
+#         # Récupérer le show existant
+#         show = db.query(Show).filter(Show.id == show_id).first()
+#         if not show:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail=f"Show with ID {show_id} not found."
+#             )
+        
+#         # Mettre à jour les champs du show
+#         for key, value in show_data.items():
+#             if hasattr(show, key) and key not in ["segments", "presenter_ids"]:
+#                 setattr(show, key, value)
+
+#         # Mettre à jour les présentateurs (relation plusieurs-à-plusieurs)
+#         if "presenter_ids" in show_data:
+#             presenters = db.query(Presenter).filter(Presenter.id.in_(show_data["presenter_ids"])).all()
+#             if len(presenters) != len(show_data["presenter_ids"]):
+#                 raise HTTPException(
+#                     status_code=status.HTTP_400_BAD_REQUEST,
+#                     detail="One or more presenter IDs are invalid."
+#                 )
+#             show.presenters = presenters
+
+#         # Mettre à jour les segments
+#         if "segments" in show_data:
+#             for segment_data in show_data["segments"]:
+#                 segment_id = segment_data.get("id")
+#                 if segment_id:  # Segment existant à mettre à jour
+#                     segment = db.query(Segment).filter(Segment.id == segment_id, Segment.show_id == show_id).first()
+#                     if not segment:
+#                         raise HTTPException(
+#                             status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f"Segment with ID {segment_id} not found for this show."
+#                         )
+#                     # Mettre à jour les champs du segment
+#                     for key, value in segment_data.items():
+#                         if hasattr(segment, key) and key != "guest_ids":
+#                             setattr(segment, key, value)
+                    
+#                     # Mettre à jour les invités du segment
+#                     if "guest_ids" in segment_data:
+#                         guests = db.query(Guest).filter(Guest.id.in_(segment_data["guest_ids"])).all()
+#                         if len(guests) != len(segment_data["guest_ids"]):
+#                             raise HTTPException(
+#                                 status_code=status.HTTP_400_BAD_REQUEST,
+#                                 detail=f"One or more guest IDs are invalid for segment '{segment.title}'."
+#                             )
+#                         segment.guests = guests
+#                 else:  # Nouveau segment à ajouter
+#                     new_segment = Segment(
+#                         title=segment_data["title"],
+#                         type=segment_data["type"],
+#                         position=segment_data["position"],
+#                         duration=segment_data["duration"],
+#                         description=segment_data.get("description"),
+#                         show_id=show.id
+#                     )
+#                     db.add(new_segment)
+#                     db.flush()  # Générer un ID pour le nouveau segment
+
+#                     # Ajouter les invités au nouveau segment
+#                     if "guest_ids" in segment_data:
+#                         guests = db.query(Guest).filter(Guest.id.in_(segment_data["guest_ids"])).all()
+#                         if len(guests) != len(segment_data["guest_ids"]):
+#                             raise HTTPException(
+#                                 status_code=status.HTTP_400_BAD_REQUEST,
+#                                 detail=f"One or more guest IDs are invalid for new segment '{new_segment.title}'."
+#                             )
+#                         new_segment.guests = guests
+
+#         # Valider les changements dans la base de données
+#         db.commit()
+#         db.refresh(show)
+#         return show
+
+#     except HTTPException as http_exc:
+#         # Remonter les erreurs spécifiques levées
+#         raise http_exc
+
+#     except Exception as e:
+#         # Gestion des erreurs inattendues
+#         db.rollback()
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail=f"An unexpected error occurred: {str(e)}"
+#         )
 
 
 
