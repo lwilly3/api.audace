@@ -70,8 +70,9 @@ class ShowCreateWithDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+# Modèle pour la mise à jour d'un segment avec détails
 class SegmentUpdateWithDetails(BaseModel):
-    id: Optional[int]
+    id: Optional[int] = None
     title: str
     type: str
     position: int
@@ -81,15 +82,17 @@ class SegmentUpdateWithDetails(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-
+# Modèle pour la mise à jour d'une émission avec détails
 class ShowUpdateWithDetails(BaseModel):
     title: Optional[str] = None
     type: Optional[str] = None
     duration: Optional[int] = None
     presenter_ids: Optional[List[int]] = []
     segments: Optional[List[SegmentUpdateWithDetails]] = []
-
-    model_config = ConfigDict(from_attributes=True)
+    broadcast_date: Optional[datetime] = None  # Ajout pour correspondre à la payload
+    frequency: Optional[str] = None           # Ajout pour correspondre à la payload
+    emission_id: Optional[int] = None         # Ajout pour correspondre à la payload
+    status: Optional[str] = None              # Ajout pour correspondre à la payload
 
 
 # Schéma pour créer un show
