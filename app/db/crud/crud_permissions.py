@@ -434,7 +434,7 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'can_changestatus_archived_showplan', 'can_setOnline_showplan', 'can_viewAll_showplan',
 
     # Permissions pour les utilisateurs
-    'can_acces_users_section', 'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users',
+    'can_acces_users_section', 'can_view_users', 'can_edit_users', 'can_desable_users', 'can_delete_users','can_create_users',
 
     # Permissions pour les rôles
     'can_manage_roles', 'can_assign_roles',

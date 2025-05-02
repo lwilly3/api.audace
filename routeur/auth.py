@@ -1,4 +1,5 @@
-from fastapi import HTTPException, Response, status, Depends, APIRouter
+from fastapi import HTTPException, Response, status, Depends, APIRouter, Query
+from datetime import datetime
 from sqlalchemy.orm import Session
 # import app.database as database, app.schemas as schemas, app.table_models as table_models, app.utils as utils, app.oauth2 as oauth2
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
@@ -16,6 +17,9 @@ from app.db.crud.crud_auth import revoke_token
 from pydantic import BaseModel, EmailStr
 from app.db.crud.crud_users import create_user
 from routeur.users_route import assign_default_role_to_user
+from app.schemas.schema_invite import InviteRequest, InviteResponse, ValidateInviteResponse, SignupWithInviteRequest
+from app.db.crud.crud_invite_token import create_invite_token, get_invite_token, mark_token_used
+from app.models.model_user_permissions import UserPermissions
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -104,4 +108,51 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
     assign_default_role_to_user(new_user.id, db)
     from app.db.crud.crud_permissions import initialize_user_permissions
     initialize_user_permissions(db, new_user.id)
+    return new_user
+
+# Génération d'un lien d'invitation temporaire
+@router.post('/invite', response_model=InviteResponse, status_code=status.HTTP_201_CREATED)
+def generate_invite(
+    request: InviteRequest,
+    db: Session = Depends(get_db),
+    current_user: model_user.User = Depends(oauth2.get_current_user)
+):
+    """Crée un token d'invitation temporaire valable une seule fois (permission can_create_users requise)"""
+    # Vérifier la permission can_create_users
+    perms = db.query(UserPermissions).filter(UserPermissions.user_id == current_user.id).first()
+    if not perms or not perms.can_acces_users_section:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission can_create_users requise")
+    invite = create_invite_token(db, request.email)
+    return invite
+
+# Validation d'un token d'invitation
+@router.get('/invite/validate', response_model=ValidateInviteResponse)
+def validate_invite(token: str = Query(...), db: Session = Depends(get_db)):
+    """Vérifie si le token est valide, non expiré et non utilisé"""
+    invite = get_invite_token(db, token)
+    if not invite or invite.used or invite.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token invalide, expiré ou déjà utilisé")
+    return {'valid': True, 'email': invite.email}
+
+# Inscription via lien d'invitation
+@router.post('/signup-with-invite', response_model=UserInDB, status_code=status.HTTP_201_CREATED)
+def signup_with_invite(request: SignupWithInviteRequest, db: Session = Depends(get_db)):
+    """Crée un utilisateur à partir d'un token d'invitation"""
+    invite = get_invite_token(db, request.token)
+    if not invite:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token non trouvé")
+    if invite.used or invite.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="Token expiré ou déjà utilisé")
+    if invite.email != request.email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email ne correspond pas au token")
+    # Création de l'utilisateur enrichi
+    user_data = request.model_dump()
+    new_user = create_user(db, user_data)
+    if not new_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Echec création utilisateur")
+    assign_default_role_to_user(new_user.id, db)
+    from app.db.crud.crud_permissions import initialize_user_permissions
+    initialize_user_permissions(db, new_user.id)
+    # Marquer le token comme utilisé
+    mark_token_used(db, request.token)
     return new_user
