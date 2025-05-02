@@ -1017,6 +1017,10 @@ def delete_all_shows(db: Session) -> int:
     Supprime tous les shows de la base et retourne le nombre supprimé.
     """
     try:
+        # Supprimer d'abord les relations pour éviter les FK violations
+        db.query(ShowPresenter).delete(synchronize_session=False)
+        db.query(SegmentGuest).delete(synchronize_session=False)
+        db.query(Segment).delete(synchronize_session=False)
         count = db.query(Show).delete(synchronize_session=False)
         db.commit()
         return count
@@ -1033,9 +1037,15 @@ def delete_shows_by_user(db: Session, user_id: int) -> int:
     Supprime tous les shows créés par un utilisateur donné et retourne le nombre supprimé.
     """
     try:
-        count = (db.query(Show)
-                   .filter(Show.created_by == user_id)
-                   .delete(synchronize_session=False))
+        # Identifier les shows à supprimer
+        show_ids = [s.id for s in db.query(Show.id).filter(Show.created_by == user_id)]
+        # Supprimer d'abord les relations
+        if show_ids:
+            db.query(ShowPresenter).filter(ShowPresenter.show_id.in_(show_ids)).delete(synchronize_session=False)
+            db.query(SegmentGuest).filter(SegmentGuest.show_id.in_(show_ids)).delete(synchronize_session=False)
+            db.query(Segment).filter(Segment.show_id.in_(show_ids)).delete(synchronize_session=False)
+        # Puis supprimer les shows
+        count = db.query(Show).filter(Show.created_by == user_id).delete(synchronize_session=False)
         db.commit()
         return count
     except Exception as e:
