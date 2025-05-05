@@ -93,12 +93,14 @@ class SignupRequest(BaseModel):
 @router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=UserInDB)
 def signup(request: SignupRequest, db: Session = Depends(get_db)):
     # Créer un utilisateur minimal avec email comme username
+    # Hasher le mot de passe avant stockage
+    hashed_pw = utils.hash(request.password)
     user_data = {
         'username': request.email,
         'name': '',
         'family_name': '',
         'email': request.email,
-        'password': request.password,
+        'password': hashed_pw,
         'phone_number': ''
     }
     new_user = create_user(db, user_data)
@@ -147,6 +149,9 @@ def signup_with_invite(request: SignupWithInviteRequest, db: Session = Depends(g
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email ne correspond pas au token")
     # Création de l'utilisateur enrichi
     user_data = request.model_dump()
+    # Hasher le mot de passe avant stockage
+    if 'password' in user_data:
+        user_data['password'] = utils.hash(user_data['password'])
     new_user = create_user(db, user_data)
     if not new_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Echec création utilisateur")
