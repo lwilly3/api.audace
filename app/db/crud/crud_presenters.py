@@ -401,11 +401,10 @@ def assign_presenter(db: Session, presenter: PresenterCreate):
     Assigne un statut de présentateur à un utilisateur.
     Réactive si supprimé, sinon crée un nouvel enregistrement.
     """
-    # Si un présentateur portant ce nom existe déjà
     existing_by_name = db.query(Presenter).filter(Presenter.name == presenter.name).first()
     if existing_by_name:
-        # Si soft-deleted, on réactive sans modifier les autres champs
-        if getattr(existing_by_name, 'is_deleted', False):
+        # Si soft-deleted, on réactive uniquement le flag et la date
+        if existing_by_name.is_deleted:
             existing_by_name.is_deleted = False
             existing_by_name.deleted_at = None
             db.commit()
