@@ -105,15 +105,101 @@ Test that the form fields in CreateShowPlan persist correctly after adding new s
   - 410 Gone : token utilisé ou périmé
 
 ### Frontend (src/components/auth/GenerateInviteLink.tsx)
-- Formulaire pour saisir l'email destinataire
-- Appel POST `/auth/invite` avec `{ email }`
-- Afficher le lien généré ou message de confirmation
+- Importer les hooks React (`useState`, `useEffect`) et un client HTTP (`axios` ou `fetch`).
+- États à gérer :
+  * `email: string` – modèle du champ email.
+  * `loading: boolean` – indicateur de chargement pendant l’appel.
+  * `inviteLink: string | null` – lien généré ou null.
+  * `expiresAt: string | null` – date d’expiration ISO pour affichage.
+  * `error: string | null` – message d’erreur utilisateur.
+- Formulaire :
+  1. Champ email avec validation en `onChange` (regex simple + non vide).
+  2. Bouton « Générer le lien » désactivé si `loading` ou email invalide.
+- Fonction `handleGenerate` :
+  ```tsx
+  async function handleGenerate() {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.post('/auth/invite', { email });
+      const { token, expires_at } = response.data;
+      setInviteLink(`${window.location.origin}/signup/${token}`);
+      setExpiresAt(expires_at);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Erreur lors de la génération du lien');
+    } finally {
+      setLoading(false);
+    }
+  }
+  ```
+- UI à afficher :
+  * Spinner ou indicator lorsque `loading === true`.
+  * En cas de succès (`inviteLink` non null) :
+    - Afficher le lien cliquable.
+    - Bouton « Copier » avec `navigator.clipboard.writeText(inviteLink)` et feedback visuel (« Lien copié !»).
+    - Texte « Expire le: {new Date(expiresAt).toLocaleString()} ».
+  * En cas d’erreur (`error` non null) : afficher `error` en rouge.
+- Réinitialisation :
+  * Si l’email change, nettoyer `inviteLink`, `expiresAt` et `error`.
+- Intégration :
+  * Render ce composant dans la page d’administration (`src/pages/users/UserList.tsx` ou `AdminDashboard`).
+  * Passer un prop `onInviteSent(token: string)` si besoin de notifier le parent.
 
 ### Signup avec invite (src/pages/auth/SignupWithInvite.tsx)
-- Extraire `token` depuis l'URL
-- Vérifier côté backend via GET `/auth/invite/validate?token=${token}`
-- Si valide : afficher formulaire de création de compte
-- À la soumission : POST `/auth/signup-with-invite` `{ token, username, password, ... }`
+- Importer les hooks React (`useState`, `useEffect`) et router (`useParams`, `useNavigate`) ainsi qu’un client HTTP (`axios` ou `fetch`).
+- États à gérer :
+  * `token: string` – extrait de l’URL (`useParams`).
+  * `loading: boolean` – pour l’appel de validation et de création.
+  * `error: string | null` – message d’erreur global.
+  * `valid: boolean` – si le token est valide (initialement false).
+  * `email: string` – obtenu via la validation du token (lecture seule).
+  * `form: { username: string; password: string; name: string; family_name: string; phone_number?: string; profilePicture?: string }` – données saisies.
+- `useEffect` au montage :
+  ```tsx
+  useEffect(() => {
+    async function validate() {
+      setLoading(true);
+      try {
+        const res = await axios.get(`/auth/invite/validate?token=${token}`);
+        setEmail(res.data.email);
+        setValid(true);
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Lien invalide ou expiré');
+      } finally {
+        setLoading(false);
+      }
+    }
+    validate();
+  }, [token]);
+  ```
+- Formulaire de signup (affiché si `valid === true`) :
+  1. Champs : username, password, name, family_name, phone_number, profilePicture (URL). Tous obligatoires sauf les deux derniers.
+  2. Validation simple : non vide pour username/password, format URL pour avatar.
+- Fonction `handleSignup` :
+  ```tsx
+  async function handleSignup() {
+    setLoading(true);
+    setError(null);
+    try {
+      const payload = { token, email, ...form };
+      await axios.post('/auth/signup-with-invite', payload);
+      navigate('/login', { state: { message: 'Compte créé avec succès. Veuillez vous connecter.' } });
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Erreur lors de la création de compte');
+    } finally {
+      setLoading(false);
+    }
+  }
+  ```
+- UI :
+  * Si `loading`, afficher un spinner.
+  * Si `error`, afficher le message en rouge.
+  * Si `!valid && !loading`, afficher un message « Lien invalide ou expiré ».
+  * Formulaire : boutons « Valider » désactivé tant que `loading` ou validation échoue.
+  * Après succès, rediriger vers la page de login avec un toast ou message.
+- Intégration :
+  * Déclarer la route React : `<Route path="/signup/:token" element={<SignupWithInvite />} />`.
+  * Ajouter de la navigation conditionnelle pour `token` manquant.
 
 ### Database Changes
 - Nouvelle table `invite_tokens` :

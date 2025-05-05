@@ -390,108 +390,30 @@ def get_presenters(db: Session, skip: int = 0, limit: int = 10):
         logger.error(f"Error fetching presenters: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching presenters")
 
+from fastapi import HTTPException
+from starlette import status
+from app.models.model_presenter import Presenter
+from app.schemas.schema_presenters import PresenterCreate
+from app.db.crud.crud_presenters import create_presenter  # éviter recursion
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# from datetime import datetime, timezone
-# from sqlalchemy.orm import Session
-# import app.models as models
-
-# # CRUD pour les Présentateurs
-# def create_presenter(db: Session, name: str, biography: str = None):
-#     presenter = models.Presenter(name=name, biography=biography)
-#     db.add(presenter)
-#     db.commit()
-#     db.refresh(presenter)
-#     return presenter
-
-# def get_presenter(db: Session, presenter_id: int):
-#     return db.query(models.Presenter).filter(models.Presenter.id == presenter_id).first()
-
-# def update_presenter(db: Session, presenter_id: int, name: str = None, biography: str = None):
-#     presenter = db.query(models.Presenter).filter(models.Presenter.id == presenter_id).first()
-#     if presenter:
-#         if name:
-#             presenter.name = name
-#         if biography:
-#             presenter.biography = biography
-#         db.commit()
-#         db.refresh(presenter)
-#     return presenter
-
-# def delete_presenter(db: Session, presenter_id: int):
-#     presenter = db.query(models.Presenter).filter(models.Presenter.id == presenter_id).first()
-#     if presenter:
-#         presenter.is_deleted = True
-#         presenter.deleted_at = datetime.now(timezone.utc)  # Utilisation de timezone-aware datetime
-#         db.commit()
-#     return presenter
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # from sqlalchemy.orm import Session
-# # from models.model_presenter import Presenter
-# # from schemas.schema_presenters import PresenterCreate, PresenterUpdate
-
-# # def create_presenter(db: Session, presenter: PresenterCreate):
-# #     new_presenter = Presenter(**presenter.dict())
-# #     db.add(new_presenter)
-# #     db.commit()
-# #     db.refresh(new_presenter)
-# #     return new_presenter
-
-# # def get_presenter(db: Session, presenter_id: int):
-# #     return db.query(Presenter).filter(Presenter.id == presenter_id).first()
-
-# # def update_presenter(db: Session, presenter_id: int, presenter_update: PresenterUpdate):
-# #     presenter = db.query(Presenter).filter(Presenter.id == presenter_id).first()
-# #     for key, value in presenter_update.dict(exclude_unset=True).items():
-# #         setattr(presenter, key, value)
-# #     db.commit()
-# #     db.refresh(presenter)
-# #     return presenter
+def assign_presenter(db: Session, presenter: PresenterCreate):
+    """
+    Assigne un statut de présentateur à un utilisateur.
+    Réactive si supprimé, sinon crée un nouvel enregistrement.
+    """
+    existing = db.query(Presenter).filter(Presenter.users_id == presenter.users_id).first()
+    if existing:
+        if getattr(existing, 'is_deleted', False):
+            existing.is_deleted = False
+            existing.deleted_at = None
+            # Mettre à jour les champs du présentateur
+            existing.name = presenter.name
+            existing.biography = presenter.biography
+            existing.contact_info = presenter.contact_info
+            db.commit()
+            db.refresh(existing)
+            return existing
+        else:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Presenter already exists")
+    # Pas d'existant → création standard
+    return create_presenter(db, presenter)

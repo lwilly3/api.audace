@@ -34327,3 +34327,192 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-05-02 22:25:18,479 - hapson-api - INFO - Incoming Request: GET http://testserver/search_shows/?status=active
 2025-05-02 22:25:18,529 - hapson-api - INFO - Completed Request: GET http://testserver/search_shows/?status=active - Status: 200 - Time: 0.05s
 2025-05-02 22:25:18,530 - httpx - INFO - HTTP Request: GET http://testserver/search_shows/?status=active "HTTP/1.1 200 OK"
+2025-05-05 16:25:11,957 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:14,684 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 2.73s
+2025-05-05 16:25:14,690 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:14,692 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:14,740 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.05s
+2025-05-05 16:25:14,742 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:14,744 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:14,761 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 403 - Time: 0.02s
+2025-05-05 16:25:14,947 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 403 Forbidden"
+2025-05-05 16:25:15,001 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:15,284 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.28s
+2025-05-05 16:25:15,291 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:15,293 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:15,315 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.02s
+2025-05-05 16:25:15,318 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:15,319 - hapson-api - INFO - Incoming Request: GET http://testserver/dashbord/
+2025-05-05 16:25:15,600 - hapson-api - INFO - Completed Request: GET http://testserver/dashbord/ - Status: 200 - Time: 0.28s
+2025-05-05 16:25:15,602 - httpx - INFO - HTTP Request: GET http://testserver/dashbord/ "HTTP/1.1 200 OK"
+2025-05-05 16:25:15,625 - hapson-api - INFO - Incoming Request: GET http://testserver/dashbord/
+2025-05-05 16:25:15,667 - hapson-api - INFO - Completed Request: GET http://testserver/dashbord/ - Status: 401 - Time: 0.04s
+2025-05-05 16:25:15,670 - httpx - INFO - HTTP Request: GET http://testserver/dashbord/ "HTTP/1.1 401 Unauthorized"
+2025-05-05 16:25:15,712 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:15,814 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.10s
+2025-05-05 16:25:15,815 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:15,817 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:15,902 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.09s
+2025-05-05 16:25:15,914 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:15,917 - hapson-api - INFO - Incoming Request: POST http://testserver/emissions/
+2025-05-05 16:25:15,953 - hapson-api - INFO - Completed Request: POST http://testserver/emissions/ - Status: 200 - Time: 0.04s
+2025-05-05 16:25:15,961 - httpx - INFO - HTTP Request: POST http://testserver/emissions/ "HTTP/1.1 200 OK"
+2025-05-05 16:25:15,964 - hapson-api - INFO - Incoming Request: GET http://testserver/emissions/?skip=0&limit=10
+2025-05-05 16:25:15,998 - hapson-api - INFO - Completed Request: GET http://testserver/emissions/?skip=0&limit=10 - Status: 200 - Time: 0.03s
+2025-05-05 16:25:15,999 - httpx - INFO - HTTP Request: GET http://testserver/emissions/?skip=0&limit=10 "HTTP/1.1 200 OK"
+2025-05-05 16:25:16,002 - hapson-api - INFO - Incoming Request: GET http://testserver/emissions/128
+2025-05-05 16:25:16,071 - hapson-api - INFO - Completed Request: GET http://testserver/emissions/128 - Status: 200 - Time: 0.07s
+2025-05-05 16:25:16,134 - httpx - INFO - HTTP Request: GET http://testserver/emissions/128 "HTTP/1.1 200 OK"
+2025-05-05 16:25:16,135 - hapson-api - INFO - Incoming Request: PUT http://testserver/emissions/upd/128
+2025-05-05 16:25:16,571 - hapson-api - INFO - Completed Request: PUT http://testserver/emissions/upd/128 - Status: 200 - Time: 0.44s
+2025-05-05 16:25:16,578 - httpx - INFO - HTTP Request: PUT http://testserver/emissions/upd/128 "HTTP/1.1 200 OK"
+2025-05-05 16:25:16,581 - hapson-api - INFO - Incoming Request: DELETE http://testserver/emissions/softDel/128
+2025-05-05 16:25:16,605 - hapson-api - INFO - Completed Request: DELETE http://testserver/emissions/softDel/128 - Status: 200 - Time: 0.02s
+2025-05-05 16:25:16,612 - httpx - INFO - HTTP Request: DELETE http://testserver/emissions/softDel/128 "HTTP/1.1 200 OK"
+2025-05-05 16:25:16,614 - hapson-api - INFO - Incoming Request: DELETE http://testserver/emissions/del/128
+2025-05-05 16:25:16,648 - hapson-api - INFO - Completed Request: DELETE http://testserver/emissions/del/128 - Status: 200 - Time: 0.03s
+2025-05-05 16:25:16,656 - httpx - INFO - HTTP Request: DELETE http://testserver/emissions/del/128 "HTTP/1.1 200 OK"
+2025-05-05 16:25:16,664 - hapson-api - INFO - Incoming Request: GET http://testserver/emissions/128
+2025-05-05 16:25:16,713 - hapson-api - INFO - Completed Request: GET http://testserver/emissions/128 - Status: 404 - Time: 0.05s
+2025-05-05 16:25:16,716 - httpx - INFO - HTTP Request: GET http://testserver/emissions/128 "HTTP/1.1 404 Not Found"
+2025-05-05 16:25:16,732 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:17,115 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.38s
+2025-05-05 16:25:17,117 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:17,119 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:17,347 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.23s
+2025-05-05 16:25:17,351 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:17,352 - hapson-api - INFO - Incoming Request: POST http://testserver/guests/
+2025-05-05 16:25:17,568 - hapson-api - INFO - Completed Request: POST http://testserver/guests/ - Status: 200 - Time: 0.22s
+2025-05-05 16:25:17,572 - httpx - INFO - HTTP Request: POST http://testserver/guests/ "HTTP/1.1 200 OK"
+2025-05-05 16:25:17,575 - hapson-api - INFO - Incoming Request: GET http://testserver/guests/?skip=0&limit=10
+2025-05-05 16:25:17,637 - hapson-api - INFO - Completed Request: GET http://testserver/guests/?skip=0&limit=10 - Status: 200 - Time: 0.06s
+2025-05-05 16:25:17,690 - httpx - INFO - HTTP Request: GET http://testserver/guests/?skip=0&limit=10 "HTTP/1.1 200 OK"
+2025-05-05 16:25:17,697 - hapson-api - INFO - Incoming Request: GET http://testserver/guests/213
+2025-05-05 16:25:17,799 - hapson-api - INFO - Completed Request: GET http://testserver/guests/213 - Status: 200 - Time: 0.10s
+2025-05-05 16:25:17,802 - httpx - INFO - HTTP Request: GET http://testserver/guests/213 "HTTP/1.1 200 OK"
+2025-05-05 16:25:17,803 - hapson-api - INFO - Incoming Request: PUT http://testserver/guests/213
+2025-05-05 16:25:17,972 - hapson-api - INFO - Completed Request: PUT http://testserver/guests/213 - Status: 200 - Time: 0.17s
+2025-05-05 16:25:17,974 - httpx - INFO - HTTP Request: PUT http://testserver/guests/213 "HTTP/1.1 200 OK"
+2025-05-05 16:25:17,976 - hapson-api - INFO - Incoming Request: GET http://testserver/guests/search?query=Guest999
+2025-05-05 16:25:18,068 - hapson-api - INFO - Completed Request: GET http://testserver/guests/search?query=Guest999 - Status: 200 - Time: 0.09s
+2025-05-05 16:25:18,071 - httpx - INFO - HTTP Request: GET http://testserver/guests/search?query=Guest999 "HTTP/1.1 200 OK"
+2025-05-05 16:25:18,072 - hapson-api - INFO - Incoming Request: GET http://testserver/guests/details/213
+2025-05-05 16:25:18,092 - hapson-api - INFO - Completed Request: GET http://testserver/guests/details/213 - Status: 200 - Time: 0.02s
+2025-05-05 16:25:18,094 - httpx - INFO - HTTP Request: GET http://testserver/guests/details/213 "HTTP/1.1 200 OK"
+2025-05-05 16:25:18,100 - hapson-api - INFO - Incoming Request: DELETE http://testserver/guests/213
+2025-05-05 16:25:18,710 - hapson-api - INFO - Completed Request: DELETE http://testserver/guests/213 - Status: 200 - Time: 0.61s
+2025-05-05 16:25:18,725 - httpx - INFO - HTTP Request: DELETE http://testserver/guests/213 "HTTP/1.1 200 OK"
+2025-05-05 16:25:18,728 - hapson-api - INFO - Incoming Request: GET http://testserver/guests/213
+2025-05-05 16:25:18,761 - hapson-api - INFO - Completed Request: GET http://testserver/guests/213 - Status: 404 - Time: 0.03s
+2025-05-05 16:25:18,768 - httpx - INFO - HTTP Request: GET http://testserver/guests/213 "HTTP/1.1 404 Not Found"
+2025-05-05 16:25:18,821 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:19,269 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.45s
+2025-05-05 16:25:19,273 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:19,274 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:19,327 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.05s
+2025-05-05 16:25:19,363 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:19,368 - hapson-api - INFO - Incoming Request: POST http://testserver/notifications/
+2025-05-05 16:25:19,419 - hapson-api - INFO - Completed Request: POST http://testserver/notifications/ - Status: 200 - Time: 0.05s
+2025-05-05 16:25:19,421 - httpx - INFO - HTTP Request: POST http://testserver/notifications/ "HTTP/1.1 200 OK"
+2025-05-05 16:25:19,422 - hapson-api - INFO - Incoming Request: GET http://testserver/notifications/
+2025-05-05 16:25:19,443 - hapson-api - INFO - Completed Request: GET http://testserver/notifications/ - Status: 200 - Time: 0.02s
+2025-05-05 16:25:19,475 - httpx - INFO - HTTP Request: GET http://testserver/notifications/ "HTTP/1.1 200 OK"
+2025-05-05 16:25:19,478 - hapson-api - INFO - Incoming Request: GET http://testserver/notifications/30
+2025-05-05 16:25:19,512 - hapson-api - INFO - Completed Request: GET http://testserver/notifications/30 - Status: 200 - Time: 0.03s
+2025-05-05 16:25:19,513 - httpx - INFO - HTTP Request: GET http://testserver/notifications/30 "HTTP/1.1 200 OK"
+2025-05-05 16:25:19,522 - hapson-api - INFO - Incoming Request: PUT http://testserver/notifications/30
+2025-05-05 16:25:19,570 - hapson-api - INFO - Completed Request: PUT http://testserver/notifications/30 - Status: 200 - Time: 0.05s
+2025-05-05 16:25:19,572 - httpx - INFO - HTTP Request: PUT http://testserver/notifications/30 "HTTP/1.1 200 OK"
+2025-05-05 16:25:19,574 - hapson-api - INFO - Incoming Request: DELETE http://testserver/notifications/30
+2025-05-05 16:25:19,625 - hapson-api - INFO - Completed Request: DELETE http://testserver/notifications/30 - Status: 200 - Time: 0.05s
+2025-05-05 16:25:19,628 - httpx - INFO - HTTP Request: DELETE http://testserver/notifications/30 "HTTP/1.1 200 OK"
+2025-05-05 16:25:19,629 - hapson-api - INFO - Incoming Request: GET http://testserver/notifications/30
+2025-05-05 16:25:19,658 - hapson-api - INFO - Completed Request: GET http://testserver/notifications/30 - Status: 200 - Time: 0.03s
+2025-05-05 16:25:19,660 - httpx - INFO - HTTP Request: GET http://testserver/notifications/30 "HTTP/1.1 200 OK"
+2025-05-05 16:25:19,677 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:20,514 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.84s
+2025-05-05 16:25:20,515 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:20,521 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:20,641 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.12s
+2025-05-05 16:25:20,643 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:20,644 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/users/1771
+2025-05-05 16:25:21,615 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/users/1771 - Status: 200 - Time: 0.97s
+2025-05-05 16:25:21,618 - httpx - INFO - HTTP Request: GET http://testserver/permissions/users/1771 "HTTP/1.1 200 OK"
+2025-05-05 16:25:21,619 - hapson-api - INFO - Incoming Request: POST http://testserver/permissions/roles
+2025-05-05 16:25:24,843 - hapson-api - INFO - Completed Request: POST http://testserver/permissions/roles - Status: 200 - Time: 3.22s
+2025-05-05 16:25:24,844 - httpx - INFO - HTTP Request: POST http://testserver/permissions/roles "HTTP/1.1 200 OK"
+2025-05-05 16:25:24,852 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/roles
+2025-05-05 16:25:24,952 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/roles - Status: 200 - Time: 0.10s
+2025-05-05 16:25:24,956 - httpx - INFO - HTTP Request: GET http://testserver/permissions/roles "HTTP/1.1 200 OK"
+2025-05-05 16:25:24,969 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/roles/131
+2025-05-05 16:25:25,288 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/roles/131 - Status: 200 - Time: 0.32s
+2025-05-05 16:25:25,292 - httpx - INFO - HTTP Request: GET http://testserver/permissions/roles/131 "HTTP/1.1 200 OK"
+2025-05-05 16:25:25,294 - hapson-api - INFO - Incoming Request: PUT http://testserver/permissions/roles/131
+2025-05-05 16:25:25,863 - hapson-api - INFO - Completed Request: PUT http://testserver/permissions/roles/131 - Status: 200 - Time: 0.57s
+2025-05-05 16:25:25,887 - httpx - INFO - HTTP Request: PUT http://testserver/permissions/roles/131 "HTTP/1.1 200 OK"
+2025-05-05 16:25:25,888 - hapson-api - INFO - Incoming Request: DELETE http://testserver/permissions/roles/131
+2025-05-05 16:25:25,943 - hapson-api - INFO - Completed Request: DELETE http://testserver/permissions/roles/131 - Status: 200 - Time: 0.06s
+2025-05-05 16:25:25,946 - httpx - INFO - HTTP Request: DELETE http://testserver/permissions/roles/131 "HTTP/1.1 200 OK"
+2025-05-05 16:25:25,948 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/roles
+2025-05-05 16:25:25,972 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/roles - Status: 200 - Time: 0.02s
+2025-05-05 16:25:25,974 - httpx - INFO - HTTP Request: GET http://testserver/permissions/roles "HTTP/1.1 200 OK"
+2025-05-05 16:25:25,975 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/permissions
+2025-05-05 16:25:25,994 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/permissions - Status: 200 - Time: 0.02s
+2025-05-05 16:25:25,995 - httpx - INFO - HTTP Request: GET http://testserver/permissions/permissions "HTTP/1.1 200 OK"
+2025-05-05 16:25:25,996 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/permissions/1
+2025-05-05 16:25:26,042 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/permissions/1 - Status: 200 - Time: 0.05s
+2025-05-05 16:25:26,061 - httpx - INFO - HTTP Request: GET http://testserver/permissions/permissions/1 "HTTP/1.1 200 OK"
+2025-05-05 16:25:26,063 - hapson-api - INFO - Incoming Request: PUT http://testserver/permissions/update_permissions/1771
+2025-05-05 16:25:26,215 - hapson-api - INFO - Completed Request: PUT http://testserver/permissions/update_permissions/1771 - Status: 400 - Time: 0.15s
+2025-05-05 16:25:26,224 - httpx - INFO - HTTP Request: PUT http://testserver/permissions/update_permissions/1771 "HTTP/1.1 400 Bad Request"
+2025-05-05 16:25:26,230 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:26,310 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.08s
+2025-05-05 16:25:26,312 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:26,312 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:26,340 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.03s
+2025-05-05 16:25:26,344 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:26,345 - hapson-api - INFO - Incoming Request: POST http://testserver/permissions/roles
+2025-05-05 16:25:26,364 - hapson-api - INFO - Completed Request: POST http://testserver/permissions/roles - Status: 422 - Time: 0.02s
+2025-05-05 16:25:26,366 - httpx - INFO - HTTP Request: POST http://testserver/permissions/roles "HTTP/1.1 422 Unprocessable Entity"
+2025-05-05 16:25:26,464 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:27,044 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.58s
+2025-05-05 16:25:27,046 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:27,048 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:27,065 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.02s
+2025-05-05 16:25:27,067 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:27,073 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/roles/999999
+2025-05-05 16:25:27,090 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/roles/999999 - Status: 404 - Time: 0.02s
+2025-05-05 16:25:27,093 - httpx - INFO - HTTP Request: GET http://testserver/permissions/roles/999999 "HTTP/1.1 404 Not Found"
+2025-05-05 16:25:27,100 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:27,166 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.07s
+2025-05-05 16:25:27,167 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:27,172 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:27,196 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.02s
+2025-05-05 16:25:27,199 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:27,200 - hapson-api - INFO - Incoming Request: GET http://testserver/permissions/roles
+2025-05-05 16:25:27,296 - hapson-api - INFO - Completed Request: GET http://testserver/permissions/roles - Status: 200 - Time: 0.10s
+2025-05-05 16:25:27,300 - httpx - INFO - HTTP Request: GET http://testserver/permissions/roles "HTTP/1.1 200 OK"
+2025-05-05 16:25:27,314 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:29,412 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 2.10s
+2025-05-05 16:25:29,414 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:29,415 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:29,490 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.07s
+2025-05-05 16:25:29,497 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:29,498 - hapson-api - INFO - Incoming Request: PUT http://testserver/permissions/update_permissions/1775
+2025-05-05 16:25:29,530 - hapson-api - INFO - Completed Request: PUT http://testserver/permissions/update_permissions/1775 - Status: 400 - Time: 0.03s
+2025-05-05 16:25:29,533 - httpx - INFO - HTTP Request: PUT http://testserver/permissions/update_permissions/1775 "HTTP/1.1 400 Bad Request"
+2025-05-05 16:25:29,562 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/signup
+2025-05-05 16:25:29,674 - hapson-api - INFO - Completed Request: POST http://testserver/auth/signup - Status: 201 - Time: 0.11s
+2025-05-05 16:25:29,684 - httpx - INFO - HTTP Request: POST http://testserver/auth/signup "HTTP/1.1 201 Created"
+2025-05-05 16:25:29,686 - hapson-api - INFO - Incoming Request: POST http://testserver/auth/login
+2025-05-05 16:25:29,839 - hapson-api - INFO - Completed Request: POST http://testserver/auth/login - Status: 200 - Time: 0.15s
+2025-05-05 16:25:29,849 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2025-05-05 16:25:29,853 - hapson-api - INFO - Incoming Request: POST http://testserver/presenters/
+2025-05-05 16:25:30,157 - hapson-api - INFO - Completed Request: POST http://testserver/presenters/ - Status: 200 - Time: 0.30s
+2025-05-05 16:25:30,165 - httpx - INFO - HTTP Request: POST http://testserver/presenters/ "HTTP/1.1 200 OK"
+2025-05-05 16:25:30,168 - hapson-api - INFO - Incoming Request: GET http://testserver/presenters/all?skip=0&limit=100
+2025-05-05 16:25:30,359 - hapson-api - INFO - Completed Request: GET http://testserver/presenters/all?skip=0&limit=100 - Status: 200 - Time: 0.19s
+2025-05-05 16:25:30,422 - httpx - INFO - HTTP Request: GET http://testserver/presenters/all?skip=0&limit=100 "HTTP/1.1 200 OK"
+2025-05-05 16:25:30,426 - hapson-api - INFO - Incoming Request: GET http://testserver/presenters/None
+2025-05-05 16:25:30,515 - hapson-api - INFO - Completed Request: GET http://testserver/presenters/None - Status: 422 - Time: 0.09s
+2025-05-05 16:25:30,524 - httpx - INFO - HTTP Request: GET http://testserver/presenters/None "HTTP/1.1 422 Unprocessable Entity"

@@ -200,6 +200,33 @@ def update_user_permissions_route(user_id: int, permissions: dict, userConnected
     
 
 
+@router.patch("/users/{user_id}/patch_selected_permissions", response_model=Dict[str, Any], dependencies=[Depends(check_permissions)])
+def patch_selected_permissions(
+    user_id: int,
+    permissions: Dict[str, bool],
+    current_user: User = Depends(oauth2.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Met à jour uniquement un sous-ensemble de permissions pour l'utilisateur :
+    can_acces_showplan_section, can_create_showplan,
+    can_changestatus_owned_showplan, can_delete_showplan,
+    can_edit_showplan, can_archive_showplan,
+    can_acces_guests_section, can_view_guests,
+    can_edit_guests, can_view_archives
+    """
+    allowed = {
+        'can_acces_showplan_section', 'can_create_showplan', 'can_changestatus_owned_showplan',
+        'can_delete_showplan', 'can_edit_showplan', 'can_archive_showplan',
+        'can_acces_guests_section', 'can_view_guests', 'can_edit_guests', 'can_view_archives'
+    }
+    invalid = [p for p in permissions.keys() if p not in allowed]
+    if invalid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Permissions invalides pour ce endpoint : {invalid}")
+    # Appel à la fonction CRUD existante pour l'opération partielle
+    return update_user_permissions(db, user_id, permissions, current_user.id)
+
 
     # /////////////////////////////////////////////////////////////////////
 

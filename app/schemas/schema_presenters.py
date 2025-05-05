@@ -108,6 +108,7 @@ class PresenterUpdate(BaseModel):
 
 class PresenterResponse(BaseModel):
     """Réponse après validation ou récupération d'un présentateur."""
+    id: int  # Identifiant du présentateur
     name: str
     contact_info: Optional[str]
     biography: Optional[str]
