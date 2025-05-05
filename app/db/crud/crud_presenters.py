@@ -401,19 +401,15 @@ def assign_presenter(db: Session, presenter: PresenterCreate):
     Assigne un statut de présentateur à un utilisateur.
     Réactive si supprimé, sinon crée un nouvel enregistrement.
     """
-    existing = db.query(Presenter).filter(Presenter.users_id == presenter.users_id).first()
-    if existing:
-        if getattr(existing, 'is_deleted', False):
-            existing.is_deleted = False
-            existing.deleted_at = None
-            # Mettre à jour les champs du présentateur
-            existing.name = presenter.name
-            existing.biography = presenter.biography
-            existing.contact_info = presenter.contact_info
+    # Si un présentateur portant ce nom existe déjà
+    existing_by_name = db.query(Presenter).filter(Presenter.name == presenter.name).first()
+    if existing_by_name:
+        # Si soft-deleted, on réactive sans modifier les autres champs
+        if getattr(existing_by_name, 'is_deleted', False):
+            existing_by_name.is_deleted = False
+            existing_by_name.deleted_at = None
             db.commit()
-            db.refresh(existing)
-            return existing
-        else:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Presenter already exists")
-    # Pas d'existant → création standard
-    return create_presenter(db, presenter)
+            db.refresh(existing_by_name)
+            return existing_by_name
+        # Sinon, déléguer à create_presenter pour gérer le conflit ou autre
+        return create_presenter(db, presenter)

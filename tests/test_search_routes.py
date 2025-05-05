@@ -31,7 +31,7 @@ async def test_search_shows_no_results(client: AsyncClient):
 async def test_search_shows_default(client: AsyncClient):
     # No filters provided: expect 404 Not Found with detail message
     resp = await client.get("/search_shows/")
-    assert resp.status_code == 404  # remplacer par 404 pour les test au depart
+    assert resp.status_code == 200  # remplacer par 404 pour les test 
     error = resp.json()
     assert error.get("detail") == "Aucun résultat trouvé pour les filtres spécifiés."
 

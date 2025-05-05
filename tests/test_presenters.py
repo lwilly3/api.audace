@@ -85,3 +85,25 @@ async def test_presenter_crud_and_by_user(client: AsyncClient):
     nf = await client.get(f"/presenters/{pres_id}", headers=headers)
     print(f"Réponse non trouvée : {nf.json()}")
     assert nf.status_code == 200
+
+    # Vérifier le soft-delete avec GET (toujours 200)
+    assert nf.status_code == 200
+
+    # Test de réactivation via POST /presenters/assign après suppression
+    react = await client.post(
+        "/presenters/assign",
+        json={
+            "name": pr_data["name"],
+            "contact_info": pr_data["contact_info"],
+            "biography": pr_data["biography"],
+            "users_id": uid
+        },
+        headers=headers
+    )
+    # Doit réactiver l'enregistrement existant
+    assert react.status_code == 200
+    assert react.json().get("id") == pres_id
+
+    # Conflit si on assigne à nouveau sans suppression intermédiaire
+    conflict = await client.post("/presenters/assign", json=pr_data, headers=headers)
+    assert conflict.status_code == 409
