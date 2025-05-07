@@ -424,3 +424,18 @@ def assign_presenter(db: Session, presenter: PresenterCreate):
             return existing_by_name
         # Sinon, déléguer à create_presenter pour gérer le conflit ou autre
         return create_presenter(db, presenter)
+    #si Presenter.user_id==presenter.user_id
+    existing_by_user = db.query(Presenter).filter(Presenter.users_id == presenter.users_id).first()
+    if existing_by_user:
+        # Si soft-deleted, on réactive uniquement le flag et la date
+        if existing_by_user.is_deleted:
+            existing_by_user.is_deleted = False
+            existing_by_user.deleted_at = None
+            db.commit()
+            db.refresh(existing_by_user)
+            return existing_by_user
+        # Sinon, déléguer à create_presenter pour gérer le conflit ou autre
+        return create_presenter(db, presenter)      
+
+    return create_presenter(db, presenter)
+
