@@ -390,6 +390,18 @@ def get_presenters(db: Session, skip: int = 0, limit: int = 10):
         logger.error(f"Error fetching presenters: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error fetching presenters")
 
+def get_deleted_presenters(db: Session, skip: int = 0, limit: int = 10):
+    """
+    Récupérer tous les présentateurs supprimés (is_deleted=True) avec pagination.
+    """
+    return (
+        db.query(Presenter)
+          .filter(Presenter.is_deleted == True)
+          .offset(skip)
+          .limit(limit)
+          .all()
+    )
+
 from fastapi import HTTPException
 from starlette import status
 from app.models.model_presenter import Presenter

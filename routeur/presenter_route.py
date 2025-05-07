@@ -3,8 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.crud.crud_presenters import  create_presenter, get_all_presenters, get_presenter, get_presenter_by_user, update_presenter, delete_presenter
-from app.db.crud.crud_presenters import assign_presenter
+from app.db.crud.crud_presenters import assign_presenter, create_presenter, get_all_presenters, get_presenter, get_presenter_by_user, update_presenter, delete_presenter, get_deleted_presenters
 from app.schemas.schema_presenters import PresenterCreate, PresenterResponse,PresenterResponsePaged, PresenterUpdate
 from core.auth import oauth2
 
@@ -35,6 +34,22 @@ def assign_presenter_route(
 @router.get("/all")
 def list_presenters(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     return get_all_presenters(db, skip, limit)
+
+
+# Liste des présentateurs soft-deleted
+@router.get("/deleted")
+def list_deleted_presenters(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
+    """
+    Récupérer les présentateurs marqués comme supprimés (is_deleted=True).
+    """
+    return get_deleted_presenters(db, skip, limit)
+
+
 
 # Obtenir un présentateur par IDm
 @router.get("/{presenter_id}")
@@ -99,6 +114,8 @@ def delete_presenter_route(presenter_id: int, db: Session = Depends(get_db), cur
             status_code=204,
             content={ "message": "Presenter deleted successfully" }
         )
+
+
 
 
 

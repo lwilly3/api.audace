@@ -36264,3 +36264,20 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-05-05 17:55:36,240 - hapson-api - INFO - Incoming Request: GET http://testserver/search_shows/?status=active
 2025-05-05 17:55:36,606 - hapson-api - INFO - Completed Request: GET http://testserver/search_shows/?status=active - Status: 200 - Time: 0.37s
 2025-05-05 17:55:36,608 - httpx - INFO - HTTP Request: GET http://testserver/search_shows/?status=active "HTTP/1.1 200 OK"
+2025-05-07 13:56:55,774 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/auth/login
+2025-05-07 13:56:57,497 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2025-05-07 13:56:58,465 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/auth/login - Status: 200 - Time: 2.69s
+2025-05-07 13:57:08,156 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/all
+2025-05-07 13:57:08,356 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/all - Status: 200 - Time: 0.20s
+2025-05-07 13:57:37,368 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/users/users
+2025-05-07 13:57:38,576 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/users/users - Status: 200 - Time: 1.21s
+2025-05-07 14:15:31,947 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/deleted
+2025-05-07 14:15:33,864 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/deleted - Status: 422 - Time: 1.92s
+2025-05-07 14:24:25,601 - hapson-api - INFO - Incoming Request: GET http://127.0.0.1:8000/presenters/deleted
+2025-05-07 14:24:26,342 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/deleted - Status: 200 - Time: 0.74s
+2025-05-07 14:25:29,613 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/assign
+2025-05-07 14:25:29,759 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/assign - Status: 200 - Time: 0.15s
