@@ -183,6 +183,17 @@ def generate_reset_token(request: ResetTokenRequest, db: Session = Depends(get_d
     reset = create_reset_token(db, request.user_id)
     return {"reset_token": reset.token, "expires_at": reset.expires_at.isoformat()}
 
+# Validation d'un token de réinitialisation
+@router.get('/reset-token/validate', status_code=status.HTTP_200_OK)
+def validate_reset_token(token: str = Query(...), db: Session = Depends(get_db)):
+    """
+    Vérifie si un token de réinitialisation est valide, non expiré et non utilisé.
+    """
+    reset = get_reset_token(db, token)
+    if not reset or reset.used or reset.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token invalide, expiré ou déjà utilisé")
+    return {"valid": True, "user_id": reset.user_id}
+
 @router.post('/reset-password', status_code=status.HTTP_200_OK)
 def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
     """
