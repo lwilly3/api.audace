@@ -20,10 +20,10 @@ from routeur.users_route import assign_default_role_to_user
 from app.schemas.schema_invite import InviteRequest, InviteResponse, ValidateInviteResponse, SignupWithInviteRequest
 from app.db.crud.crud_invite_token import create_invite_token, get_invite_token, mark_token_used
 from app.models.model_user_permissions import UserPermissions
-from jose import jwt, JWTError, ExpiredSignatureError
-from datetime import datetime, timedelta
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from core.auth.oauth2 import SECRET_KEY, ALGORITHM
+from app.db.crud.crud_password_reset_token import create_reset_token, get_reset_token, mark_reset_token_used
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -179,35 +179,27 @@ def generate_reset_token(request: ResetTokenRequest, db: Session = Depends(get_d
     """
     Génère un token temporaire pour réinitialiser le mot de passe à partir de l'ID utilisateur.
     """
-    # Vérifier l'utilisateur par ID
-    user = db.query(model_user.User).filter(model_user.User.id == request.user_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
-    # Préparer et signer le payload
-    expire = datetime.utcnow() + timedelta(minutes=15)
-    payload = {"user_id": user.id, "exp": expire, "purpose": "password_reset"}
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-    return {"reset_token": token, "expires_at": expire.isoformat()}
+    # Création et enregistrement du token en base
+    reset = create_reset_token(db, request.user_id)
+    return {"reset_token": reset.token, "expires_at": reset.expires_at.isoformat()}
 
 @router.post('/reset-password', status_code=status.HTTP_200_OK)
 def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
     """
     Réinitialise le mot de passe à partir d'un token de réinitialisation.
     """
-    try:
-        data = jwt.decode(request.token, SECRET_KEY, algorithms=[ALGORITHM])
-        if data.get('purpose') != 'password_reset':
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalide")
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_410_GONE, detail="Token expiré")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalide")
-    # Récupérer l'utilisateur
-    user = db.query(model_user.User).filter(model_user.User.id == data['user_id']).first()
+    # Récupérer le token en base
+    reset = get_reset_token(db, request.token)
+    if not reset:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token non trouvé")
+    if reset.used or reset.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="Token expiré ou déjà utilisé")
+    # Marquer comme utilisé
+    mark_reset_token_used(db, request.token)
+    # Mettre à jour le mot de passe de l'utilisateur
+    user = db.query(model_user.User).filter(model_user.User.id == reset.user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
-    # Hasher et mettre à jour le mot de passe
-    hashed = utils.hash(request.new_password)
-    user.password = hashed
+    user.password = utils.hash(request.new_password)
     db.commit()
     return {"message": "Mot de passe réinitialisé avec succès"}
