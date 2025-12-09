@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: audace_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-audace_db}
+      POSTGRES_USER: ${POSTGRES_USER:-audace_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - audace_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-audace_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API FastAPI
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: audace_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Base de données
+      DATABASE_URL: postgresql://${POSTGRES_USER:-audace_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-audace_db}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-audace_db}
+      POSTGRES_USER: ${POSTGRES_USER:-audace_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      
+      # JWT & Security
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      
+      # Email (si utilisé pour reset password)
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SERVER: ${MAIL_SERVER}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Audace API}
+      MAIL_TLS: ${MAIL_TLS:-true}
+      MAIL_SSL: ${MAIL_SSL:-false}
+      
+      # Application
+      FRONTEND_URL: ${FRONTEND_URL}
+      BACKEND_URL: ${BACKEND_URL}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${DEBUG:-false}
+      
+      # Uvicorn/Gunicorn
+      HOST: 0.0.0.0
+      PORT: 8000
+      WORKERS: ${WORKERS:-4}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - audace_network
+    command: >
+      sh -c "
+        echo 'Attente de la base de données...' &&
+        sleep 5 &&
+        echo 'Exécution des migrations Alembic...' &&
+        alembic upgrade head &&
+        echo 'Démarrage de l\'API...' &&
+        gunicorn maintest:app --workers ${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120
+      "
+
+networks:
+  audace_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
