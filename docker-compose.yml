@@ -12,6 +12,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups  # Dossier de sauvegarde accessible depuis l'hôte
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:

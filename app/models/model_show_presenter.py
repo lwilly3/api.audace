@@ -14,7 +14,7 @@ class ShowPresenter(Base):
     __tablename__ = "show_presenters"
 
     id = Column(Integer, primary_key=True)  # Identifiant unique de la relation
-    show_id = Column(Integer, ForeignKey("shows.id"), nullable=False, index=True)  # Clé étrangère vers Show
+    show_id = Column(Integer, ForeignKey("shows.id", ondelete="CASCADE"), nullable=False, index=True)  # Clé étrangère vers Show
    #  presenter_id = Column(Integer, ForeignKey("presenters.id"), nullable=False, index=True)  # Clé étrangère vers Presenter
     presenter_id = Column(Integer, ForeignKey("presenters.id", ondelete="CASCADE"), nullable=False)
 

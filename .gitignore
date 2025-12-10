@@ -5,3 +5,9 @@ venv/
 notes.txt
 .vscode
 .DS_Store
+
+# Sauvegardes de base de données
+backups/*.sql
+backups/*.sql.gz
+backups/*.dump
+*.log

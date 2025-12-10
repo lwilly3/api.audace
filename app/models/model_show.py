@@ -35,7 +35,7 @@ class Show(Base):
     # Relation inverse vers Emission
     emission = relationship("Emission", back_populates="shows")
 
-    presenters = relationship("Presenter", secondary="show_presenters", back_populates="shows")
+    presenters = relationship("Presenter", secondary="show_presenters", back_populates="shows", cascade="all, delete")
     segments = relationship("Segment", back_populates="show", cascade="all, delete-orphan")
     # Relation avec l'utilisateur créateur
     creator = relationship("User", back_populates="created_shows")
