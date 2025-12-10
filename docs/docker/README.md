@@ -47,6 +47,21 @@ Documentation complète pour le déploiement et la maintenance de l'API Audace a
 
 ---
 
+### ⏰ [Guide Cron - Automatisation](CRON_GUIDE.md)
+**Pour qui :** Administrateurs système, DevOps  
+**Contenu :**
+- Qu'est-ce que Cron et pourquoi l'utiliser
+- Format et syntaxe des expressions Cron
+- Installation et configuration
+- Exemples de tâches automatiques
+- Surveillance et logs
+- Dépannage des problèmes courants
+- Checklist de mise en place
+
+**Recommandé** pour automatiser les sauvegardes quotidiennes.
+
+---
+
 ### 🐳 [Guide Docker Complet](Docker_guide_api_audace.md)
 **Pour qui :** Développeurs, DevOps  
 **Contenu :**
@@ -68,6 +83,7 @@ docs/docker/
 ├── DOKPLOY_ENV.md              # Configuration Dokploy
 ├── MAINTENANCE_GUIDE.md         # Guide de maintenance
 ├── DATABASE_SECURITY.md         # Sécurité de la base
+├── CRON_GUIDE.md               # Automatisation avec Cron
 └── Docker_guide_api_audace.md  # Guide technique Docker
 ```
 
@@ -80,6 +96,7 @@ docs/docker/
 2. Configurez les variables d'environnement
 3. Déployez via Dokploy
 4. Configurez les sauvegardes automatiques ([DATABASE_SECURITY.md](DATABASE_SECURITY.md))
+5. Activez Cron pour les tâches automatiques ([CRON_GUIDE.md](CRON_GUIDE.md))
 
 ### Pour la maintenance quotidienne :
 - Consultez [MAINTENANCE_GUIDE.md](MAINTENANCE_GUIDE.md)
