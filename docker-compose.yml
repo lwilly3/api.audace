@@ -79,6 +79,7 @@ services:
       - ./logs:/app/logs
     networks:
       - audace_network
+      - dokploy-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
       interval: 30s
@@ -98,6 +99,8 @@ services:
 networks:
   audace_network:
     driver: bridge
+  dokploy-network:
+    external: true
 
 volumes:
   postgres_data:
