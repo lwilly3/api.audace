@@ -39,6 +39,7 @@ services:
       - "traefik.http.routers.audace-api.tls=true"
       - "traefik.http.routers.audace-api.tls.certresolver=letsencrypt"
       - "traefik.http.services.audace-api.loadbalancer.server.port=8000"
+      - "traefik.docker.network=dokploy-network"
     environment:
       # Base de données
       DATABASE_URL: postgresql://${POSTGRES_USER:-audace_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-audace_db}
