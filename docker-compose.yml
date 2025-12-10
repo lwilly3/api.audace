@@ -32,6 +32,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audace-api.rule=Host(`api.cloud.audace.ovh`)"
+      - "traefik.http.routers.audace-api.entrypoints=websecure"
+      - "traefik.http.routers.audace-api.tls=true"
+      - "traefik.http.routers.audace-api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.audace-api.loadbalancer.server.port=8000"
     environment:
       # Base de données
       DATABASE_URL: postgresql://${POSTGRES_USER:-audace_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-audace_db}
@@ -57,8 +64,8 @@ services:
       MAIL_SSL: ${MAIL_SSL:-false}
       
       # Application
-      FRONTEND_URL: ${FRONTEND_URL}
-      BACKEND_URL: ${BACKEND_URL}
+      FRONTEND_URL: ${FRONTEND_URL:-https://app.cloud.audace.ovh}
+      BACKEND_URL: ${BACKEND_URL:-https://api.cloud.audace.ovh}
       ENVIRONMENT: ${ENVIRONMENT:-production}
       DEBUG: ${DEBUG:-false}
       
@@ -66,12 +73,18 @@ services:
       HOST: 0.0.0.0
       PORT: 8000
       WORKERS: ${WORKERS:-4}
-    ports:
-      - "${API_PORT:-8000}:8000"
+    expose:
+      - "8000"
     volumes:
       - ./logs:/app/logs
     networks:
       - audace_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     command: >
       sh -c "
         echo 'Attente de la base de données...' &&
@@ -79,7 +92,7 @@ services:
         echo 'Exécution des migrations Alembic...' &&
         alembic upgrade head &&
         echo 'Démarrage de l\'API...' &&
-        gunicorn maintest:app --workers ${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120
+        gunicorn maintest:app --workers ${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile -
       "
 
 networks:
