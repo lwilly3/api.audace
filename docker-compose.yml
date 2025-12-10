@@ -89,12 +89,12 @@ services:
       start_period: 40s
     command: >
       sh -c "
-        echo 'Attente de la base de données...' &&
+        echo 'Attente de la base de donnees...' &&
         sleep 5 &&
-        echo 'Exécution des migrations Alembic...' &&
+        echo 'Execution des migrations Alembic...' &&
         alembic upgrade head &&
-        echo 'Démarrage de l\'API...' &&
-        gunicorn maintest:app --workers ${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile -
+        echo 'Demarrage de API...' &&
+        gunicorn maintest:app --workers $${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile -
       "
 
 networks:
