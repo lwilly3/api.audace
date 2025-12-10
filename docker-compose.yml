@@ -51,9 +51,20 @@ services:
       - "traefik.http.routers.audace-api-prod.service=audace-api-service"
       - "traefik.http.services.audace-api-service.loadbalancer.server.port=8000"
       
-      # Middleware optionnel (sécurité)
-      - "traefik.http.routers.audace-api-prod.middlewares=api-compress"
+      # Middlewares de sécurité
+      - "traefik.http.routers.audace-api-prod.middlewares=api-security,api-compress"
       - "traefik.http.middlewares.api-compress.compress=true"
+      
+      # Headers de sécurité
+      - "traefik.http.middlewares.api-security.headers.sslredirect=true"
+      - "traefik.http.middlewares.api-security.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.api-security.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.api-security.headers.stsPreload=true"
+      - "traefik.http.middlewares.api-security.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.api-security.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.api-security.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.api-security.headers.referrerPolicy=strict-origin-when-cross-origin"
+      - "traefik.http.middlewares.api-security.headers.customFrameOptionsValue=SAMEORIGIN"
     environment:
       # Variables pour le code FastAPI (config.py)
       DATABASE_HOSTNAME: db

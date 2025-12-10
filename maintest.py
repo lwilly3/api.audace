@@ -69,8 +69,23 @@ def get_settings():
 
 
 # Initialisation de l'application FastAPI
-app = FastAPI()
-
+app = FastAPI(
+    title="Audace API",
+    description="API pour la gestion des émissions radio",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    # Force HTTPS pour Swagger UI (évite mixed content)
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+    },
+    # Force les URLs en HTTPS
+    root_path="",
+    servers=[
+        {"url": "https://api.cloud.audace.ovh", "description": "Production"},
+        {"url": "http://localhost:8000", "description": "Local development"}
+    ]
+)
 
 
 # # Événement de démarrage
