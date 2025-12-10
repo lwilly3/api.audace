@@ -34,13 +34,26 @@ services:
       db:
         condition: service_healthy
     labels:
+      # Désactiver les labels auto-générés par Dokploy
+      - "com.centurylinklabs.watchtower.enable=false"
+      
+      # Configuration Traefik explicite
       - "traefik.enable=true"
-      - "traefik.http.routers.audace-api.rule=Host(`api.cloud.audace.ovh`)"
-      - "traefik.http.routers.audace-api.entrypoints=websecure"
-      - "traefik.http.routers.audace-api.tls=true"
-      - "traefik.http.routers.audace-api.tls.certresolver=letsencrypt"
-      - "traefik.http.services.audace-api.loadbalancer.server.port=8000"
       - "traefik.docker.network=dokploy-network"
+      
+      # Router HTTPS (websecure)
+      - "traefik.http.routers.audace-api-prod.rule=Host(`api.cloud.audace.ovh`)"
+      - "traefik.http.routers.audace-api-prod.entrypoints=websecure"
+      - "traefik.http.routers.audace-api-prod.tls=true"
+      - "traefik.http.routers.audace-api-prod.tls.certresolver=letsencrypt"
+      
+      # Service explicite (évite l'auto-linking)
+      - "traefik.http.routers.audace-api-prod.service=audace-api-service"
+      - "traefik.http.services.audace-api-service.loadbalancer.server.port=8000"
+      
+      # Middleware optionnel (sécurité)
+      - "traefik.http.routers.audace-api-prod.middlewares=api-compress"
+      - "traefik.http.middlewares.api-compress.compress=true"
     environment:
       # Variables pour le code FastAPI (config.py)
       DATABASE_HOSTNAME: db
