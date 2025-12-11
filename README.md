@@ -141,6 +141,19 @@ api.audace/
 - pip (gestionnaire de paquets Python)
 - Docker (optionnel, recommandé)
 
+### 🔐 Première connexion
+
+**Un utilisateur admin est créé automatiquement au premier démarrage !**
+
+Credentials par défaut :
+- **Username**: `admin`
+- **Password**: `Admin@2024!`
+- **Email**: `admin@audace.local`
+
+⚠️ **IMPORTANT** : Changez ces credentials immédiatement après la première connexion en production !
+
+➡️ **Guide complet** : [FIRST_LOGIN.md](FIRST_LOGIN.md)
+
 ### Installation avec Docker (Recommandé)
 
 ```bash

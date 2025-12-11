@@ -1,4 +1,5 @@
 from functools import lru_cache  # Décorateur pour mettre en cache les appels de fonction
+from contextlib import asynccontextmanager  # Pour le lifespan event handler
 from fastapi import FastAPI  # Classe principale pour créer une application FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # Middleware pour la gestion des CORS
 # from db.init_db_rolePermissions import create_default_role_and_permission
@@ -68,8 +69,43 @@ def get_settings():
     return settings()
 
 
-# Initialisation de l'application FastAPI
+# Lifespan event handler pour initialiser l'admin au démarrage
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Gestionnaire d'événements du cycle de vie de l'application.
+    
+    Startup:
+        - Initialise l'utilisateur administrateur par défaut si aucun admin n'existe
+        - Garantit qu'il y a toujours au moins un admin pouvant se connecter
+    
+    Shutdown:
+        - Nettoyage des ressources si nécessaire
+    """
+    # Startup
+    from app.db.database import SessionLocal
+    from app.db.init_admin import create_default_admin
+    
+    logger.info("🚀 Démarrage de l'application - Vérification de l'admin par défaut...")
+    
+    db = SessionLocal()
+    try:
+        create_default_admin(db)
+        logger.info("✅ Initialisation de l'admin terminée")
+    except Exception as e:
+        logger.error(f"❌ Erreur lors de l'initialisation de l'admin: {e}")
+    finally:
+        db.close()
+    
+    yield  # L'application s'exécute ici
+    
+    # Shutdown (optionnel)
+    logger.info("🛑 Arrêt de l'application...")
+
+
+# Initialisation de l'application FastAPI avec lifespan
 app = FastAPI(
+    lifespan=lifespan,
     title="Audace API",
     description="API pour la gestion des émissions radio",
     version="1.0.0",
@@ -86,18 +122,6 @@ app = FastAPI(
         {"url": "http://localhost:8000", "description": "Local development"}
     ]
 )
-
-
-# # Événement de démarrage
-# @app.on_event("startup")
-# def initialize_roles_permissions():
-#     print("Initializing roles and permissions...")
-#     # Utiliser la dépendance get_db
-#     db = next(get_db())  # Obtenir une instance de session
-#     create_default_role_and_permission(db)
-#     print("Roles and permissions initialized successfully!")
-
-
 
 
 # Ajout du middleware personnalisé pour journaliser les requêtes
