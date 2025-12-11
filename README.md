@@ -28,11 +28,13 @@
 
 ### 🔐 Authentification et Sécurité
 - ✅ Authentification JWT (JSON Web Tokens)
+- ✅ **Admin automatique** créé au premier démarrage (configurable)
 - ✅ Système de permissions granulaires (RBAC)
 - ✅ Gestion des rôles (Admin, Presenter, Editor, Viewer)
 - ✅ Révocation de tokens (blacklist)
 - ✅ Réinitialisation de mot de passe sécurisée
 - ✅ Invitations d'utilisateurs par email
+- ✅ Routes de diagnostic et configuration initiale
 
 ### 📺 Gestion des Émissions
 - ✅ Création et gestion de shows

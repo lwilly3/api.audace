@@ -41,6 +41,13 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
       
+      # Router HTTP → HTTPS redirect
+      - "traefik.http.routers.audace-api-http.rule=Host(`api.cloud.audace.ovh`)"
+      - "traefik.http.routers.audace-api-http.entrypoints=web"
+      - "traefik.http.routers.audace-api-http.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
+      
       # Router HTTPS (websecure)
       - "traefik.http.routers.audace-api-prod.rule=Host(`api.cloud.audace.ovh`)"
       - "traefik.http.routers.audace-api-prod.entrypoints=websecure"

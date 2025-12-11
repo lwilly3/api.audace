@@ -13,6 +13,7 @@ Documentation complète de l'architecture pour comprendre, développer et mainte
 5. [Architecture des couches](#architecture-des-couches)
 6. [Flux de données](#flux-de-données)
 7. [Sécurité et authentification](#sécurité-et-authentification)
+8. [**Variables d'environnement** 🆕](ENVIRONMENT_VARIABLES.md)
 
 ---
 

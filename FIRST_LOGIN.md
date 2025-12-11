@@ -22,13 +22,42 @@ Email: admin@audace.local
 
 Vous pouvez personnaliser les credentials de l'admin par défaut en définissant ces variables d'environnement **AVANT** le premier démarrage :
 
-```bash
-# Dans votre fichier .env ou configuration Dokploy/Docker
+### Option 1 : Via Dokploy (Recommandé)
+
+Dans l'interface Dokploy, ajoutez les variables d'environnement :
+
+```
 ADMIN_USERNAME=votre_username
 ADMIN_PASSWORD=VotreMotDePasseSecurise123!
 ADMIN_EMAIL=admin@votre-domaine.com
 ADMIN_NAME=Prénom
 ADMIN_FAMILY_NAME=Nom
+```
+
+**Important** : Ces variables sont **déjà configurées** dans le `docker-compose.yml` et seront automatiquement transmises au conteneur.
+
+### Option 2 : Via fichier .env local
+
+```bash
+# Créez un fichier .env à la racine du projet
+ADMIN_USERNAME=votre_username
+ADMIN_PASSWORD=VotreMotDePasseSecurise123!
+ADMIN_EMAIL=admin@votre-domaine.com
+ADMIN_NAME=Prénom
+ADMIN_FAMILY_NAME=Nom
+```
+
+### Option 3 : Modifier directement docker-compose.yml
+
+Dans la section `api.environment`, modifiez les valeurs par défaut :
+
+```yaml
+# Admin par défaut
+ADMIN_USERNAME: ${ADMIN_USERNAME:-votre_username}
+ADMIN_PASSWORD: ${ADMIN_PASSWORD:-VotreMotDePasse123!}
+ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@votre-domaine.com}
+ADMIN_NAME: ${ADMIN_NAME:-Prénom}
+ADMIN_FAMILY_NAME: ${ADMIN_FAMILY_NAME:-Nom}
 ```
 
 ## Processus de première connexion
@@ -43,15 +72,63 @@ docker-compose up -d
 uvicorn maintest:app --host 0.0.0.0 --port 8000
 ```
 
-### 2. Vérifier les logs
+### 2. Vérifier que les variables d'environnement sont chargées
+
+#### Via l'API (Recommandé)
+
+Après le démarrage, vérifiez que vos variables personnalisées sont bien chargées :
+
+```bash
+curl https://api.cloud.audace.ovh/setup/env-check
+```
+
+**Réponse attendue avec variables personnalisées :**
+```json
+{
+  "environment_variables": {
+    "ADMIN_USERNAME": {
+      "defined": true,
+      "value": "votre_username",
+      "source": "environment"
+    },
+    "ADMIN_PASSWORD": {
+      "defined": true,
+      "value": "***MASKED***",
+      "source": "environment"
+    },
+    "ADMIN_EMAIL": {
+      "defined": true,
+      "value": "admin@votre-domaine.com",
+      "source": "environment"
+    },
+    ...
+  },
+  "help": "Les variables avec 'source: environment' sont définies. Les autres utilisent les valeurs par défaut."
+}
+```
+
+✅ Si `"source": "environment"` → Vos variables personnalisées sont utilisées
+❌ Si `"source": "default"` → Les valeurs par défaut sont utilisées (vérifiez votre config Dokploy)
+
+#### Via les logs Docker
 
 Lors du démarrage, vous devriez voir dans les logs :
 
 ```
 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+🔍 Lecture des variables d'environnement...
+📋 Variables d'environnement détectées:
+   - ADMIN_USERNAME: ✅ défini
+   - ADMIN_PASSWORD: ✅ défini
+   - ADMIN_EMAIL: ✅ défini
+   - ADMIN_NAME: ✅ défini
+   - ADMIN_FAMILY_NAME: ✅ défini
+Credentials qui seront utilisés:
+   - Username: votre_username
+   - Email: admin@votre-domaine.com
 ✅ Utilisateur admin créé avec succès!
-   - Username: admin
-   - Email: admin@audace.local
+   - Username: votre_username
+   - Email: admin@votre-domaine.com
    ⚠️  IMPORTANT: Changez le mot de passe par défaut dès la première connexion!
 ✅ Initialisation de l'admin terminée
 ```

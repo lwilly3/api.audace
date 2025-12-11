@@ -16,6 +16,7 @@ Documentation de l'architecture générale de l'application.
 - **[DEVELOPMENT_GUIDE.md](architecture/DEVELOPMENT_GUIDE.md)** - Guide de développement
 - **[CONTRIBUTION_GUIDE.md](architecture/CONTRIBUTION_GUIDE.md)** - Guide de contribution
 - **[FUNCTIONS_REFERENCE.md](architecture/FUNCTIONS_REFERENCE.md)** - Référence alphabétique (80+ fonctions)
+- **[ENVIRONMENT_VARIABLES.md](architecture/ENVIRONMENT_VARIABLES.md)** 🆕 - Variables d'environnement et configuration
 
 **Utilisez cette section pour :**
 - Comprendre la structure globale du projet

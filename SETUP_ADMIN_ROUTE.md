@@ -34,7 +34,61 @@ curl https://api.cloud.audace.ovh/setup/check-admin
 }
 ```
 
-### 2. Créer le premier admin (si aucun n'existe)
+### 2. Vérifier les variables d'environnement
+
+**Endpoint:** `GET /setup/env-check`
+
+Cette route permet de vérifier si vos variables d'environnement personnalisées sont bien chargées.
+
+```bash
+curl https://api.cloud.audace.ovh/setup/env-check
+```
+
+**Réponse :**
+```json
+{
+  "environment_variables": {
+    "ADMIN_USERNAME": {
+      "defined": true,
+      "value": "admin",
+      "source": "environment"
+    },
+    "ADMIN_PASSWORD": {
+      "defined": true,
+      "value": "***MASKED***",
+      "source": "environment"
+    },
+    "ADMIN_EMAIL": {
+      "defined": false,
+      "value": "admin@audace.local",
+      "source": "default"
+    },
+    "ADMIN_NAME": {
+      "defined": false,
+      "value": "Administrateur",
+      "source": "default"
+    },
+    "ADMIN_FAMILY_NAME": {
+      "defined": false,
+      "value": "Système",
+      "source": "default"
+    }
+  },
+  "help": "Les variables avec 'source: environment' sont définies dans vos variables d'environnement. Les autres utilisent les valeurs par défaut du code."
+}
+```
+
+**Interprétation :**
+- `"defined": true` + `"source": "environment"` → Variable personnalisée chargée ✅
+- `"defined": false` + `"source": "default"` → Valeur par défaut utilisée ⚠️
+- `ADMIN_PASSWORD` est toujours masqué pour la sécurité
+
+**Utilité :**
+- Diagnostiquer pourquoi vos credentials personnalisés ne sont pas utilisés
+- Vérifier que Dokploy transmet bien les variables au conteneur
+- Débugger les problèmes de configuration
+
+### 3. Créer le premier admin (si aucun n'existe)
 
 **Endpoint:** `POST /setup/create-admin`
 
