@@ -150,10 +150,7 @@ def create_initial_admin(
         # Créer le rôle Admin s'il n'existe pas
         if not admin_role:
             logger.info("Création du rôle Admin...")
-            admin_role = Role(
-                name="Admin",
-                description="Administrateur système avec toutes les permissions"
-            )
+            admin_role = Role(name="Admin")
             db.add(admin_role)
             db.commit()
             db.refresh(admin_role)
