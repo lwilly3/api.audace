@@ -28,7 +28,8 @@ from routeur import (
      emission_route,
      show_route, 
      dashbord_route,role_route,
-     segment_route # Ajout de l'importation du routeur de segments
+     segment_route, # Ajout de l'importation du routeur de segments
+     setup_route  # Route de configuration initiale (sans auth)
 
 
    
@@ -138,6 +139,9 @@ app.add_middleware(
 )
 
 # Inclusion des routeurs pour structurer les endpoints de l'application
+# ⚠️ IMPORTANT: setup_route doit être inclus EN PREMIER (pas d'auth requise)
+app.include_router(setup_route.router)  # Routes de configuration initiale (SANS authentification)
+
 # app.include_router(posts.router)  # Routes liées aux posts
 app.include_router(users_route.router)  # Routes liées aux utilisateurs
 
