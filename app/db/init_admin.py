@@ -14,11 +14,9 @@ from app.models.model_user import User
 from app.models.model_role import Role
 from app.models.model_user_permissions import UserPermissions
 from app.utils.utils import hash as hash_password
+from app.db.crud.crud_permissions import initialize_user_permissions
 import logging
 import os
-
-# Alias pour correspondre à la documentation
-# UserPermission = UserPermissions
 
 logger = logging.getLogger("init_admin")
 
@@ -42,11 +40,16 @@ def create_default_admin(db: Session) -> None:
         la première connexion en production !
     """
     try:
+        logger.info("=" * 60)
+        logger.info("Initialisation de l'utilisateur administrateur par défaut")
+        logger.info("=" * 60)
+        
         # Vérifier si le rôle Admin existe
+        logger.info("Étape 1/5: Vérification du rôle 'Admin'...")
         admin_role = db.query(Role).filter(Role.name == "Admin").first()
         
         if not admin_role:
-            logger.warning("Le rôle 'Admin' n'existe pas. Création du rôle Admin...")
+            logger.warning("⚠️  Le rôle 'Admin' n'existe pas. Création du rôle Admin...")
             admin_role = Role(
                 name="Admin",
                 description="Administrateur système avec toutes les permissions"
@@ -54,20 +57,28 @@ def create_default_admin(db: Session) -> None:
             db.add(admin_role)
             db.commit()
             db.refresh(admin_role)
-            logger.info("Rôle 'Admin' créé avec succès")
+            logger.info("✅ Rôle 'Admin' créé avec succès (ID: {})".format(admin_role.id))
+        else:
+            logger.info(f"✅ Rôle 'Admin' trouvé (ID: {admin_role.id})")
         
         # Vérifier s'il existe au moins un utilisateur avec le rôle Admin
+        logger.info("Étape 2/5: Recherche d'utilisateurs admin existants...")
         admin_users = db.query(User).join(User.roles).filter(
             Role.name == "Admin",
             User.is_deleted == False
         ).all()
         
         if admin_users:
-            logger.info(f"{len(admin_users)} utilisateur(s) admin trouvé(s). Pas besoin de créer un admin par défaut.")
+            logger.info(f"✅ {len(admin_users)} utilisateur(s) admin trouvé(s):")
+            for admin in admin_users:
+                logger.info(f"   - {admin.username} (ID: {admin.id}, Email: {admin.email})")
+            logger.info("Pas besoin de créer un admin par défaut.")
+            logger.info("=" * 60)
             return
         
         # Aucun admin trouvé, créer l'utilisateur admin par défaut
-        logger.warning("Aucun utilisateur admin trouvé. Création de l'admin par défaut...")
+        logger.warning("⚠️  Aucun utilisateur admin trouvé dans la base de données!")
+        logger.info("Étape 3/5: Création de l'admin par défaut...")
         
         # Récupérer les credentials depuis les variables d'environnement
         default_username = os.getenv("ADMIN_USERNAME", "admin")
@@ -76,28 +87,38 @@ def create_default_admin(db: Session) -> None:
         default_name = os.getenv("ADMIN_NAME", "Administrateur")
         default_family_name = os.getenv("ADMIN_FAMILY_NAME", "Système")
         
+        logger.info(f"Credentials utilisés:")
+        logger.info(f"   - Username: {default_username}")
+        logger.info(f"   - Email: {default_email}")
+        logger.info(f"   - Name: {default_name} {default_family_name}")
+        
         # Vérifier si l'username ou l'email existe déjà
         existing_user = db.query(User).filter(
             (User.username == default_username) | (User.email == default_email)
         ).first()
         
         if existing_user:
-            logger.error(f"Un utilisateur avec le username '{default_username}' ou l'email '{default_email}' existe déjà mais n'a pas le rôle Admin!")
-            logger.info(f"Utilisateur existant trouvé: {existing_user.username} (ID: {existing_user.id})")
+            logger.warning(f"⚠️  Un utilisateur avec le username '{default_username}' ou l'email '{default_email}' existe déjà!")
+            logger.info(f"Utilisateur trouvé: {existing_user.username} (ID: {existing_user.id}, Email: {existing_user.email})")
             
-            # Ajouter le rôle Admin à cet utilisateur
+            # Ajouter le rôle Admin à cet utilisateur s'il ne l'a pas
             if admin_role not in existing_user.roles:
+                logger.info("Ajout du rôle Admin à cet utilisateur existant...")
                 existing_user.roles.append(admin_role)
-                logger.info(f"Ajout du rôle Admin à l'utilisateur existant: {existing_user.username}")
+            else:
+                logger.info("Cet utilisateur a déjà le rôle Admin")
             
             # Mettre à jour les permissions pour avoir tous les droits
-            update_admin_permissions(db, existing_user.id)
+            logger.info("Étape 4/5: Mise à jour des permissions...")
+            update_all_permissions_to_true(db, existing_user.id)
             
             db.commit()
-            logger.info(f"L'utilisateur '{existing_user.username}' a maintenant les droits Admin")
+            logger.info(f"✅ L'utilisateur '{existing_user.username}' a maintenant tous les droits Admin")
+            logger.info("=" * 60)
             return
         
         # Créer le nouvel utilisateur admin
+        logger.info("Création du nouvel utilisateur admin...")
         hashed_password = hash_password(default_password)
         
         admin_user = User(
@@ -112,108 +133,64 @@ def create_default_admin(db: Session) -> None:
         
         db.add(admin_user)
         db.flush()  # Obtenir l'ID sans commit complet
+        logger.info(f"✅ Utilisateur créé avec ID: {admin_user.id}")
         
         # Assigner le rôle Admin
+        logger.info("Assignation du rôle Admin...")
         admin_user.roles.append(admin_role)
+        logger.info("✅ Rôle Admin assigné")
         
-        # Créer les permissions avec tous les droits
-        create_admin_permissions(db, admin_user.id)
+        # Initialiser les permissions avec la fonction CRUD (valeurs par défaut)
+        logger.info("Étape 4/5: Initialisation des permissions...")
+        initialize_user_permissions(db, admin_user.id)
+        logger.info("✅ Permissions initialisées")
+        
+        # Mettre à jour toutes les permissions à True pour l'admin
+        logger.info("Étape 5/5: Activation de toutes les permissions admin...")
+        update_all_permissions_to_true(db, admin_user.id)
         
         db.commit()
         db.refresh(admin_user)
         
-        logger.info(f"✅ Utilisateur admin créé avec succès!")
-        logger.info(f"   - Username: {default_username}")
-        logger.info(f"   - Email: {default_email}")
-        logger.warning(f"   ⚠️  IMPORTANT: Changez le mot de passe par défaut dès la première connexion!")
+        logger.info("")
+        logger.info("=" * 60)
+        logger.info("✅ UTILISATEUR ADMIN CRÉÉ AVEC SUCCÈS!")
+        logger.info("=" * 60)
+        logger.info(f"Username: {default_username}")
+        logger.info(f"Password: {default_password}")
+        logger.info(f"Email: {default_email}")
+        logger.info(f"User ID: {admin_user.id}")
+        logger.info("=" * 60)
+        logger.warning("⚠️  IMPORTANT: Changez le mot de passe par défaut dès la première connexion!")
         
         if default_password == "Admin@2024!":
-            logger.warning(f"   ⚠️  Mot de passe par défaut utilisé. Pour plus de sécurité, définissez ADMIN_PASSWORD dans les variables d'environnement.")
+            logger.warning("⚠️  Mot de passe par défaut utilisé. Définissez ADMIN_PASSWORD dans les variables d'environnement pour plus de sécurité.")
+        
+        logger.info("=" * 60)
         
     except SQLAlchemyError as e:
         db.rollback()
-        logger.error(f"❌ Erreur lors de la création de l'admin par défaut: {e}")
+        logger.error("=" * 60)
+        logger.error("❌ ERREUR SQL lors de la création de l'admin par défaut")
+        logger.error("=" * 60)
+        logger.error(f"Type d'erreur: {type(e).__name__}")
+        logger.error(f"Message: {str(e)}")
+        logger.error("=" * 60)
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error("=" * 60)
+        logger.error("❌ ERREUR INATTENDUE lors de la création de l'admin")
+        logger.error("=" * 60)
+        logger.error(f"Type d'erreur: {type(e).__name__}")
+        logger.error(f"Message: {str(e)}")
+        logger.error("=" * 60)
+        import traceback
+        logger.error(traceback.format_exc())
         raise
 
 
-def create_admin_permissions(db: Session, user_id: int) -> None:
-    """
-    Crée des permissions avec tous les droits pour un utilisateur admin.
-    
-    Args:
-        db: Session de base de données
-        user_id: ID de l'utilisateur pour lequel créer les permissions
-    """
-    try:
-        # Vérifier si les permissions existent déjà
-        existing_permissions = db.query(UserPermissions).filter(
-            UserPermissions.user_id == user_id
-        ).first()
-        
-        if existing_permissions:
-            logger.info(f"Permissions existantes trouvées pour l'utilisateur {user_id}, mise à jour...")
-            update_admin_permissions(db, user_id)
-            return
-        
-        # Créer les permissions avec tous les droits
-        admin_permissions = UserPermissions(
-            user_id=user_id,
-            # Permissions utilisateurs
-            can_view_users=True,
-            can_create_users=True,
-            can_edit_users=True,
-            can_delete_users=True,
-            # Permissions shows
-            can_view_shows=True,
-            can_create_shows=True,
-            can_edit_shows=True,
-            can_delete_shows=True,
-            can_publish_shows=True,
-            # Permissions présentateurs
-            can_view_presenters=True,
-            can_create_presenters=True,
-            can_edit_presenters=True,
-            can_delete_presenters=True,
-            # Permissions invités
-            can_view_guests=True,
-            can_create_guests=True,
-            can_edit_guests=True,
-            can_delete_guests=True,
-            # Permissions émissions
-            can_view_emissions=True,
-            can_create_emissions=True,
-            can_edit_emissions=True,
-            can_delete_emissions=True,
-            # Permissions segments
-            can_view_segments=True,
-            can_create_segments=True,
-            can_edit_segments=True,
-            can_delete_segments=True,
-            # Permissions rôles
-            can_view_roles=True,
-            can_create_roles=True,
-            can_edit_roles=True,
-            can_delete_roles=True,
-            can_assign_roles=True,
-            # Permissions système
-            can_manage_permissions=True,
-            can_view_audit_logs=True,
-            can_view_notifications=True,
-            can_manage_settings=True,
-            # Permissions statistiques
-            can_view_statistics=True,
-            can_export_data=True
-        )
-        
-        db.add(admin_permissions)
-        logger.info(f"Permissions admin créées pour l'utilisateur {user_id}")
-        
-    except SQLAlchemyError as e:
-        logger.error(f"Erreur lors de la création des permissions admin: {e}")
-        raise
-
-
-def update_admin_permissions(db: Session, user_id: int) -> None:
+def update_all_permissions_to_true(db: Session, user_id: int) -> None:
     """
     Met à jour les permissions d'un utilisateur pour avoir tous les droits admin.
     
@@ -227,48 +204,93 @@ def update_admin_permissions(db: Session, user_id: int) -> None:
         ).first()
         
         if not permissions:
-            create_admin_permissions(db, user_id)
+            logger.error(f"Aucune permission trouvée pour l'utilisateur {user_id}")
             return
         
-        # Mettre à jour toutes les permissions à True
+        # Mettre à jour toutes les permissions à True (selon les champs réels du modèle)
+        
+        # Showplans
+        permissions.can_acces_showplan_broadcast_section = True
+        permissions.can_acces_showplan_section = True
+        permissions.can_create_showplan = True
+        permissions.can_edit_showplan = True
+        permissions.can_archive_showplan = True
+        permissions.can_archiveStatusChange_showplan = True
+        permissions.can_delete_showplan = True
+        permissions.can_destroy_showplan = True
+        permissions.can_changestatus_showplan = True
+        permissions.can_changestatus_owned_showplan = True
+        permissions.can_changestatus_archived_showplan = True
+        permissions.can_setOnline_showplan = True
+        permissions.can_viewAll_showplan = True
+        
+        # Users
+        permissions.can_acces_users_section = True
         permissions.can_view_users = True
-        permissions.can_create_users = True
         permissions.can_edit_users = True
+        permissions.can_desable_users = True
         permissions.can_delete_users = True
-        permissions.can_view_shows = True
-        permissions.can_create_shows = True
-        permissions.can_edit_shows = True
-        permissions.can_delete_shows = True
-        permissions.can_publish_shows = True
+        
+        # Roles
+        permissions.can_manage_roles = True
+        permissions.can_assign_roles = True
+        
+        # Guests
+        permissions.can_acces_guests_section = True
+        permissions.can_view_guests = True
+        permissions.can_edit_guests = True
+        permissions.can_delete_guests = True
+        
+        # Presenters
+        permissions.can_acces_presenters_section = True
         permissions.can_view_presenters = True
         permissions.can_create_presenters = True
         permissions.can_edit_presenters = True
         permissions.can_delete_presenters = True
-        permissions.can_view_guests = True
-        permissions.can_create_guests = True
-        permissions.can_edit_guests = True
-        permissions.can_delete_guests = True
+        
+        # Emissions
+        permissions.can_acces_emissions_section = True
         permissions.can_view_emissions = True
         permissions.can_create_emissions = True
         permissions.can_edit_emissions = True
         permissions.can_delete_emissions = True
-        permissions.can_view_segments = True
-        permissions.can_create_segments = True
-        permissions.can_edit_segments = True
-        permissions.can_delete_segments = True
-        permissions.can_view_roles = True
-        permissions.can_create_roles = True
-        permissions.can_edit_roles = True
-        permissions.can_delete_roles = True
-        permissions.can_assign_roles = True
-        permissions.can_manage_permissions = True
-        permissions.can_view_audit_logs = True
-        permissions.can_view_notifications = True
-        permissions.can_manage_settings = True
-        permissions.can_view_statistics = True
-        permissions.can_export_data = True
+        permissions.can_manage_emissions = True
         
-        logger.info(f"Permissions admin mises à jour pour l'utilisateur {user_id}")
+        # Notifications
+        permissions.can_view_notifications = True
+        permissions.can_manage_notifications = True
+        
+        # Audit logs
+        permissions.can_view_audit_logs = True
+        permissions.can_view_login_history = True
+        
+        # Settings
+        permissions.can_manage_settings = True
+        
+        # Messages
+        permissions.can_view_messages = True
+        permissions.can_send_messages = True
+        permissions.can_delete_messages = True
+        
+        # Files
+        permissions.can_view_files = True
+        permissions.can_upload_files = True
+        permissions.can_delete_files = True
+        
+        # Tasks
+        permissions.can_view_tasks = True
+        permissions.can_create_tasks = True
+        permissions.can_edit_tasks = True
+        permissions.can_delete_tasks = True
+        permissions.can_assign_tasks = True
+        
+        # Archives
+        permissions.can_view_archives = True
+        permissions.can_destroy_archives = True
+        permissions.can_restore_archives = True
+        permissions.can_delete_archives = True
+        
+        logger.info(f"✅ Toutes les permissions admin activées pour l'utilisateur {user_id}")
         
     except SQLAlchemyError as e:
         logger.error(f"Erreur lors de la mise à jour des permissions admin: {e}")
