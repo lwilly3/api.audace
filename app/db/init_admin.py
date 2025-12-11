@@ -117,40 +117,45 @@ def create_default_admin(db: Session) -> None:
             logger.info("=" * 60)
             return
         
-        # Créer le nouvel utilisateur admin
+        # Créer le nouvel utilisateur admin (même approche que create_user)
         logger.info("Création du nouvel utilisateur admin...")
         hashed_password = hash_password(default_password)
         
-        admin_user = User(
-            username=default_username,
-            name=default_name,
-            family_name=default_family_name,
-            email=default_email,
-            password=hashed_password,
-            is_active=True,
-            is_deleted=False
-        )
-        
-        db.add(admin_user)
-        db.flush()  # Obtenir l'ID sans commit complet
-        logger.info(f"✅ Utilisateur créé avec ID: {admin_user.id}")
-        
-        # Assigner le rôle Admin
-        logger.info("Assignation du rôle Admin...")
-        admin_user.roles.append(admin_role)
-        logger.info("✅ Rôle Admin assigné")
-        
-        # Initialiser les permissions avec la fonction CRUD (valeurs par défaut)
-        logger.info("Étape 4/5: Initialisation des permissions...")
-        initialize_user_permissions(db, admin_user.id)
-        logger.info("✅ Permissions initialisées")
-        
-        # Mettre à jour toutes les permissions à True pour l'admin
-        logger.info("Étape 5/5: Activation de toutes les permissions admin...")
-        update_all_permissions_to_true(db, admin_user.id)
-        
-        db.commit()
-        db.refresh(admin_user)
+        try:
+            admin_user = User(
+                username=default_username,
+                name=default_name,
+                family_name=default_family_name,
+                email=default_email,
+                password=hashed_password,
+                is_active=True
+            )
+            
+            db.add(admin_user)
+            db.commit()
+            db.refresh(admin_user)
+            logger.info(f"✅ Utilisateur créé avec ID: {admin_user.id}")
+            
+            # Initialiser les permissions (comme dans create_user)
+            logger.info("Initialisation des permissions...")
+            initialize_user_permissions(db, admin_user.id)
+            logger.info("✅ Permissions initialisées")
+            
+            # Assigner le rôle Admin
+            logger.info("Assignation du rôle Admin...")
+            admin_user.roles.append(admin_role)
+            db.commit()
+            logger.info("✅ Rôle Admin assigné")
+            
+            # Mettre à jour toutes les permissions à True pour l'admin
+            logger.info("Activation de toutes les permissions admin...")
+            update_all_permissions_to_true(db, admin_user.id)
+            db.commit()
+            
+        except Exception as create_error:
+            db.rollback()
+            logger.error(f"❌ Erreur lors de la création: {create_error}")
+            raise
         
         logger.info("")
         logger.info("=" * 60)
