@@ -264,6 +264,51 @@ def create_initial_admin(
 
 
 @router.get(
+    "/env-check",
+    summary="Vérifier les variables d'environnement",
+    description="Affiche si les variables d'environnement admin sont définies (sans révéler les valeurs)"
+)
+def check_environment_variables():
+    """
+    Vérifie si les variables d'environnement pour l'admin par défaut sont définies.
+    
+    Utile pour déboguer si les credentials par défaut ne sont pas ceux attendus.
+    """
+    import os
+    
+    return {
+        "environment_variables": {
+            "ADMIN_USERNAME": {
+                "defined": os.getenv("ADMIN_USERNAME") is not None,
+                "value": os.getenv("ADMIN_USERNAME", "admin"),
+                "source": "environment" if os.getenv("ADMIN_USERNAME") else "default"
+            },
+            "ADMIN_PASSWORD": {
+                "defined": os.getenv("ADMIN_PASSWORD") is not None,
+                "value": "***HIDDEN***" if os.getenv("ADMIN_PASSWORD") else "Admin@2024! (default)",
+                "source": "environment" if os.getenv("ADMIN_PASSWORD") else "default"
+            },
+            "ADMIN_EMAIL": {
+                "defined": os.getenv("ADMIN_EMAIL") is not None,
+                "value": os.getenv("ADMIN_EMAIL", "admin@audace.local"),
+                "source": "environment" if os.getenv("ADMIN_EMAIL") else "default"
+            },
+            "ADMIN_NAME": {
+                "defined": os.getenv("ADMIN_NAME") is not None,
+                "value": os.getenv("ADMIN_NAME", "Administrateur"),
+                "source": "environment" if os.getenv("ADMIN_NAME") else "default"
+            },
+            "ADMIN_FAMILY_NAME": {
+                "defined": os.getenv("ADMIN_FAMILY_NAME") is not None,
+                "value": os.getenv("ADMIN_FAMILY_NAME", "Système"),
+                "source": "environment" if os.getenv("ADMIN_FAMILY_NAME") else "default"
+            }
+        },
+        "help": "Si 'source' est 'default', la variable n'est pas définie dans l'environnement"
+    }
+
+
+@router.get(
     "/status",
     summary="Statut du système",
     description="Retourne le statut de configuration du système"

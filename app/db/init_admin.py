@@ -78,13 +78,22 @@ def create_default_admin(db: Session) -> None:
         logger.info("Étape 3/5: Création de l'admin par défaut...")
         
         # Récupérer les credentials depuis les variables d'environnement
+        logger.info("🔍 Lecture des variables d'environnement...")
         default_username = os.getenv("ADMIN_USERNAME", "admin")
         default_password = os.getenv("ADMIN_PASSWORD", "Admin@2024!")
         default_email = os.getenv("ADMIN_EMAIL", "admin@audace.local")
         default_name = os.getenv("ADMIN_NAME", "Administrateur")
         default_family_name = os.getenv("ADMIN_FAMILY_NAME", "Système")
         
-        logger.info(f"Credentials utilisés:")
+        # Debug : afficher si les variables viennent de l'environnement ou des valeurs par défaut
+        logger.info("📋 Variables d'environnement détectées:")
+        logger.info(f"   - ADMIN_USERNAME: {'✅ défini' if os.getenv('ADMIN_USERNAME') else '❌ non défini (valeur par défaut)'}")
+        logger.info(f"   - ADMIN_PASSWORD: {'✅ défini' if os.getenv('ADMIN_PASSWORD') else '❌ non défini (valeur par défaut)'}")
+        logger.info(f"   - ADMIN_EMAIL: {'✅ défini' if os.getenv('ADMIN_EMAIL') else '❌ non défini (valeur par défaut)'}")
+        logger.info(f"   - ADMIN_NAME: {'✅ défini' if os.getenv('ADMIN_NAME') else '❌ non défini (valeur par défaut)'}")
+        logger.info(f"   - ADMIN_FAMILY_NAME: {'✅ défini' if os.getenv('ADMIN_FAMILY_NAME') else '❌ non défini (valeur par défaut)'}")
+        
+        logger.info(f"Credentials qui seront utilisés:")
         logger.info(f"   - Username: {default_username}")
         logger.info(f"   - Email: {default_email}")
         logger.info(f"   - Name: {default_name} {default_family_name}")
