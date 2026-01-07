@@ -2,6 +2,7 @@ from functools import lru_cache  # Décorateur pour mettre en cache les appels d
 from contextlib import asynccontextmanager  # Pour le lifespan event handler
 from fastapi import FastAPI  # Classe principale pour créer une application FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # Middleware pour la gestion des CORS
+from app.__version__ import get_version, get_version_info, API_V1_PREFIX
 # from db.init_db_rolePermissions import create_default_role_and_permission
 # from app.db.init_db_rolePermissions import create_default_role_and_permission
 
@@ -29,7 +30,8 @@ from routeur import (
      show_route, 
      dashbord_route,role_route,
      segment_route, # Ajout de l'importation du routeur de segments
-     setup_route  # Route de configuration initiale (sans auth)
+     setup_route,  # Route de configuration initiale (sans auth)
+     version_route  # Route d'information sur la version
 
 
    
@@ -109,7 +111,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="Audace API",
     description="API pour la gestion des émissions radio",
-    version="1.0.0",
+    version=get_version(),  # Version dynamique depuis __version__.py
     docs_url="/docs",
     redoc_url="/redoc",
     # Force HTTPS pour Swagger UI (évite mixed content)
@@ -121,12 +123,25 @@ app = FastAPI(
     servers=[
         {"url": "https://api.cloud.audace.ovh", "description": "Production"},
         {"url": "http://localhost:8000", "description": "Local development"}
-    ]
+    ],
+    # Informations de contact et licence
+    contact={
+        "name": "Audace API Support",
+        "url": "https://api.cloud.audace.ovh",
+        "email": "support@audace.ovh"
+    },
+    license_info={
+        "name": "Proprietary",
+    }
 )
 
 
 # Ajout du middleware personnalisé pour journaliser les requêtes
 app.add_middleware(LoggerMiddleware)
+
+# Ajout du middleware de versioning de l'API
+from app.middleware.version_middleware import APIVersionMiddleware
+app.add_middleware(APIVersionMiddleware)
 
 # Ajout du middleware CORS pour autoriser les requêtes provenant de tous les domaines
 origins = ["*"]  # Permet l'accès depuis n'importe quelle origine
@@ -141,6 +156,7 @@ app.add_middleware(
 # Inclusion des routeurs pour structurer les endpoints de l'application
 # ⚠️ IMPORTANT: setup_route doit être inclus EN PREMIER (pas d'auth requise)
 app.include_router(setup_route.router)  # Routes de configuration initiale (SANS authentification)
+app.include_router(version_route.router)  # Routes d'information sur la version
 
 # app.include_router(posts.router)  # Routes liées aux posts
 app.include_router(users_route.router)  # Routes liées aux utilisateurs

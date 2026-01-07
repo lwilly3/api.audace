@@ -135,6 +135,28 @@ services:
         gunicorn maintest:app --workers $${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile -
       "
 
+  # Service pour exécuter les migrations manuellement
+  # Usage: docker-compose run --rm migrate
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOSTNAME: db
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${POSTGRES_USER:-audace_user}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_NAME: ${POSTGRES_DB:-audace_db}
+      SECRET_KEY: ${SECRET_KEY}
+    networks:
+      - audace_network
+    command: alembic upgrade head
+    profiles:
+      - tools  # Ne démarre pas automatiquement avec docker-compose up
+
 networks:
   audace_network:
     driver: bridge

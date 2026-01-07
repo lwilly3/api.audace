@@ -301,6 +301,16 @@ def update_all_permissions_to_true(db: Session, user_id: int) -> None:
         permissions.can_restore_archives = True
         permissions.can_delete_archives = True
         
+        # Citations et transcriptions (module Firebase)
+        permissions.quotes_view = True
+        permissions.quotes_create = True
+        permissions.quotes_edit = True
+        permissions.quotes_delete = True
+        permissions.quotes_publish = True
+        permissions.stream_transcription_view = True
+        permissions.stream_transcription_create = True
+        permissions.quotes_capture_live = True
+        
         logger.info(f"✅ Toutes les permissions admin activées pour l'utilisateur {user_id}")
         
     except SQLAlchemyError as e:

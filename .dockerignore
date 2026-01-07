@@ -34,3 +34,30 @@ coverage.xml
 .env.local
 .env.*.local
 node_modules/
+
+# Documentation de développement (non nécessaire en production)
+docs/
+*.md
+!README.md
+CHANGELOG.md
+API_VERSION_SUMMARY.md
+QUOTES_PERMISSIONS.md
+TRACEABILITY_CHEATSHEET.md
+
+# Fichiers de développement
+scripts/test_*.py
+scripts/diagnostic_*.py
+scripts/force_*.py
+test/
+tests/__pycache__
+
+# Backups et logs locaux
+backups/
+*.log
+api_logs.log
+
+# Diagrammes et assets de développement
+PlantUML_diagrams/
+
+# Archives de changelog
+docs/changelog/

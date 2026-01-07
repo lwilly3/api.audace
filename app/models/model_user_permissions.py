@@ -110,6 +110,16 @@ class UserPermissions(Base):
     can_restore_archives = Column(Boolean, default=False, nullable=True)
     can_delete_archives = Column(Boolean, default=False, nullable=True)  
 
+    # Permissions pour le module Citations (intégration Firebase)
+    quotes_view = Column(Boolean, default=False, nullable=False)  # Visualiser les citations
+    quotes_create = Column(Boolean, default=False, nullable=False)  # Créer de nouvelles citations
+    quotes_edit = Column(Boolean, default=False, nullable=False)  # Modifier les citations existantes
+    quotes_delete = Column(Boolean, default=False, nullable=False)  # Supprimer des citations
+    quotes_publish = Column(Boolean, default=False, nullable=False)  # Publier sur réseaux sociaux
+    stream_transcription_view = Column(Boolean, default=False, nullable=False)  # Voir les transcriptions en direct
+    stream_transcription_create = Column(Boolean, default=False, nullable=False)  # Démarrer une transcription
+    quotes_capture_live = Column(Boolean, default=False, nullable=False)  # Capturer depuis transcription live
+
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
 
