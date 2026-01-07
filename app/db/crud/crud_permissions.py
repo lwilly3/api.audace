@@ -132,6 +132,16 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "can_restore_archives": permissions.can_restore_archives,
     "can_delete_archives": permissions.can_delete_archives,
 
+    # Permissions pour les citations (Citations module - Firebase)
+    "quotes_view": permissions.quotes_view,
+    "quotes_create": permissions.quotes_create,
+    "quotes_edit": permissions.quotes_edit,
+    "quotes_delete": permissions.quotes_delete,
+    "quotes_publish": permissions.quotes_publish,
+    "stream_transcription_view": permissions.stream_transcription_view,
+    "stream_transcription_create": permissions.stream_transcription_create,
+    "quotes_capture_live": permissions.quotes_capture_live,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
@@ -238,7 +248,17 @@ def initialize_user_permissions(db: Session, user_id: int):
     can_view_archives=False,
     can_destroy_archives=False,
     can_restore_archives=False,
-    can_delete_archives=False
+    can_delete_archives=False,
+
+    # Permissions pour les citations (Citations module - Firebase)
+    quotes_view=False,
+    quotes_create=False,
+    quotes_edit=False,
+    quotes_delete=False,
+    quotes_publish=False,
+    stream_transcription_view=False,
+    stream_transcription_create=False,
+    quotes_capture_live=False
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -471,7 +491,11 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
 
     # Permissions pour les archives (nouvelles)
       # Ajout suggéré pour cohérence
-    'can_view_archives', 'can_destroy_archives', 'can_restore_archives', 'can_delete_archives'
+    'can_view_archives', 'can_destroy_archives', 'can_restore_archives', 'can_delete_archives',
+
+    # Permissions pour les citations (Citations module - Firebase)
+    'quotes_view', 'quotes_create', 'quotes_edit', 'quotes_delete', 'quotes_publish',
+    'stream_transcription_view', 'stream_transcription_create', 'quotes_capture_live'
 }
 
         # Vérifier les permissions fournies

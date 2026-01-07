@@ -40,6 +40,7 @@ Documentation détaillée de la logique métier par module.
 - **[AUTH.md](business-logic/AUTH.md)** - JWT, reset password, invite tokens (6 fonctions)
 - **[PERMISSIONS.md](business-logic/PERMISSIONS.md)** - RBAC complet (7 fonctions, 40+ permissions)
 - **[ROLES.md](business-logic/ROLES.md)** - Gestion des rôles (7 fonctions)
+- **🆕 [PERMISSIONS_MANAGEMENT_GUIDE.md](PERMISSIONS_MANAGEMENT_GUIDE.md)** - Guide pour ajouter/supprimer des permissions (13 étapes)
 
 #### 👥 Gestion des Entités
 - **[USERS.md](business-logic/USERS.md)** - Gestion utilisateurs (10 fonctions, 720 lignes)

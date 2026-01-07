@@ -108,6 +108,8 @@ await create_audit_log(
 user.permissions.can_delete_shows = True
 ```
 
+**📘 Pour ajouter/supprimer des permissions** : Suivre OBLIGATOIREMENT le guide [docs/PERMISSIONS_MANAGEMENT_GUIDE.md](docs/PERMISSIONS_MANAGEMENT_GUIDE.md) (13 étapes)
+
 ### 5. 🚫 NE JAMAIS utiliser `dict()` avec Pydantic v2
 
 ```python
@@ -847,55 +849,49 @@ def test_new_operation(client, test_user_token):
 
 ### Procédure 3 : Ajouter une nouvelle permission
 
-**Étapes OBLIGATOIRES** :
+**⚠️ IMPORTANT** : Cette procédure est simplifiée. Pour la version complète avec 13 étapes détaillées, **suivre OBLIGATOIREMENT** le guide [docs/PERMISSIONS_MANAGEMENT_GUIDE.md](docs/PERMISSIONS_MANAGEMENT_GUIDE.md).
 
-1. **Modifier le modèle UserPermission** (`app/models/permissions.py`)
-```python
-class UserPermission(Base):
-    __tablename__ = "user_permissions"
-    
-    # Nouvelle permission
-    can_new_action = Column(Boolean, default=False, nullable=False)
+**Résumé des étapes** :
+
+1. **Créer la migration Alembic**
+```bash
+alembic revision -m "add_new_permissions"
 ```
 
-2. **Migration Alembic**
+2. **Mettre à jour le modèle** `app/models/model_user_permissions.py`
+```python
+nouvelle_permission = Column(Boolean, default=False, nullable=False, comment="Description")
+```
+
+3. **Mettre à jour TOUS les CRUDs** `app/db/crud/crud_permissions.py` :
+   - ✅ `get_user_permissions()` - Ajouter dans le dictionnaire retourné
+   - ✅ `initialize_user_permissions()` - Ajouter avec `=False`
+   - ✅ `update_user_permissions()` - Ajouter dans `valid_permissions`
+
+4. **Mettre à jour `init_admin.py`** pour activer la permission pour l'admin
+
+5. **Créer les scripts d'initialisation** (optionnel mais recommandé)
+
+6. **Appliquer la migration**
 ```bash
-alembic revision --autogenerate -m "add_can_new_action_permission"
 alembic upgrade head
 ```
 
-3. **Mettre à jour le schéma** (`app/schemas/permission_schema.py`)
-```python
-class PermissionResponse(BaseModel):
-    can_new_action: bool = False
-```
+7. **Tester et documenter**
 
-4. **Mettre à jour l'initialisation** (`app/db/init_db_rolePermissions.py`)
-```python
-def get_default_permissions(role_name: str) -> dict:
-    permissions = {
-        "Admin": {
-            "can_new_action": True,
-            # ...
-        },
-        "Editor": {
-            "can_new_action": True,
-            # ...
-        },
-        "Presenter": {
-            "can_new_action": False,
-            # ...
-        }
-    }
-    return permissions.get(role_name, {})
-```
+**📋 Checklist complète** : 
+- [ ] Migration Alembic
+- [ ] Modèle SQLAlchemy
+- [ ] CRUD `get_user_permissions`
+- [ ] CRUD `initialize_user_permissions`
+- [ ] CRUD `update_user_permissions`
+- [ ] Init admin
+- [ ] Scripts d'initialisation
+- [ ] Tests API
+- [ ] Documentation
+- [ ] CHANGELOG
 
-5. **Utiliser dans le CRUD**
-```python
-async def new_action(db: AsyncSession, current_user: User):
-    if not current_user.permissions.can_new_action:
-        raise HTTPException(status_code=403, detail="Permission denied")
-    # ...
+**🔗 Voir le guide complet** : [docs/PERMISSIONS_MANAGEMENT_GUIDE.md](docs/PERMISSIONS_MANAGEMENT_GUIDE.md)
 ```
 
 6. **Documenter** (`docs/business-logic/PERMISSIONS.md`)
@@ -1286,6 +1282,9 @@ alembic revision --autogenerate -m "add_performance_indexes"
 | **Architecture** | Vue d'ensemble technique | [docs/architecture/](docs/architecture/) |
 | **Logique métier** | Documentation par module | [docs/business-logic/](docs/business-logic/) |
 | **Guide démarrage** | Pour nouveaux développeurs | [docs/business-logic/QUICKSTART.md](docs/business-logic/QUICKSTART.md) |
+| **🔑 Gestion permissions** | Ajouter/supprimer permissions | [docs/PERMISSIONS_MANAGEMENT_GUIDE.md](docs/PERMISSIONS_MANAGEMENT_GUIDE.md) |
+| **🐳 Guide Docker** | Docker, migrations, deploy | [docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md) |
+| **📋 Traçabilité** | CHANGELOG et versioning | [docs/TRACEABILITY_GUIDE.md](docs/TRACEABILITY_GUIDE.md) |
 
 ### Documentation externe
 

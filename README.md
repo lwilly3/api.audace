@@ -257,9 +257,12 @@ La documentation exhaustive est disponible dans le dossier `docs/` :
 | 📊 Modèles de données | Tous les modèles (15) | [DATA_MODELS.md](docs/architecture/DATA_MODELS.md) |
 | 🔌 Endpoints API | Tous les endpoints (70+) | [API_ENDPOINTS.md](docs/architecture/API_ENDPOINTS.md) |
 | 💼 Logique métier | Documentation par module (12 fichiers) | [business-logic/](docs/business-logic/) |
+| � **Gestion permissions** | **Ajouter/supprimer permissions (13 étapes)** | **[PERMISSIONS_MANAGEMENT_GUIDE.md](docs/PERMISSIONS_MANAGEMENT_GUIDE.md)** |
+| 🐳 Docker | Déploiement et migrations | [DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md) |
 | 📝 Traçabilité | Historique et changelog | [CHANGELOG.md](CHANGELOG.md) • [TRACEABILITY_GUIDE.md](docs/TRACEABILITY_GUIDE.md) |
 | 🔐 Permissions Citations | Module Citations + Firebase | [QUOTES_PERMISSIONS.md](QUOTES_PERMISSIONS.md) |
 | 🔄 Versioning API | Gestion des versions | [API_VERSIONING.md](docs/API_VERSIONING.md) |
+| 🤖 Guide Agent IA | Pour agents IA et assistants | [AGENT.md](AGENT.md) |
 
 ### Documentation API interactive
 
