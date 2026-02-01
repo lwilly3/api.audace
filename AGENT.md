@@ -8,15 +8,16 @@
 ## 📋 Table des matières
 
 1. [Vue d'ensemble du projet](#-vue-densemble-du-projet)
-2. [Règles d'or (OBLIGATOIRES)](#-règles-dor-obligatoires)
-3. [Architecture et dépendances](#-architecture-et-dépendances)
-4. [Modèles de données et relations](#-modèles-de-données-et-relations)
-5. [Conventions de code](#-conventions-de-code)
-6. [Patterns et anti-patterns](#-patterns-et-anti-patterns)
-7. [Procédures de modification](#-procédures-de-modification)
-8. [Tests et validation](#-tests-et-validation)
-9. [Documentation](#-documentation)
-10. [Checklist avant commit](#-checklist-avant-commit)
+2. [🎯 GitHub Skills (NOUVEAU)](#-github-skills)
+3. [Règles d'or (OBLIGATOIRES)](#-règles-dor-obligatoires)
+4. [Architecture et dépendances](#-architecture-et-dépendances)
+5. [Modèles de données et relations](#-modèles-de-données-et-relations)
+6. [Conventions de code](#-conventions-de-code)
+7. [Patterns et anti-patterns](#-patterns-et-anti-patterns)
+8. [Procédures de modification](#-procédures-de-modification)
+9. [Tests et validation](#-tests-et-validation)
+10. [Documentation](#-documentation)
+11. [Checklist avant commit](#-checklist-avant-commit)
 
 ---
 
@@ -49,6 +50,53 @@
 - Les contraintes de base de données (foreign keys, unique)
 - Les tokens JWT et leur révocation
 - Les audit logs (traçabilité légale)
+
+---
+
+## 🎯 GitHub Skills
+
+> **📁 Emplacement** : `.github/skills/`  
+> **📚 Index complet** : [.github/skills/README.md](.github/skills/README.md)
+
+Les **GitHub Skills** sont des guides détaillés et spécialisés qui complètent ce document AGENT.md. Ils fournissent des règles, exemples et checklists pour chaque type de tâche.
+
+### 🔴 Skills Critiques (À consulter OBLIGATOIREMENT)
+
+| Skill | Fichier | Quand l'utiliser |
+|-------|---------|------------------|
+| **Architecture Guardian** | [architecture-guardian/skill.md](.github/skills/architecture-guardian/skill.md) | Toute modification de code |
+| **Security Rules** | [security-rules/skill.md](.github/skills/security-rules/skill.md) | Auth, permissions, données sensibles |
+| **Refactor Safe** | [refactor-safe/skill.md](.github/skills/refactor-safe/skill.md) | Renaming, refactoring, migrations |
+
+### 🟠 Skills Importants
+
+| Skill | Fichier | Quand l'utiliser |
+|-------|---------|------------------|
+| **Endpoint Creator** | [endpoint-creator/skill.md](.github/skills/endpoint-creator/skill.md) | Nouveau endpoint FastAPI |
+| **Model Generator** | [model-generator/skill.md](.github/skills/model-generator/skill.md) | Nouveau modèle/table |
+| **Migration Helper** | [migration-helper/skill.md](.github/skills/migration-helper/skill.md) | Modification base de données |
+| **Test Enforcer** | [test-enforcer/skill.md](.github/skills/test-enforcer/skill.md) | Écriture de tests |
+
+### 🟡 Skills Recommandés
+
+| Skill | Fichier | Quand l'utiliser |
+|-------|---------|------------------|
+| **Error Handling** | [error-handling/skill.md](.github/skills/error-handling/skill.md) | Gestion des exceptions |
+| **Logging Standard** | [logging-standard/skill.md](.github/skills/logging-standard/skill.md) | Ajout de logs |
+| **Service Pattern** | [service-pattern/skill.md](.github/skills/service-pattern/skill.md) | Logique métier complexe |
+| **API Documentation** | [api-documentation/skill.md](.github/skills/api-documentation/skill.md) | Documentation OpenAPI |
+| **Domain Radio Rules** | [domain-radio-rules/skill.md](.github/skills/domain-radio-rules/skill.md) | Émissions, Shows, Segments |
+
+### 📋 Workflow avec les Skills
+
+```
+Avant toute modification :
+1. ✅ Lire ce fichier AGENT.md (vue d'ensemble)
+2. ✅ Consulter architecture-guardian (règles globales)
+3. ✅ Identifier le skill correspondant à la tâche
+4. ✅ Suivre les règles et interdictions du skill
+5. ✅ Valider avec la checklist du skill
+```
 
 ---
 
