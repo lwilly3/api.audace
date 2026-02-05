@@ -87,6 +87,12 @@ Les **GitHub Skills** sont des guides détaillés et spécialisés qui complète
 | **API Documentation** | [api-documentation/skill.md](.github/skills/api-documentation/skill.md) | Documentation OpenAPI |
 | **Domain Radio Rules** | [domain-radio-rules/skill.md](.github/skills/domain-radio-rules/skill.md) | Émissions, Shows, Segments |
 
+### 🔵 Skill Frontend
+
+| Skill | Fichier | Quand l'utiliser |
+|-------|---------|------------------|
+| **API Consumer** | [api-consumer/skill.md](.github/skills/api-consumer/skill.md) | Développement frontend, intégration API |
+
 ### 📋 Workflow avec les Skills
 
 ```

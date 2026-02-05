@@ -36281,3 +36281,269 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2025-05-07 14:24:26,342 - hapson-api - INFO - Completed Request: GET http://127.0.0.1:8000/presenters/deleted - Status: 200 - Time: 0.74s
 2025-05-07 14:25:29,613 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/presenters/assign
 2025-05-07 14:25:29,759 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/presenters/assign - Status: 200 - Time: 0.15s
+2026-01-12 11:11:08,947 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-01-12 11:11:08,949 - init_admin - INFO - ============================================================
+2026-01-12 11:11:08,949 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-01-12 11:11:08,949 - init_admin - INFO - ============================================================
+2026-01-12 11:11:08,949 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-01-12 11:11:09,816 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-01-12 11:11:09,816 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-01-12 11:11:09,837 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-01-12 11:11:09,837 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-01-12 11:11:09,837 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-01-12 11:11:09,837 - init_admin - INFO - ============================================================
+2026-01-12 11:11:09,837 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-01-12 11:13:15,877 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/auth/login
+2026-01-12 11:13:15,894 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-01-12 11:13:17,283 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/auth/login - Status: 200 - Time: 1.41s
+2026-02-01 18:12:41,186 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-01 18:12:51,850 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-01 18:12:51,851 - init_admin - INFO - ============================================================
+2026-02-01 18:12:51,851 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-01 18:12:51,851 - init_admin - INFO - ============================================================
+2026-02-01 18:12:51,851 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-01 18:12:52,246 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-01 18:12:52,246 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-01 18:12:52,262 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-01 18:12:52,263 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-01 18:12:52,263 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-01 18:12:52,263 - init_admin - INFO - ============================================================
+2026-02-01 18:12:52,263 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-01 18:13:02,825 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-01 18:13:10,760 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-01 18:13:10,760 - init_admin - INFO - ============================================================
+2026-02-01 18:13:10,763 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-01 18:13:10,763 - init_admin - INFO - ============================================================
+2026-02-01 18:13:10,763 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-01 18:13:11,271 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-01 18:13:11,271 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-01 18:13:11,280 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-01 18:13:11,281 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-01 18:13:11,281 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-01 18:13:11,281 - init_admin - INFO - ============================================================
+2026-02-01 18:13:11,282 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-01 18:13:30,071 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-01 18:13:39,808 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-01 18:13:39,810 - init_admin - INFO - ============================================================
+2026-02-01 18:13:39,810 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-01 18:13:39,811 - init_admin - INFO - ============================================================
+2026-02-01 18:13:39,811 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-01 18:13:41,140 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-01 18:13:41,141 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-01 18:13:41,168 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-01 18:13:41,168 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-01 18:13:41,168 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-01 18:13:41,168 - init_admin - INFO - ============================================================
+2026-02-01 18:13:41,168 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-01 18:14:02,047 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-01 18:14:17,317 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-01 18:14:17,342 - init_admin - INFO - ============================================================
+2026-02-01 18:14:17,343 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-01 18:14:17,343 - init_admin - INFO - ============================================================
+2026-02-01 18:14:17,343 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-01 18:14:20,052 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-01 18:14:20,052 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-01 18:14:20,337 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-01 18:14:20,337 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-01 18:14:20,337 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-01 18:14:20,338 - init_admin - INFO - ============================================================
+2026-02-01 18:14:20,338 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-01 19:29:52,640 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-01 19:30:00,866 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-01 19:30:00,866 - init_admin - INFO - ============================================================
+2026-02-01 19:30:00,867 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-01 19:30:00,867 - init_admin - INFO - ============================================================
+2026-02-01 19:30:00,867 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-01 19:30:01,234 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-01 19:30:01,235 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-01 19:30:01,293 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-01 19:30:01,293 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-01 19:30:01,293 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-01 19:30:01,293 - init_admin - INFO - ============================================================
+2026-02-01 19:30:01,294 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-01 19:37:41,795 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-01 19:38:10,711 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-01 19:38:10,711 - init_admin - INFO - ============================================================
+2026-02-01 19:38:10,712 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-01 19:38:10,712 - init_admin - INFO - ============================================================
+2026-02-01 19:38:10,712 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-01 19:38:11,167 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-01 19:38:11,167 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-01 19:38:11,195 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-01 19:38:11,196 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-01 19:38:11,196 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-01 19:38:11,196 - init_admin - INFO - ============================================================
+2026-02-01 19:38:11,196 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 14:45:12,732 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 14:45:23,678 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 14:45:23,678 - init_admin - INFO - ============================================================
+2026-02-05 14:45:23,678 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 14:45:23,678 - init_admin - INFO - ============================================================
+2026-02-05 14:45:23,678 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 14:45:24,422 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 14:45:24,422 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 14:45:24,438 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 14:45:24,438 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 14:45:24,438 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 14:45:24,438 - init_admin - INFO - ============================================================
+2026-02-05 14:45:24,438 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 14:45:25,684 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 14:45:28,901 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 14:45:28,902 - init_admin - INFO - ============================================================
+2026-02-05 14:45:28,902 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 14:45:28,902 - init_admin - INFO - ============================================================
+2026-02-05 14:45:28,902 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 14:45:29,034 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 14:45:29,034 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 14:45:29,043 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 14:45:29,043 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 14:45:29,043 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 14:45:29,044 - init_admin - INFO - ============================================================
+2026-02-05 14:45:29,044 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 14:45:39,181 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 14:45:42,386 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 14:45:42,387 - init_admin - INFO - ============================================================
+2026-02-05 14:45:42,387 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 14:45:42,387 - init_admin - INFO - ============================================================
+2026-02-05 14:45:42,387 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 14:45:42,738 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 14:45:42,738 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 14:45:42,933 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 14:45:42,933 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 14:45:42,933 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 14:45:42,933 - init_admin - INFO - ============================================================
+2026-02-05 14:45:42,934 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 14:52:03,086 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 14:52:07,377 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 14:52:07,378 - init_admin - INFO - ============================================================
+2026-02-05 14:52:07,378 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 14:52:07,378 - init_admin - INFO - ============================================================
+2026-02-05 14:52:07,379 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 14:52:07,573 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 14:52:07,573 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 14:52:07,583 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 14:52:07,583 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 14:52:07,583 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 14:52:07,583 - init_admin - INFO - ============================================================
+2026-02-05 14:52:07,583 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 14:55:31,300 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 14:55:37,371 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 14:55:37,372 - init_admin - INFO - ============================================================
+2026-02-05 14:55:37,372 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 14:55:37,373 - init_admin - INFO - ============================================================
+2026-02-05 14:55:37,373 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 14:55:37,597 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 14:55:37,597 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 14:55:37,606 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 14:55:37,606 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 14:55:37,606 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 14:55:37,607 - init_admin - INFO - ============================================================
+2026-02-05 14:55:37,607 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 14:55:43,423 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 14:55:46,792 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 14:55:46,792 - init_admin - INFO - ============================================================
+2026-02-05 14:55:46,792 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 14:55:46,792 - init_admin - INFO - ============================================================
+2026-02-05 14:55:46,793 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 14:55:46,946 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 14:55:46,946 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 14:55:46,954 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 14:55:46,955 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 14:55:46,955 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 14:55:46,955 - init_admin - INFO - ============================================================
+2026-02-05 14:55:46,955 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 14:57:24,693 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 14:57:27,719 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 14:57:27,719 - init_admin - INFO - ============================================================
+2026-02-05 14:57:27,719 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 14:57:27,719 - init_admin - INFO - ============================================================
+2026-02-05 14:57:27,720 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 14:57:27,963 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 14:57:27,963 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 14:57:27,972 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 14:57:27,973 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 14:57:27,973 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 14:57:27,973 - init_admin - INFO - ============================================================
+2026-02-05 14:57:27,973 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 15:00:28,373 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 15:00:34,190 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 15:00:34,192 - init_admin - INFO - ============================================================
+2026-02-05 15:00:34,193 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 15:00:34,196 - init_admin - INFO - ============================================================
+2026-02-05 15:00:34,197 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 15:00:34,553 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 15:00:34,553 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 15:00:34,563 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 15:00:34,563 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 15:00:34,563 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 15:00:34,563 - init_admin - INFO - ============================================================
+2026-02-05 15:00:34,564 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 15:18:50,233 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 15:18:56,570 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 15:18:56,571 - init_admin - INFO - ============================================================
+2026-02-05 15:18:56,572 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 15:18:56,572 - init_admin - INFO - ============================================================
+2026-02-05 15:18:56,572 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 15:18:56,788 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 15:18:56,789 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 15:18:56,798 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 15:18:56,799 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 15:18:56,799 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 15:18:56,799 - init_admin - INFO - ============================================================
+2026-02-05 15:18:56,799 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 15:19:01,665 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 15:19:07,188 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 15:19:07,190 - init_admin - INFO - ============================================================
+2026-02-05 15:19:07,190 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 15:19:07,190 - init_admin - INFO - ============================================================
+2026-02-05 15:19:07,190 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 15:19:07,320 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 15:19:07,320 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 15:19:07,328 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 15:19:07,328 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 15:19:07,328 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 15:19:07,328 - init_admin - INFO - ============================================================
+2026-02-05 15:19:07,328 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 15:50:21,541 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 15:50:28,630 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 15:50:28,631 - init_admin - INFO - ============================================================
+2026-02-05 15:50:28,631 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 15:50:28,631 - init_admin - INFO - ============================================================
+2026-02-05 15:50:28,631 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 15:50:28,908 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 15:50:28,909 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 15:50:28,920 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 15:50:28,920 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 15:50:28,920 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 15:50:28,921 - init_admin - INFO - ============================================================
+2026-02-05 15:50:28,921 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 15:52:55,609 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 15:53:03,314 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 15:53:03,314 - init_admin - INFO - ============================================================
+2026-02-05 15:53:03,314 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 15:53:03,314 - init_admin - INFO - ============================================================
+2026-02-05 15:53:03,314 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 15:53:03,693 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 15:53:03,694 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 15:53:03,738 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 15:53:03,738 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 15:53:03,738 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 15:53:03,739 - init_admin - INFO - ============================================================
+2026-02-05 15:53:03,739 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 15:53:46,379 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 15:53:58,439 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 15:53:58,441 - init_admin - INFO - ============================================================
+2026-02-05 15:53:58,441 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 15:53:58,441 - init_admin - INFO - ============================================================
+2026-02-05 15:53:58,441 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 15:53:58,826 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 15:53:58,827 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 15:53:58,879 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 15:53:58,879 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 15:53:58,879 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 15:53:58,879 - init_admin - INFO - ============================================================
+2026-02-05 15:53:58,879 - hapson-api - INFO - ✅ Initialisation de l'admin terminée

@@ -118,7 +118,24 @@ class UserPermissions(Base):
     quotes_publish = Column(Boolean, default=False, nullable=False)  # Publier sur réseaux sociaux
     stream_transcription_view = Column(Boolean, default=False, nullable=False)  # Voir les transcriptions en direct
     stream_transcription_create = Column(Boolean, default=False, nullable=False)  # Démarrer une transcription
+
     quotes_capture_live = Column(Boolean, default=False, nullable=False)  # Capturer depuis transcription live
+
+    # Permissions pour le module Inventaire (Firebase)
+    inventory_view = Column(Boolean, default=False, nullable=False)  # Voir l'inventaire
+    inventory_view_all_companies = Column(Boolean, default=False, nullable=False)  # Voir l'inventaire de toutes les entreprises
+    inventory_view_values = Column(Boolean, default=False, nullable=False)  # Voir les valeurs/prix des équipements
+    inventory_create = Column(Boolean, default=False, nullable=False)  # Ajouter des équipements
+    inventory_edit = Column(Boolean, default=False, nullable=False)  # Modifier les équipements
+    inventory_delete = Column(Boolean, default=False, nullable=False)  # Supprimer/Archiver des équipements
+    inventory_move = Column(Boolean, default=False, nullable=False)  # Créer des mouvements (attributions, transferts)
+    inventory_approve_transfers = Column(Boolean, default=False, nullable=False)  # Approuver les transferts inter-sites
+    inventory_approve_company_loans = Column(Boolean, default=False, nullable=False)  # Approuver les prêts inter-entreprises
+    inventory_maintenance_create = Column(Boolean, default=False, nullable=False)  # Créer des maintenances
+    inventory_maintenance_manage = Column(Boolean, default=False, nullable=False)  # Gérer les maintenances
+    inventory_manage_documents = Column(Boolean, default=False, nullable=False)  # Gérer les documents/pièces jointes
+    inventory_manage_settings = Column(Boolean, default=False, nullable=False)  # Configurer les listes (catégories, statuts...)
+    inventory_manage_locations = Column(Boolean, default=False, nullable=False)  # Gérer les sites et locaux
 
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")

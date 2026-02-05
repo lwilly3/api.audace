@@ -48,6 +48,12 @@ Ces skills guident les développeurs et agents IA pour :
 |-------|-------------|------------------|
 | [domain-radio-rules](domain-radio-rules/skill.md) | Règles métier radio | Émissions, Shows, Segments |
 
+### 🔵 Frontend (API Consumer)
+
+| Skill | Description | Quand l'utiliser |
+|-------|-------------|------------------|
+| [api-consumer](api-consumer/skill.md) | Guide complet pour consommer l'API | Développement frontend, agents IA front |
+
 ---
 
 ## 🚀 Guide de Démarrage Rapide
@@ -99,8 +105,10 @@ Avant toute modification :
 │   └── skill.md                   # Standards de logging
 ├── api-documentation/
 │   └── skill.md                   # Documentation OpenAPI
-└── domain-radio-rules/
-    └── skill.md                   # Règles métier radio
+├── domain-radio-rules/
+│   └── skill.md                   # Règles métier radio
+└── api-consumer/
+    └── skill.md                   # 🔵 Guide pour frontend
 ```
 
 ---
@@ -117,6 +125,7 @@ Avant toute modification :
 | Refactoring | refactor-safe → architecture-guardian |
 | Logique métier | service-pattern → domain-radio-rules |
 | Documentation | api-documentation |
+| **Frontend / API Client** | api-consumer |
 
 ---
 

@@ -140,6 +140,22 @@ class UserPermissionsSchema(BaseModel):
     can_restore_archives: Optional[bool] = False
     can_delete_archives: Optional[bool] = False
 
+    # Permissions pour le module Inventaire (Firebase)
+    inventory_view: Optional[bool] = False  # Voir l'inventaire
+    inventory_view_all_companies: Optional[bool] = False  # Voir l'inventaire de toutes les entreprises
+    inventory_view_values: Optional[bool] = False  # Voir les valeurs/prix des équipements
+    inventory_create: Optional[bool] = False  # Ajouter des équipements
+    inventory_edit: Optional[bool] = False  # Modifier les équipements
+    inventory_delete: Optional[bool] = False  # Supprimer/Archiver des équipements
+    inventory_move: Optional[bool] = False  # Créer des mouvements (attributions, transferts)
+    inventory_approve_transfers: Optional[bool] = False  # Approuver les transferts inter-sites
+    inventory_approve_company_loans: Optional[bool] = False  # Approuver les prêts inter-entreprises
+    inventory_maintenance_create: Optional[bool] = False  # Créer des maintenances
+    inventory_maintenance_manage: Optional[bool] = False  # Gérer les maintenances
+    inventory_manage_documents: Optional[bool] = False  # Gérer les documents/pièces jointes
+    inventory_manage_settings: Optional[bool] = False  # Configurer les listes (catégories, statuts...)
+    inventory_manage_locations: Optional[bool] = False  # Gérer les sites et locaux
+
     model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour créer un modèle de rôle

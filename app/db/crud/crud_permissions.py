@@ -132,6 +132,7 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "can_restore_archives": permissions.can_restore_archives,
     "can_delete_archives": permissions.can_delete_archives,
 
+
     # Permissions pour les citations (Citations module - Firebase)
     "quotes_view": permissions.quotes_view,
     "quotes_create": permissions.quotes_create,
@@ -141,6 +142,22 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "stream_transcription_view": permissions.stream_transcription_view,
     "stream_transcription_create": permissions.stream_transcription_create,
     "quotes_capture_live": permissions.quotes_capture_live,
+
+    # Permissions pour le module Inventaire (Firebase)
+    "inventory_view": permissions.inventory_view,
+    "inventory_view_all_companies": permissions.inventory_view_all_companies,
+    "inventory_view_values": permissions.inventory_view_values,
+    "inventory_create": permissions.inventory_create,
+    "inventory_edit": permissions.inventory_edit,
+    "inventory_delete": permissions.inventory_delete,
+    "inventory_move": permissions.inventory_move,
+    "inventory_approve_transfers": permissions.inventory_approve_transfers,
+    "inventory_approve_company_loans": permissions.inventory_approve_company_loans,
+    "inventory_maintenance_create": permissions.inventory_maintenance_create,
+    "inventory_maintenance_manage": permissions.inventory_maintenance_manage,
+    "inventory_manage_documents": permissions.inventory_manage_documents,
+    "inventory_manage_settings": permissions.inventory_manage_settings,
+    "inventory_manage_locations": permissions.inventory_manage_locations,
 
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
@@ -495,7 +512,23 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
 
     # Permissions pour les citations (Citations module - Firebase)
     'quotes_view', 'quotes_create', 'quotes_edit', 'quotes_delete', 'quotes_publish',
-    'stream_transcription_view', 'stream_transcription_create', 'quotes_capture_live'
+    'stream_transcription_view', 'stream_transcription_create', 'quotes_capture_live',
+
+    # Permissions pour le module Inventaire (Firebase)
+    'inventory_view',
+    'inventory_view_all_companies',
+    'inventory_view_values',
+    'inventory_create',
+    'inventory_edit',
+    'inventory_delete',
+    'inventory_move',
+    'inventory_approve_transfers',
+    'inventory_approve_company_loans',
+    'inventory_maintenance_create',
+    'inventory_maintenance_manage',
+    'inventory_manage_documents',
+    'inventory_manage_settings',
+    'inventory_manage_locations'
 }
 
         # Vérifier les permissions fournies
