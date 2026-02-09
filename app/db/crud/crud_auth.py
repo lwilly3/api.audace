@@ -9,6 +9,7 @@ from app.config.config import settings
 def revoke_token(db: Session, token: str) -> RevokedToken:
     """
     Ajoute un token à la table RevokedToken pour l'invalider.
+    Si le token est déjà révoqué, retourne l'entrée existante sans erreur.
 
     Args:
         db (Session): Session SQLAlchemy pour accéder à la base de données.
@@ -17,6 +18,11 @@ def revoke_token(db: Session, token: str) -> RevokedToken:
     Returns:
         RevokedToken: Objet représentant le token révoqué.
     """
+    # Vérifier si le token est déjà révoqué pour éviter une IntegrityError (duplicate key)
+    existing = db.query(RevokedToken).filter(RevokedToken.token == token).first()
+    if existing:
+        return existing
+
     revoked_token = RevokedToken(token=token)
     db.add(revoked_token)
     db.commit()
