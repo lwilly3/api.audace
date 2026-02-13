@@ -24,6 +24,7 @@ from app.db.crud.crud_users import (
     get_non_presenters
 )
 from app.db.database import get_db
+from app.db.crud.crud_audit_logs import log_action
 # from app.db.init_db_rolePermissions import create_default_role_and_permission
 
 router = APIRouter(
@@ -165,6 +166,7 @@ def create_new_user(user_to_create: UserCreate, db: Session = Depends(get_db)):
     if created_user:
         # Assigner le rôle "public"
         assign_default_role_to_user(created_user.id, db)
+        log_action(db, created_user.id, "create", "users", created_user.id)
 
         return JSONResponse(
             status_code=201,
@@ -203,10 +205,8 @@ def update_user_route(user_id: int, user_update: UserUpdate, db: Session = Depen
     updated_user = update_user(db, user_id, user_update)
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
+    log_action(db, user_id, "update", "users", user_id)
     return updated_user
-
-
-
 
 @router.put("/upd_date/{id}", response_model=UserInDB)
 def update_user_info(id: int, user: UserInDB, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
@@ -228,7 +228,7 @@ def delete_user_info(id: int, db: Session = Depends(get_db)):
             status_code=404,
             content={"detail": "User non trouvé"}
         )
-        # raise HTTPException(status_code=404, detail="User not found")
+    log_action(db, id, "soft_delete", "users", id)
     return JSONResponse(
             status_code=204,
             content={"detail": "User soft-deleted successfully"}

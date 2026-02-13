@@ -7,6 +7,7 @@ from app.db.database import get_db # Assurez-vous d'avoir une fonction SessionLo
 from app.schemas import ShowOut  # Modèle Show que vous avez défini précédemment
 from core.auth import oauth2
 from app.models.model_user import User
+from app.db.crud.crud_audit_logs import log_action
 # Initialisation de l'application FastAPI
 router = APIRouter(
         prefix="/shows",
@@ -37,6 +38,7 @@ async def create_show_new(
 # Appel de la fonction pour insérer les données dans la base
 # Appel de la fonction pour insérer les données dans la base
         new_show = create_show_with_elements_from_json(db=db, shows_data=shows_data, curent_user_id=current_user.id)
+        log_action(db, current_user.id, "create", "shows", new_show.id)
         return {"message": "Émission créée avec succès", "show_id": new_show.id}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -100,7 +102,9 @@ async def update_show_status_route(
             detail="Status field is required."
         )
 
-    return update_show_status(db, show_id, show_data.status)
+    result = update_show_status(db, show_id, show_data.status)
+    log_action(db, 0, "update_status", "shows", show_id)
+    return result
 
 # créer un conducteur avec ses segments
 # ///////////////////////////////// , current_user: int = Depends(oauth2.get_current_user)
@@ -120,6 +124,7 @@ async def create_show_with_details_endpoint(show_data: ShowCreateWithDetail, db:
     try:
         # Appel du service pour créer un show avec ses segments et relations
         show = create_show_with_details(db=db, show_data=show_data, curent_user_id=current_user.id)
+        log_action(db, current_user.id, "create_with_details", "shows", show.get("id", 0) if isinstance(show, dict) else 0)
 
         # Retourne les données du show créé
         return {
@@ -166,6 +171,7 @@ async def update_show_details_route( # Renamed from update_show
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Show with ID {show_id} not found."
         )
+    log_action(db, 0, "update_with_details", "shows", show_id)
     return updated_show
 
 
@@ -177,7 +183,9 @@ def create_new_show_route(show: ShowCreate, db: Session = Depends(get_db)):
     """
     Crée un nouveau show.
     """
-    return create_show(db=db, show=show)
+    new_show = create_show(db=db, show=show)
+    log_action(db, 0, "create", "shows", new_show.id if new_show else 0)
+    return new_show
 
 # Route pour récupérer tous les shows
 @router.get("/", response_model=List[ShowOut])
@@ -216,7 +224,9 @@ def update_existing_show_route(show_id: int, show: ShowUpdate, db: Session = Dep
     """
     Met à jour un show existant.
     """
-    return update_show(db=db, show_id=show_id, show=show)
+    result = update_show(db=db, show_id=show_id, show=show)
+    log_action(db, current_user.id, "update", "shows", show_id)
+    return result
 
 # Route pour supprimer un show
 @router.delete("/del/{show_id}", response_model=ShowOut)
@@ -227,6 +237,7 @@ def delete_existing_show_route(show_id: int, db: Session = Depends(get_db), curr
     db_show = delete_show(db=db, show_id=show_id)
     if db_show is None:
         raise HTTPException(status_code=404, detail="Show non trouvé")
+    log_action(db, current_user.id, "delete", "shows", show_id)
     return db_show
 
 
@@ -257,6 +268,7 @@ def delete_existing_show_route(show_id: int, db: Session = Depends(get_db), curr
 def delete_all_shows_route(db: Session = Depends(get_db), current_user: User = Depends(oauth2.get_current_user)):
     """Supprime tous les shows et retourne le nombre supprimés"""
     count = delete_all_shows(db)
+    log_action(db, current_user.id, "delete_all", "shows", 0)
     return {'deleted': count}
 
 # DELETE shows by creator
@@ -266,4 +278,5 @@ def delete_shows_by_user_route(user_id: int, db: Session = Depends(get_db), curr
     count = delete_shows_by_user(db, user_id)
     if count == 0:
         raise HTTPException(status_code=404, detail=f"Aucun show trouvé pour l'utilisateur {user_id}")
+    log_action(db, current_user.id, "delete_by_user", "shows", user_id)
     return {'deleted': count}

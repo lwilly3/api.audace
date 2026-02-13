@@ -6,7 +6,7 @@ from .schema_permissions import PermissionCreate, PermissionRead, PermissionUpda
 from .schema_roles import RoleCreate, RoleRead, RoleUpdate,UserRoleAssign,Role_Read
 from .schema_role_permissions import RolePermissionCreate, RolePermissionRead
 from .schema_login_history import LoginHistoryCreate, LoginHistoryRead
-from .schema_audit_logs import AuditLogCreate, AuditLogRead, AuditLogBase, AuditLog, AuditLogSearch
+from .schema_audit_logs import AuditLogCreate, AuditLogRead, AuditLogBase, AuditLog, AuditLogSearch, AuditLogPaginated, AuditLogStats
 from .schema_archived_audit_logs import ArchivedAuditLogCreate, ArchivedAuditLogRead
 from .schema_notifications import NotificationCreate, NotificationRead, NotificationUpdate
 from .schema_presenters import PresenterCreate, PresenterUpdate, PresenterResponse,PresenterHistory, PresenterSearch,PresenterResponsePaged

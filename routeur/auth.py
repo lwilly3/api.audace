@@ -24,6 +24,7 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from core.auth.oauth2 import SECRET_KEY, ALGORITHM
 from app.db.crud.crud_password_reset_token import create_reset_token, get_reset_token, mark_reset_token_used
+from app.db.crud.crud_audit_logs import log_action
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -69,6 +70,7 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
    access_token= oauth2.create_acces_token(data={'user_id':user_to_log_on_db.id})
 
    permissions= get_user_permissions(db, user_to_log_on_db.id)
+   log_action(db, user_to_log_on_db.id, "login", "users", user_to_log_on_db.id)
    
    return{"access_token" :access_token, "token_type":"bearer" ,
           "user_id":user_to_log_on_db.id,
@@ -86,6 +88,7 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
 def logout(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get_db), current_user: model_user.User = Depends(oauth2.get_current_user)):
     # Ajoute le token à la liste noire pour l'invalider
     revoke_token(db, token)
+    log_action(db, current_user.id, "logout", "users", current_user.id)
 
     # Retourne une réponse 204 (No Content) pour indiquer que la déconnexion a réussi
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -114,6 +117,7 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
     assign_default_role_to_user(new_user.id, db)
     from app.db.crud.crud_permissions import initialize_user_permissions
     initialize_user_permissions(db, new_user.id)
+    log_action(db, new_user.id, "signup", "users", new_user.id)
     return new_user
 
 # Génération d'un lien d'invitation temporaire
@@ -164,6 +168,7 @@ def signup_with_invite(request: SignupWithInviteRequest, db: Session = Depends(g
     initialize_user_permissions(db, new_user.id)
     # Marquer le token comme utilisé
     mark_token_used(db, request.token)
+    log_action(db, new_user.id, "signup_with_invite", "users", new_user.id)
     return new_user
 
 
@@ -213,4 +218,5 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
     user.password = utils.hash(request.new_password)
     db.commit()
+    log_action(db, user.id, "reset_password", "users", user.id)
     return {"message": "Mot de passe réinitialisé avec succès"}

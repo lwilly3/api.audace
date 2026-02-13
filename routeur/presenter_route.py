@@ -6,6 +6,7 @@ from app.db.database import get_db
 from app.db.crud.crud_presenters import assign_presenter, create_presenter, get_all_presenters, get_presenter, get_presenter_by_user, update_presenter, delete_presenter, get_deleted_presenters
 from app.schemas.schema_presenters import PresenterCreate, PresenterResponse,PresenterResponsePaged, PresenterUpdate
 from core.auth import oauth2
+from app.db.crud.crud_audit_logs import log_action
 
 router=APIRouter(
     prefix="/presenters",
@@ -16,6 +17,7 @@ router=APIRouter(
 @router.post("/")
 def create_presenter_route(presenter_to_create: PresenterCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     presenterCreated = create_presenter(db, presenter_to_create )
+    log_action(db, current_user.id, "create", "presenters", presenterCreated.id if presenterCreated else 0)
     return presenterCreated
 
 # Assigner ou réactiver un présentateur existant , response_model=PresenterResponse
@@ -30,7 +32,6 @@ def assign_presenter_route(
     Réactive si soft-deleted, sinon lève une erreur si déjà actif.
     """
     return assign_presenter(db, presenter_to_assign)
-
 @router.get("/all")
 def list_presenters(skip: int = 0, limit: int = 10, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     return get_all_presenters(db, skip, limit)
@@ -97,6 +98,7 @@ def update_presenter_route(presenter_id: int, presenter_to_update: PresenterUpda
     presenter = update_presenter(db, presenter_id, presenter_to_update)
     if presenter is None:
         raise HTTPException(status_code=404, detail="Presenter not found")
+    log_action(db, current_user.id, "update", "presenters", presenter_id)
     return presenter
 
 # Supprimer un présentateur (soft delete)
@@ -108,8 +110,7 @@ def delete_presenter_route(presenter_id: int, db: Session = Depends(get_db), cur
             status_code=404,
             content={ "message": "Presenter not found" }
         )
-        # raise HTTPException(status_code=404, detail="Presenter not found")
-    # return {"message": "Presenter deleted successfully"}
+    log_action(db, current_user.id, "soft_delete", "presenters", presenter_id)
     return JSONResponse(
             status_code=204,
             content={ "message": "Presenter deleted successfully" }

@@ -30,6 +30,7 @@ def create_role_route(role: RoleCreate, db: Session = Depends(get_db)):
     db_role = create_role(db, role)
     if not db_role:
         raise HTTPException(status_code=400, detail="Role creation failed (possibly duplicate name)")
+    log_action(db, 0, "create", "roles", db_role.id)
     return db_role
 
 # Lister tous les rôles response_model=List[RoleRead]
@@ -61,6 +62,7 @@ def update_role_route(role_id: int, role_update: RoleUpdate, db: Session = Depen
     db_role = update_role(db, role_id, role_update)
     if not db_role:
         raise HTTPException(status_code=404, detail="Role not found or update failed (possibly duplicate name)")
+    log_action(db, 0, "update", "roles", role_id)
     return db_role
 
 # Supprimer un rôle
@@ -72,6 +74,7 @@ def delete_role_route(role_id: int, db: Session = Depends(get_db)):
     success = delete_role(db, role_id)
     if not success:
         raise HTTPException(status_code=404, detail="Role not found")
+    log_action(db, 0, "delete", "roles", role_id)
     return None  # 204 No Content ne retourne pas de corps
 
 
@@ -90,6 +93,7 @@ def assign_roles_route(user_id: int, role_assign: UserRoleAssign, db: Session = 
     user = assign_roles_to_user(db, user_id, role_assign.role_ids)
     if not user:
         raise HTTPException(status_code=404, detail="User not found or invalid role IDs")
+    log_action(db, user_id, "assign_roles", "user_roles", user_id)
     return user
 
 # Retirer des rôles d'un utilisateur , response_model=UserRead
@@ -101,6 +105,7 @@ def remove_roles_route(user_id: int, role_remove: UserRoleAssign, db: Session = 
     user = remove_roles_from_user(db, user_id, role_remove.role_ids)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    log_action(db, user_id, "unassign_roles", "user_roles", user_id)
     return user
 
 # Lister les rôles d'un utilisateur , response_model=List[RoleRead]

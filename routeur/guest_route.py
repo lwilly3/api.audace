@@ -13,6 +13,7 @@ from core.auth import oauth2
 from app.db.crud.crud_guests import GuestService
 from app.schemas.schema_guests import GuestResponseWithAppearances
 from app.exceptions.guest_exceptions import GuestNotFoundException, DatabaseQueryException
+from app.db.crud.crud_audit_logs import log_action
 
 
 
@@ -31,7 +32,9 @@ def create_guest_route(
     db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """Route pour créer un invité."""
     try:
-        return create_guest(db=db, guest=guest)
+        result = create_guest(db=db, guest=guest)
+        log_action(db, current_user.id, "create", "guests", result.id if result else 0)
+        return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur lors de la création de l'invité: {str(e)}")
 
@@ -80,6 +83,7 @@ def update_guest_route(
         db_guest = update_guest(db=db, guest_id=guest_id, guest_update=guest_update)
         if db_guest is None:
             raise HTTPException(status_code=404, detail="Invité non trouvé")
+        log_action(db, current_user.id, "update", "guests", guest_id)
         return db_guest
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour de l'invité: {str(e)}")
@@ -93,6 +97,7 @@ def delete_guest_route(
     try:
         if not delete_guest(db=db, guest_id=guest_id):
             raise HTTPException(status_code=404, detail="Invité non trouvé")
+        log_action(db, current_user.id, "delete", "guests", guest_id)
         return {"message": "Invité supprimé avec succès"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression de l'invité: {str(e)}")

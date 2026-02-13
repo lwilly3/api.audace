@@ -6,6 +6,7 @@ from app.models import Segment
 from app.db.crud.crud_segments import create_segment, get_segments, get_segment_by_id, update_segment, update_segment_position, soft_delete_segment
 from typing import List
 from core.auth import oauth2
+from app.db.crud.crud_audit_logs import log_action
 # Création d'un routeur FastAPI pour regrouper toutes les routes liées aux segments
 router = APIRouter(
            prefix="/segments",
@@ -18,7 +19,9 @@ router = APIRouter(
 # 1. Créer un segment
 @router.post("/", response_model=SegmentResponse, status_code=status.HTTP_201_CREATED)
 def create_route(segment: SegmentCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    return create_segment(db, segment)
+    result = create_segment(db, segment)
+    log_action(db, current_user.id, "create", "segments", result.id if result else 0)
+    return result
 
 # 2. Récupérer tous les segments
 @router.get("/", response_model=list[SegmentResponse])
@@ -39,7 +42,9 @@ def update_route(segment_id: int, segment: SegmentUpdate, db: Session = Depends(
     db_segment = get_segment_by_id(db, segment_id)
     if not db_segment:
         raise HTTPException(status_code=404, detail="Segment not found")
-    return update_segment(db, db_segment, segment)
+    result = update_segment(db, db_segment, segment)
+    log_action(db, current_user.id, "update", "segments", segment_id)
+    return result
 
 # 5. Modifier la position d'un segment
 @router.patch("/{segment_id}/position", response_model=SegmentResponse)
@@ -47,7 +52,9 @@ def update_position_route(segment_id: int, position_update: SegmentPositionUpdat
     db_segment = get_segment_by_id(db, segment_id)
     if not db_segment:
         raise HTTPException(status_code=404, detail="Segment not found")
-    return update_segment_position(db, db_segment, position_update.position)
+    result = update_segment_position(db, db_segment, position_update.position)
+    log_action(db, current_user.id, "update_position", "segments", segment_id)
+    return result
 
 # 6. Soft delete d'un segment
 @router.delete("/{segment_id}", response_model=dict)
@@ -55,7 +62,9 @@ def delete_route(segment_id: int, db: Session = Depends(get_db), current_user: i
     db_segment = get_segment_by_id(db, segment_id)
     if not db_segment:
         raise HTTPException(status_code=404, detail="Segment not found")
-    return soft_delete_segment(db, db_segment)
+    result = soft_delete_segment(db, db_segment)
+    log_action(db, current_user.id, "soft_delete", "segments", segment_id)
+    return result
 
 
 

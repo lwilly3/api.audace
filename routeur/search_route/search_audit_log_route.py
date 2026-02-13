@@ -1,23 +1,28 @@
 
 # routes.py
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from datetime import datetime
-from app.schemas import AuditLog
+from sqlalchemy.orm import Session
+from app.schemas import AuditLogSearch
 from app.db.crud.crud_search_audit_Log import search_audit_logs
+from app.db.database import get_db
+from core.auth import oauth2
 
 router = APIRouter()
 
-@router.get("/audit-logs/search", response_model=List[AuditLog])
+@router.get("/audit-logs/search", response_model=List[AuditLogSearch])
 def search_audit_logs_route(
     user_id: Optional[int] = None,
     action: Optional[str] = None,
     table_name: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     """
     Rechercher des logs d'audit par utilisateur, action, ou table_name.
     """
-    filtered_logs = search_audit_logs(user_id, action, table_name)
+    filtered_logs = search_audit_logs(db, user_id, action, table_name)
 
     if not filtered_logs:
         raise HTTPException(status_code=404, detail="No audit logs found matching the search criteria")
