@@ -147,7 +147,11 @@ def log_action(db: Session, user_id: int, action: str, table_name: str, record_i
             timestamp=datetime.now(timezone.utc)
         )
         db.add(new_log)
+        # Empêche l'expiration des autres objets traqués par la session
+        old_expire = db.expire_on_commit
+        db.expire_on_commit = False
         db.commit()
+        db.expire_on_commit = old_expire
     except Exception as e:
         db.rollback()
         import logging
