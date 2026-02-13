@@ -182,6 +182,7 @@ app.include_router(segment_route.router) # Routes pour les segments
 
 # /// add pour test
 app.include_router(notification_route.router) # Routes pour les notifications
+app.include_router(audit_log_route.router) # Routes pour les journaux d'audit
 
 
 
