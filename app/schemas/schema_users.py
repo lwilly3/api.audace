@@ -136,7 +136,8 @@ class UserRoleRead(BaseModel):
 class UserSrearchResponse(UserBase):
     id: int
     created_at:Optional[ datetime]
-    profilePicture: Optional[str] 
+    profilePicture: Optional[str]
+    is_active: Optional[bool] = True
     roles: Optional[List[UserRoleRead] ] # Liste des rôles associés à l'utilisateur
 
     model_config = {
