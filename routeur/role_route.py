@@ -11,6 +11,7 @@ from app.schemas import RoleCreate, RoleRead, RoleUpdate, Permission ,Permission
 # from app.db.crud.crud_roles import delete_role
 # from app.db.crud.crud_roles import add_role_to_user, remove_role_from_user  # Importer les fonctions CRUD
 from core.auth import oauth2
+from app.db.crud.crud_audit_logs import log_action
 
 
 router=APIRouter(
