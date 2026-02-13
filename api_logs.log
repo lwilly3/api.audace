@@ -36547,3 +36547,43 @@ AttributeError: module 'bcrypt' has no attribute '__about__'
 2026-02-05 15:53:58,879 - init_admin - INFO - Pas besoin de créer un admin par défaut.
 2026-02-05 15:53:58,879 - init_admin - INFO - ============================================================
 2026-02-05 15:53:58,879 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-05 16:47:55,297 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-05 16:48:07,009 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-05 16:48:07,010 - init_admin - INFO - ============================================================
+2026-02-05 16:48:07,011 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-05 16:48:07,012 - init_admin - INFO - ============================================================
+2026-02-05 16:48:07,012 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-05 16:48:07,498 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-05 16:48:07,499 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-05 16:48:07,541 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-05 16:48:07,541 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-05 16:48:07,542 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-05 16:48:07,542 - init_admin - INFO - ============================================================
+2026-02-05 16:48:07,542 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-09 12:13:16,874 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/auth/login
+2026-02-09 12:13:17,255 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-02-09 12:13:18,641 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/auth/login - Status: 200 - Time: 1.77s
+2026-02-09 12:56:53,524 - hapson-api - INFO - 🛑 Arrêt de l'application...
+2026-02-09 12:57:14,002 - hapson-api - INFO - 🚀 Démarrage de l'application - Vérification de l'admin par défaut...
+2026-02-09 12:57:14,006 - init_admin - INFO - ============================================================
+2026-02-09 12:57:14,007 - init_admin - INFO - Initialisation de l'utilisateur administrateur par défaut
+2026-02-09 12:57:14,007 - init_admin - INFO - ============================================================
+2026-02-09 12:57:14,007 - init_admin - INFO - Étape 1/5: Vérification du rôle 'Admin'...
+2026-02-09 12:57:16,630 - init_admin - INFO - ✅ Rôle 'Admin' trouvé (ID: 4)
+2026-02-09 12:57:16,631 - init_admin - INFO - Étape 2/5: Recherche d'utilisateurs admin existants...
+2026-02-09 12:57:16,668 - init_admin - INFO - ✅ 1 utilisateur(s) admin trouvé(s):
+2026-02-09 12:57:16,669 - init_admin - INFO -    - admin (ID: 20, Email: admin@audace.local)
+2026-02-09 12:57:16,669 - init_admin - INFO - Pas besoin de créer un admin par défaut.
+2026-02-09 12:57:16,669 - init_admin - INFO - ============================================================
+2026-02-09 12:57:16,669 - hapson-api - INFO - ✅ Initialisation de l'admin terminée
+2026-02-09 13:03:42,662 - hapson-api - INFO - Incoming Request: POST http://127.0.0.1:8000/auth/login
+2026-02-09 13:03:42,682 - passlib.handlers.bcrypt - WARNING - (trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/Users/happi/App/API/FASTAPI/venv/lib/python3.9/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-02-09 13:03:43,590 - hapson-api - INFO - Completed Request: POST http://127.0.0.1:8000/auth/login - Status: 200 - Time: 0.93s

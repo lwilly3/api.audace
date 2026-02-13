@@ -126,11 +126,11 @@ def assign_default_role_to_user(user_id: int, db: Session):
 
 
 @router.get("/users",response_model=List[UserSrearchResponse] )
-def get_users(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def get_users(status: str = "active", db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
-    Récupérer tous les utilisateurs actifs.
+    Récupérer les utilisateurs selon leur statut (active, inactive, all).
     """
-    return get_all_users(db)
+    return get_all_users(db, status=status)
 
 @router.get("/users/{id}")
 def get_user(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):

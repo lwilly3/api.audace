@@ -128,12 +128,21 @@ def get_user_or_404(db: Session, user_id: int) -> User:
 # -------------------------
 # Récupérer tous les utilisateurs actifs
 # -------------------------
-def get_all_users(db: Session) -> List[User]:
+def get_all_users(db: Session, status: str = "active") -> List[User]:
     """
-    Récupérer tous les utilisateurs actifs dans la base de données.
+    Récupérer les utilisateurs dans la base de données.
+
+    Args:
+        db (Session): Session SQLAlchemy.
+        status (str): Filtre de statut — "active", "inactive" ou "all".
     """
-    try:  
-        query = db.query(User).options(joinedload(User.roles)).filter(User.is_active == True)
+    try:
+        query = db.query(User).options(joinedload(User.roles))
+        if status == "active":
+            query = query.filter(User.is_active == True)
+        elif status == "inactive":
+            query = query.filter(User.is_active == False)
+        # status == "all" → pas de filtre sur is_active
         return query.all()
     except SQLAlchemyError as e:
         print(f"Error retrieving all users: {e}")
