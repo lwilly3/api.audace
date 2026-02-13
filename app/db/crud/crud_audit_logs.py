@@ -9,14 +9,14 @@ from sqlalchemy.exc import SQLAlchemyError
 def get_all_audit_logs(db: Session) -> list:
     """Récupérer tous les logs d'audit actifs"""
     try:
-        return db.query(AuditLog).filter(AuditLog.is_deleted == False).all()
+        return db.query(AuditLog).all()
     except SQLAlchemyError as e:
         raise Exception(f"Erreur lors de la récupération des logs d'audit actifs : {str(e)}")
 
 def get_audit_log(db: Session, id: int) -> AuditLog:
     """Récupérer un log d'audit spécifique"""
     try:
-        return db.query(AuditLog).filter(AuditLog.id == id, AuditLog.is_deleted == False).first()
+        return db.query(AuditLog).filter(AuditLog.id == id).first()
     except SQLAlchemyError as e:
         raise Exception(f"Erreur lors de la récupération du log d'audit avec ID {id} : {str(e)}")
 
@@ -41,7 +41,7 @@ def create_audit_log(db: Session, action: str, user_id: Optional[int], details: 
 def archive_audit_log(db: Session, id: int) -> Optional[ArchivedAuditLog]:
     """Archiver un log d'audit"""
     try:
-        log = db.query(AuditLog).filter(AuditLog.id == id, AuditLog.is_deleted == False).first()
+        log = db.query(AuditLog).filter(AuditLog.id == id).first()
         if log:
             # Archive le log
             archived_log = ArchivedAuditLog(
@@ -52,14 +52,12 @@ def archive_audit_log(db: Session, id: int) -> Optional[ArchivedAuditLog]:
                 timestamp=log.timestamp
             )
             db.add(archived_log)
+
+            # Supprimer le log actif
+            db.delete(log)
             db.commit()
-            
-            # Marquer comme supprimé dans les logs actifs
-            log.is_deleted = True
-            log.deleted_at = datetime.now(timezone.utc)  # Utilisation de timezone-aware datetime
-            db.commit()
-            db.refresh(log)
-            
+            db.refresh(archived_log)
+
             return archived_log
         return None
     except SQLAlchemyError as e:
