@@ -79,6 +79,7 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
              "family_name":user_to_log_on_db.family_name,
              "name":user_to_log_on_db.name,
              "phone_number":user_to_log_on_db.phone_number,
+             "profilePicture":user_to_log_on_db.profilePicture,
                "permissions":permissions}
 
 
