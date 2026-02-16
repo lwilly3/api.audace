@@ -17,7 +17,7 @@ class GuestCreate(BaseModel):
     role: Optional[str] = Field(None, description="role", json_schema_extra={"example": "journalist"})
     phone: Optional[str] = Field(None, description="phone", json_schema_extra={"example": "+237 05 06 07 06"})
     email: Optional[str] = Field(None, description="email", json_schema_extra={"example": "Marie@gmail.com"})
-    avart: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
+    avatar: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -33,7 +33,7 @@ class GuestUpdate(BaseModel):
     role: Optional[str] = Field(None, description="role")
     phone: Optional[str] = Field(None, description="phone")
     email: Optional[str] = Field(None, description="email")
-    avart: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
+    avatar: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -48,7 +48,7 @@ class GuestResponse(BaseModel):
     role: Optional[str] = Field(None, description="role")
     phone: Optional[str] = Field(None, description="phone")
     email: Optional[str] = Field(None, description="email")
-    avart: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
+    avatar: Optional[str] = Field(None, description="avatar", json_schema_extra={"example": "https://www.google.com"})
 
     segments: List[str] = Field(default=[], description="Liste des segments associés")
 

@@ -23,8 +23,8 @@ def create_guest(db: Session, guest: GuestCreate) -> GuestResponse:
             biography=guest.biography,
             role=guest.role,
             email=guest.email,
-            phone=guest.phone
-
+            phone=guest.phone,
+            avatar=guest.avatar
         )
 
         db.add(db_guest)
@@ -166,6 +166,7 @@ def search_guest(session: Session, query: str) -> Dict[str, Any]:
                 "role": guest.role,
                 "contact_info": guest.contact_info,
                 "biography": guest.biography,
+                "avatar": guest.avatar,
                 # "created_at": guest.created_at,
                 # "updated_at": guest.updated_at,
                 # "is_deleted": guest.is_deleted,
