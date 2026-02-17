@@ -8,6 +8,8 @@ from app.schemas import ShowOut  # Modèle Show que vous avez défini précédem
 from core.auth import oauth2
 from app.models.model_user import User
 from app.db.crud.crud_audit_logs import log_action
+from app.db.crud.crud_roles import get_user_max_hierarchy
+from app.models.model_show import Show as ShowModel
 # Initialisation de l'application FastAPI
 router = APIRouter(
         prefix="/shows",
@@ -233,7 +235,22 @@ def update_existing_show_route(show_id: int, show: ShowUpdate, db: Session = Dep
 def delete_existing_show_route(show_id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
     Supprime un show par son ID.
+    Seul un super_admin peut supprimer un show archive.
     """
+    # Verifier si le show est archive avant suppression
+    show = db.query(ShowModel).filter(ShowModel.id == show_id).first()
+    if show is None:
+        raise HTTPException(status_code=404, detail="Show non trouvé")
+
+    # Protection des archives: seul un super_admin peut supprimer un show archive
+    if show.status and show.status.lower().startswith("archiv"):
+        actor_level = get_user_max_hierarchy(db, current_user.id)
+        if actor_level < 100:
+            raise HTTPException(
+                status_code=403,
+                detail="Seul un super administrateur peut supprimer les archives"
+            )
+
     db_show = delete_show(db=db, show_id=show_id)
     if db_show is None:
         raise HTTPException(status_code=404, detail="Show non trouvé")

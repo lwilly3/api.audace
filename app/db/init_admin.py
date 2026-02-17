@@ -74,8 +74,8 @@ ALL_PERMISSIONS_TRUE = {
     "inventory_location_view": True, "inventory_location_manage": True,
 }
 
-# Admin = tout sauf gestion super_admin (pour l'instant identique)
-ADMIN_PERMISSIONS = {**ALL_PERMISSIONS_TRUE}
+# Admin = tout sauf destruction archives (reservee au super_admin)
+ADMIN_PERMISSIONS = {**ALL_PERMISSIONS_TRUE, "can_destroy_archives": False}
 
 # Invite = aucune permission
 INVITE_PERMISSIONS = {k: False for k in ALL_PERMISSIONS_TRUE}
