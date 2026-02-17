@@ -132,7 +132,7 @@ services:
         echo 'Execution des migrations Alembic...' &&
         alembic upgrade head &&
         echo 'Demarrage de API...' &&
-        gunicorn maintest:app --workers $${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120 --access-logfile - --error-logfile -
+        gunicorn maintest:app --workers $${WORKERS:-4} --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --forwarded-allow-ips='*' --timeout 120 --access-logfile - --error-logfile -
       "
 
   # Service pour exécuter les migrations manuellement
