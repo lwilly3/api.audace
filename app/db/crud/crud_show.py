@@ -933,7 +933,16 @@ def get_show_with_details(db: Session, show_id):
                 "duration": segment.duration,
                 "description": segment.description,
                 "guests": [
-                    {"id": guest.id, "name": guest.name, "contact_info": guest.contact_info}
+                    {
+                        "id": guest.id,
+                        "name": guest.name,
+                        "contact_info": guest.contact_info,
+                        "role": guest.role,
+                        "avatar": guest.avatar,
+                        "email": guest.email,
+                        "phone": guest.phone,
+                        "biography": guest.biography,
+                    }
                     for guest in segment.guests
                 ]
             }

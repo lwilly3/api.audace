@@ -287,22 +287,18 @@ class GuestService:
             name=guest.name,
             role=guest.role,
             avatar=guest.avatar,
-            created_at=guest.created_at,
             biography=guest.biography,
             contact_info=guest.contact_info,
-            
-            contact={
-                "email": guest.email,
-                "phone": guest.phone
-            },
+            email=guest.email,
+            phone=guest.phone,
             appearances=[
                 {
-                    "show_id": show.id,  # Ajout de l'ID du conducteur
+                    "show_id": show.id,
                     "show_title": show.title,
                     "broadcast_date": show.broadcast_date
                 }
                 for show in appearances
-                if show.broadcast_date  # Exclut les émissions sans date de diffusion
+                if show.broadcast_date
             ]
         )
     
