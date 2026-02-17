@@ -25,11 +25,11 @@ class User(BaseModel):
     __tablename__ = "users"  # Nom de la table
 
     id = Column(Integer, primary_key=True)  # Identifiant unique pour chaque utilisateur
-    username = Column(String, nullable=False, unique=True, index=True)  # Nom d'utilisateur unique
+    username = Column(String, nullable=False)  # Nom d'utilisateur unique (unicité gérée via __table_args__)
     name = Column(String, nullable=True, index=True)  # prenomNom du présentateur
     family_name = Column(String, nullable=True, index=True,) # Nom famille du présentateur
     # roles = Column(String, nullable=True, index=True)  #  # role gest, admin, presenter, user, viewer, superadmin, technicien
-    email = Column(String, nullable=False, unique=True, index=True)  # Email unique de l'utilisateur
+    email = Column(String, nullable=False)  # Email unique (unicité gérée via __table_args__)
     password = Column(String, nullable=False)  # Mot de passe de l'utilisateur
     is_active = Column(Boolean, default=True)  # Indique si l'utilisateur est actif
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))  # Date de création
@@ -88,7 +88,7 @@ class User(BaseModel):
 
     # Index pour accélérer les recherches
     __table_args__ = (
-        Index('ix_users_username', 'username'),  # Index pour le champ "username"
-        Index('ix_users_email', 'email'),  # Index pour le champ "email"
+        Index('ix_users_username', 'username', unique=True),  # Index unique pour le champ "username"
+        Index('ix_users_email', 'email', unique=True),  # Index unique pour le champ "email"
         Index('ix_users_phone_number', 'phone_number'),  # Index pour le champ "phone_number"
     )

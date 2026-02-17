@@ -3,15 +3,21 @@ from typing import List
 from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
-from app.db.crud.crud_roles import create_role, update_role, delete_role,get_role_by_id,get_all_roles,list_user_roles,remove_roles_from_user,assign_roles_to_user
-# from app.db.crud.crud_role_permissions import create_permission
-# import app.schemas. as schemas
+from app.db.crud.crud_roles import (
+    create_role, update_role, delete_role, get_role_by_id, get_all_roles,
+    list_user_roles, remove_roles_from_user, assign_roles_to_user,
+    get_user_max_hierarchy, count_users_with_role
+)
+from app.models.model_role import Role, BUILTIN_ROLE_NAMES
+from app.models.model_RoleTemplate import RoleTemplate
+from app.models.model_user_permissions import UserPermissions
 import app.db.crud as crud
 from app.schemas import RoleCreate, RoleRead, RoleUpdate, Permission ,PermissionCreate,UserRoleAssign,UserSrearchResponse
-# from app.db.crud.crud_roles import delete_role
-# from app.db.crud.crud_roles import add_role_to_user, remove_role_from_user  # Importer les fonctions CRUD
 from core.auth import oauth2
 from app.db.crud.crud_audit_logs import log_action
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 router=APIRouter(
@@ -58,8 +64,11 @@ def get_role_route(role_id: int, db: Session = Depends(get_db)):
 @router.put("/update/{role_id}", response_model=RoleRead)
 def update_role_route(role_id: int, role_update: RoleUpdate, db: Session = Depends(get_db)):
     """
-    Mettre à jour un rôle existant.
+    Mettre à jour un rôle existant. Les rôles système ne peuvent pas être renommés.
     """
+    existing_role = get_role_by_id(db, role_id)
+    if existing_role and existing_role.name in BUILTIN_ROLE_NAMES:
+        raise HTTPException(status_code=403, detail="Les roles systeme ne peuvent pas etre modifies")
     db_role = update_role(db, role_id, role_update)
     if not db_role:
         raise HTTPException(status_code=404, detail="Role not found or update failed (possibly duplicate name)")
@@ -70,8 +79,11 @@ def update_role_route(role_id: int, role_update: RoleUpdate, db: Session = Depen
 @router.delete("/del/{role_id}", status_code=204)
 def delete_role_route(role_id: int, db: Session = Depends(get_db)):
     """
-    Supprimer un rôle par son ID.
+    Supprimer un rôle par son ID. Les rôles système ne peuvent pas être supprimés.
     """
+    existing_role = get_role_by_id(db, role_id)
+    if existing_role and existing_role.name in BUILTIN_ROLE_NAMES:
+        raise HTTPException(status_code=403, detail="Les roles systeme ne peuvent pas etre supprimes")
     success = delete_role(db, role_id)
     if not success:
         raise HTTPException(status_code=404, detail="Role not found")
@@ -85,28 +97,83 @@ def delete_role_route(role_id: int, db: Session = Depends(get_db)):
 
 
 
-# Assigner des rôles à un utilisateur response_model=UserRead
-@router.post("/assign/{user_id}", response_model=UserSrearchResponse )
-def assign_roles_route(user_id: int, role_assign: UserRoleAssign, db: Session = Depends(get_db)):
+# Assigner des rôles à un utilisateur avec protection hierarchique
+@router.post("/assign/{user_id}", response_model=UserSrearchResponse)
+def assign_roles_route(
+    user_id: int,
+    role_assign: UserRoleAssign,
+    db: Session = Depends(get_db),
+    current_user = Depends(oauth2.get_current_user)
+):
     """
     Assigner un ou plusieurs rôles à un utilisateur.
+    Verifie que l'acteur a un niveau superieur aux roles assignes.
     """
+    actor_level = get_user_max_hierarchy(db, current_user.id)
+
+    # Verifier que les roles a assigner ont un niveau < a celui de l'acteur
+    roles_to_assign = db.query(Role).filter(Role.id.in_(role_assign.role_ids)).all()
+    for role in roles_to_assign:
+        if role.hierarchy_level >= actor_level:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Vous ne pouvez pas assigner le role '{role.name}' (niveau {role.hierarchy_level})"
+            )
+
     user = assign_roles_to_user(db, user_id, role_assign.role_ids)
     if not user:
         raise HTTPException(status_code=404, detail="User not found or invalid role IDs")
-    log_action(db, user_id, "assign_roles", "user_roles", user_id)
+
+    # Auto-application du template de permissions pour le role de plus haut niveau
+    highest_role = max(roles_to_assign, key=lambda r: r.hierarchy_level)
+    template = db.query(RoleTemplate).filter(RoleTemplate.name == highest_role.name).first()
+    if template:
+        user_perms = db.query(UserPermissions).filter(UserPermissions.user_id == user_id).first()
+        if user_perms:
+            for perm, value in template.permissions.items():
+                if hasattr(user_perms, perm):
+                    setattr(user_perms, perm, value)
+            db.commit()
+            logger.info(f"Template '{template.name}' auto-applique a l'utilisateur {user_id}")
+
+    log_action(db, current_user.id, "assign_roles", "user_roles", user_id)
     return user
 
-# Retirer des rôles d'un utilisateur , response_model=UserRead
+# Retirer des rôles d'un utilisateur avec protection hierarchique
 @router.post("/unassign/{user_id}")
-def remove_roles_route(user_id: int, role_remove: UserRoleAssign, db: Session = Depends(get_db)):
+def remove_roles_route(
+    user_id: int,
+    role_remove: UserRoleAssign,
+    db: Session = Depends(get_db),
+    current_user = Depends(oauth2.get_current_user)
+):
     """
     Retirer un ou plusieurs rôles d'un utilisateur.
+    Protege le dernier super_admin.
     """
+    actor_level = get_user_max_hierarchy(db, current_user.id)
+
+    # Verifier que les roles a retirer ont un niveau < a celui de l'acteur
+    roles_to_remove = db.query(Role).filter(Role.id.in_(role_remove.role_ids)).all()
+    for role in roles_to_remove:
+        if role.hierarchy_level >= actor_level:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Vous ne pouvez pas retirer le role '{role.name}'"
+            )
+        # Protection dernier super_admin
+        if role.name == "super_admin":
+            sa_count = count_users_with_role(db, "super_admin")
+            if sa_count <= 1:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Impossible de retirer le role super_admin du dernier super administrateur"
+                )
+
     user = remove_roles_from_user(db, user_id, role_remove.role_ids)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    log_action(db, user_id, "unassign_roles", "user_roles", user_id)
+    log_action(db, current_user.id, "unassign_roles", "user_roles", user_id)
     return user
 
 # Lister les rôles d'un utilisateur , response_model=List[RoleRead]

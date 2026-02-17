@@ -1,11 +1,31 @@
-from sqlalchemy.exc import SQLAlchemyError 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlalchemy import exc, func
 from fastapi import HTTPException, status
-from app.models.model_role import Role
+from app.models.model_role import Role, BUILTIN_ROLE_NAMES
 from app.models.model_user import User
+from app.models.model_user_role import UserRole
 from app.schemas.schema_roles import RoleCreate, RoleUpdate
 from typing import Optional, List
-from sqlalchemy import exc
+
+
+# ===================== Helpers hierarchie =====================
+
+def get_user_max_hierarchy(db: Session, user_id: int) -> int:
+    """Retourne le niveau hierarchique max parmi les roles de l'utilisateur."""
+    result = db.query(func.max(Role.hierarchy_level)).join(
+        UserRole, UserRole.role_id == Role.id
+    ).filter(UserRole.user_id == user_id).scalar()
+    return result or 0
+
+
+def count_users_with_role(db: Session, role_name: str) -> int:
+    """Compte le nombre d'utilisateurs actifs ayant un role donne."""
+    return db.query(User).join(User.roles).filter(
+        Role.name == role_name,
+        User.is_deleted == False,
+        User.is_active == True
+    ).count()
 
 
 
@@ -24,7 +44,7 @@ def create_role(db: Session, role: RoleCreate) -> Optional[Role]:
         Optional[Role]: Le rôle créé ou None en cas d'erreur.
     """
     try:
-        db_role = Role(name=role.name)
+        db_role = Role(name=role.name, hierarchy_level=role.hierarchy_level or 20)
         db.add(db_role)
         db.commit()
         db.refresh(db_role)

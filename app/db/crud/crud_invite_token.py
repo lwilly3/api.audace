@@ -1,3 +1,4 @@
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import uuid
@@ -37,3 +38,18 @@ def mark_token_used(db: Session, token: str) -> None:
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Token déjà utilisé")
     invite.used = True
     db.commit()
+
+
+def get_all_invite_tokens(db: Session, token_status: Optional[str] = None) -> List[InviteToken]:
+    """
+    Liste tous les tokens d'invitation avec filtre optionnel.
+    token_status: 'pending' | 'used' | 'expired' | None (tous)
+    """
+    query = db.query(InviteToken).order_by(InviteToken.created_at.desc())
+    if token_status == 'pending':
+        query = query.filter(InviteToken.used == False, InviteToken.expires_at > datetime.utcnow())
+    elif token_status == 'used':
+        query = query.filter(InviteToken.used == True)
+    elif token_status == 'expired':
+        query = query.filter(InviteToken.used == False, InviteToken.expires_at <= datetime.utcnow())
+    return query.all()

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class InviteRequest(BaseModel):
@@ -22,5 +22,14 @@ class SignupWithInviteRequest(BaseModel):
     family_name: str
     phone_number: Optional[str] = None
     profilePicture: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+class InviteTokenListItem(BaseModel):
+    token: str
+    email: str
+    expires_at: datetime
+    used: bool
+    created_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}

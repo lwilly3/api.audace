@@ -4,13 +4,13 @@ from typing import Optional, List
 
 class RoleBase(BaseModel):
     name: str
+    hierarchy_level: int = 20
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RoleCreate(RoleBase):
-    
-    pass
+    hierarchy_level: Optional[int] = 20
 
     model_config = ConfigDict(from_attributes=True)
 

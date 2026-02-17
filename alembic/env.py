@@ -9,10 +9,12 @@ from alembic import context
 # from app.db.database import metadata
 
 from app.config.config import settings
-from app.models.model_user import Base as Base__models 
+from app.db.database import Base
+# Importer tous les modèles pour qu'Alembic les détecte
+import app.models  # noqa: F401
 
 # Charger les modèles de votre projet
-target_metadata =  Base__models.metadata
+target_metadata = Base.metadata
 # from app.models.table_models import Base as TableBase
 # from app.models.mediaLib_models import Base as MediaLibBase
 # target_metadata = [

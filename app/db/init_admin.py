@@ -1,18 +1,19 @@
 """
 Script d'initialisation de l'utilisateur administrateur par défaut.
 
-Ce module crée automatiquement un utilisateur admin avec toutes les permissions
-si aucun utilisateur admin n'existe dans la base de données.
+Ce module crée automatiquement les rôles système et un utilisateur super_admin
+avec toutes les permissions si aucun n'existe dans la base de données.
 
 Utilisé au démarrage de l'application pour garantir qu'il y a toujours
-au moins un admin pouvant accéder au système.
+au moins un super_admin pouvant accéder au système.
 """
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.model_user import User
-from app.models.model_role import Role
+from app.models.model_role import Role, BUILTIN_ROLES
 from app.models.model_user_permissions import UserPermissions
+from app.models.model_RoleTemplate import RoleTemplate
 from app.utils.utils import hash as hash_password
 from app.db.crud.crud_permissions import initialize_user_permissions
 import logging
@@ -21,112 +22,175 @@ import os
 logger = logging.getLogger("init_admin")
 
 
+def create_builtin_roles(db: Session) -> None:
+    """
+    Crée les rôles système s'ils n'existent pas encore.
+    Met à jour le hierarchy_level des rôles existants.
+    """
+    for role_def in BUILTIN_ROLES:
+        existing = db.query(Role).filter(Role.name == role_def["name"]).first()
+        if not existing:
+            new_role = Role(name=role_def["name"], hierarchy_level=role_def["hierarchy_level"])
+            db.add(new_role)
+            logger.info(f"  Role '{role_def['name']}' cree (level {role_def['hierarchy_level']})")
+        else:
+            if existing.hierarchy_level != role_def["hierarchy_level"]:
+                existing.hierarchy_level = role_def["hierarchy_level"]
+                logger.info(f"  Role '{role_def['name']}' mis a jour (level {role_def['hierarchy_level']})")
+    db.commit()
+
+
+# Permissions par defaut pour chaque role builtin
+ALL_PERMISSIONS_TRUE = {
+    "can_acces_showplan_broadcast_section": True, "can_acces_showplan_section": True,
+    "can_create_showplan": True, "can_edit_showplan": True, "can_archive_showplan": True,
+    "can_archiveStatusChange_showplan": True, "can_delete_showplan": True, "can_destroy_showplan": True,
+    "can_changestatus_showplan": True, "can_changestatus_owned_showplan": True,
+    "can_changestatus_archived_showplan": True, "can_setOnline_showplan": True, "can_viewAll_showplan": True,
+    "can_acces_users_section": True, "can_view_users": True, "can_edit_users": True,
+    "can_desable_users": True, "can_delete_users": True,
+    "can_manage_roles": True, "can_assign_roles": True,
+    "can_acces_guests_section": True, "can_view_guests": True, "can_edit_guests": True, "can_delete_guests": True,
+    "can_acces_presenters_section": True, "can_view_presenters": True, "can_create_presenters": True,
+    "can_edit_presenters": True, "can_delete_presenters": True,
+    "can_acces_emissions_section": True, "can_view_emissions": True, "can_create_emissions": True,
+    "can_edit_emissions": True, "can_delete_emissions": True, "can_manage_emissions": True,
+    "can_view_notifications": True, "can_manage_notifications": True,
+    "can_view_audit_logs": True, "can_view_login_history": True, "can_manage_settings": True,
+    "can_view_messages": True, "can_send_messages": True, "can_delete_messages": True,
+    "can_view_files": True, "can_upload_files": True, "can_delete_files": True,
+    "can_view_tasks": True, "can_create_tasks": True, "can_edit_tasks": True,
+    "can_delete_tasks": True, "can_assign_tasks": True,
+    "can_view_archives": True, "can_destroy_archives": True, "can_restore_archives": True, "can_delete_archives": True,
+    "quotes_view": True, "quotes_create": True, "quotes_edit": True, "quotes_delete": True,
+    "quotes_publish": True, "stream_transcription_view": True, "stream_transcription_create": True,
+    "quotes_capture_live": True,
+    "inventory_view": True, "inventory_create": True, "inventory_edit": True,
+    "inventory_delete": True, "inventory_manage": True,
+    "inventory_movement_view": True, "inventory_movement_create": True,
+    "inventory_movement_edit": True, "inventory_movement_delete": True,
+    "inventory_category_view": True, "inventory_category_create": True,
+    "inventory_category_edit": True, "inventory_category_delete": True,
+    "inventory_location_view": True, "inventory_location_manage": True,
+}
+
+# Admin = tout sauf gestion super_admin (pour l'instant identique)
+ADMIN_PERMISSIONS = {**ALL_PERMISSIONS_TRUE}
+
+# Invite = aucune permission
+INVITE_PERMISSIONS = {k: False for k in ALL_PERMISSIONS_TRUE}
+
+# Public = permissions de base (voir son profil, notifications)
+PUBLIC_PERMISSIONS = {**INVITE_PERMISSIONS, "can_view_notifications": True}
+
+BUILTIN_TEMPLATES = {
+    "super_admin": {"description": "Toutes les permissions (super administrateur)", "permissions": ALL_PERMISSIONS_TRUE},
+    "Admin": {"description": "Permissions administrateur", "permissions": ADMIN_PERMISSIONS},
+    "public": {"description": "Permissions de base", "permissions": PUBLIC_PERMISSIONS},
+    "invite": {"description": "Aucune permission (utilisateur invite)", "permissions": INVITE_PERMISSIONS},
+}
+
+
+def create_builtin_templates(db: Session) -> None:
+    """
+    Cree les templates de permissions systeme s'ils n'existent pas encore.
+    """
+    for name, config in BUILTIN_TEMPLATES.items():
+        existing = db.query(RoleTemplate).filter(RoleTemplate.name == name).first()
+        if not existing:
+            template = RoleTemplate(
+                name=name,
+                description=config["description"],
+                permissions=config["permissions"]
+            )
+            db.add(template)
+            logger.info(f"  Template '{name}' cree")
+    db.commit()
+
+
 def create_default_admin(db: Session) -> None:
     """
-    Crée un utilisateur administrateur par défaut si aucun admin n'existe.
-    
-    Vérifie d'abord s'il existe au moins un utilisateur avec le rôle "Admin".
-    Si aucun admin n'existe, crée un utilisateur admin avec :
-    - Username: admin
-    - Password: configurable via env (défaut: Admin@2024!)
-    - Email: configurable via env (défaut: admin@audace.local)
-    - Toutes les permissions activées
-    
-    Args:
-        db: Session de base de données SQLAlchemy
-        
-    Note:
-        Les credentials par défaut doivent être changés immédiatement après
-        la première connexion en production !
+    Crée les rôles système et un utilisateur super_admin par défaut si aucun n'existe.
     """
     try:
         logger.info("=" * 60)
-        logger.info("Initialisation de l'utilisateur administrateur par défaut")
+        logger.info("Initialisation des roles systeme et super administrateur")
         logger.info("=" * 60)
-        
-        # Vérifier si le rôle Admin existe
-        logger.info("Étape 1/5: Vérification du rôle 'Admin'...")
+
+        # Etape 1: Creer les roles systeme
+        logger.info("Etape 1/5: Creation des roles systeme...")
+        create_builtin_roles(db)
+
+        # Etape 1b: Creer les templates de permissions systeme
+        logger.info("Etape 1b/5: Creation des templates de permissions...")
+        create_builtin_templates(db)
+
+        # Recuperer le role super_admin
+        super_admin_role = db.query(Role).filter(Role.name == "super_admin").first()
+        # Aussi s'assurer que le role Admin existe (compatibilite)
         admin_role = db.query(Role).filter(Role.name == "Admin").first()
-        
-        if not admin_role:
-            logger.warning("⚠️  Le rôle 'Admin' n'existe pas. Création du rôle Admin...")
-            admin_role = Role(name="Admin")
-            db.add(admin_role)
-            db.commit()
-            db.refresh(admin_role)
-            logger.info("✅ Rôle 'Admin' créé avec succès (ID: {})".format(admin_role.id))
-        else:
-            logger.info(f"✅ Rôle 'Admin' trouvé (ID: {admin_role.id})")
-        
-        # Vérifier s'il existe au moins un utilisateur avec le rôle Admin
-        logger.info("Étape 2/5: Recherche d'utilisateurs admin existants...")
+
+        if not super_admin_role:
+            logger.error("Le role 'super_admin' n'a pas pu etre cree!")
+            return
+
+        # Verifier s'il existe au moins un utilisateur avec le role super_admin ou Admin
+        logger.info("Etape 2/5: Recherche d'utilisateurs admin existants...")
         admin_users = db.query(User).join(User.roles).filter(
-            Role.name == "Admin",
+            Role.name.in_(["super_admin", "Admin"]),
             User.is_deleted == False
         ).all()
-        
+
         if admin_users:
-            logger.info(f"✅ {len(admin_users)} utilisateur(s) admin trouvé(s):")
+            logger.info(f"{len(admin_users)} utilisateur(s) admin trouve(s):")
             for admin in admin_users:
-                logger.info(f"   - {admin.username} (ID: {admin.id}, Email: {admin.email})")
-            logger.info("Pas besoin de créer un admin par défaut.")
+                role_names = [r.name for r in admin.roles]
+                logger.info(f"   - {admin.username} (ID: {admin.id}, Roles: {role_names})")
+                # Promouvoir les anciens "Admin" en super_admin si pas deja fait
+                if super_admin_role not in admin.roles and admin_role in admin.roles:
+                    admin.roles.append(super_admin_role)
+                    logger.info(f"   -> Promu en super_admin")
+            db.commit()
             logger.info("=" * 60)
             return
         
-        # Aucun admin trouvé, créer l'utilisateur admin par défaut
-        logger.warning("⚠️  Aucun utilisateur admin trouvé dans la base de données!")
-        logger.info("Étape 3/5: Création de l'admin par défaut...")
-        
-        # Récupérer les credentials depuis les variables d'environnement
-        logger.info("🔍 Lecture des variables d'environnement...")
+        # Aucun admin trouve, creer l'utilisateur admin par defaut
+        logger.warning("Aucun utilisateur admin trouve dans la base de donnees!")
+        logger.info("Etape 3/5: Creation de l'admin par defaut...")
+
+        # Recuperer les credentials depuis les variables d'environnement
         default_username = os.getenv("ADMIN_USERNAME", "admin")
         default_password = os.getenv("ADMIN_PASSWORD", "Admin@2024!")
         default_email = os.getenv("ADMIN_EMAIL", "admin@audace.local")
         default_name = os.getenv("ADMIN_NAME", "Administrateur")
         default_family_name = os.getenv("ADMIN_FAMILY_NAME", "Système")
-        
-        # Debug : afficher si les variables viennent de l'environnement ou des valeurs par défaut
-        logger.info("📋 Variables d'environnement détectées:")
-        logger.info(f"   - ADMIN_USERNAME: {'✅ défini' if os.getenv('ADMIN_USERNAME') else '❌ non défini (valeur par défaut)'}")
-        logger.info(f"   - ADMIN_PASSWORD: {'✅ défini' if os.getenv('ADMIN_PASSWORD') else '❌ non défini (valeur par défaut)'}")
-        logger.info(f"   - ADMIN_EMAIL: {'✅ défini' if os.getenv('ADMIN_EMAIL') else '❌ non défini (valeur par défaut)'}")
-        logger.info(f"   - ADMIN_NAME: {'✅ défini' if os.getenv('ADMIN_NAME') else '❌ non défini (valeur par défaut)'}")
-        logger.info(f"   - ADMIN_FAMILY_NAME: {'✅ défini' if os.getenv('ADMIN_FAMILY_NAME') else '❌ non défini (valeur par défaut)'}")
-        
-        logger.info(f"Credentials qui seront utilisés:")
-        logger.info(f"   - Username: {default_username}")
-        logger.info(f"   - Email: {default_email}")
-        logger.info(f"   - Name: {default_name} {default_family_name}")
-        
-        # Vérifier si l'username ou l'email existe déjà
+
+        logger.info(f"Credentials: Username={default_username}, Email={default_email}")
+
+        # Verifier si l'username ou l'email existe deja
         existing_user = db.query(User).filter(
             (User.username == default_username) | (User.email == default_email)
         ).first()
-        
+
         if existing_user:
-            logger.warning(f"⚠️  Un utilisateur avec le username '{default_username}' ou l'email '{default_email}' existe déjà!")
-            logger.info(f"Utilisateur trouvé: {existing_user.username} (ID: {existing_user.id}, Email: {existing_user.email})")
-            
-            # Ajouter le rôle Admin à cet utilisateur s'il ne l'a pas
-            if admin_role not in existing_user.roles:
-                logger.info("Ajout du rôle Admin à cet utilisateur existant...")
+            logger.warning(f"Utilisateur '{existing_user.username}' existe deja!")
+
+            # Ajouter le role super_admin a cet utilisateur
+            if super_admin_role not in existing_user.roles:
+                existing_user.roles.append(super_admin_role)
+            if admin_role and admin_role not in existing_user.roles:
                 existing_user.roles.append(admin_role)
-            else:
-                logger.info("Cet utilisateur a déjà le rôle Admin")
-            
-            # Mettre à jour les permissions pour avoir tous les droits
-            logger.info("Étape 4/5: Mise à jour des permissions...")
+
             update_all_permissions_to_true(db, existing_user.id)
-            
             db.commit()
-            logger.info(f"✅ L'utilisateur '{existing_user.username}' a maintenant tous les droits Admin")
+            logger.info(f"L'utilisateur '{existing_user.username}' a maintenant tous les droits super_admin")
             logger.info("=" * 60)
             return
-        
-        # Créer le nouvel utilisateur admin (même approche que create_user)
-        logger.info("Création du nouvel utilisateur admin...")
+
+        # Creer le nouvel utilisateur admin
+        logger.info("Creation du nouvel utilisateur admin...")
         hashed_password = hash_password(default_password)
-        
+
         try:
             admin_user = User(
                 username=default_username,
@@ -136,47 +200,40 @@ def create_default_admin(db: Session) -> None:
                 password=hashed_password,
                 is_active=True
             )
-            
+
             db.add(admin_user)
             db.commit()
             db.refresh(admin_user)
-            logger.info(f"✅ Utilisateur créé avec ID: {admin_user.id}")
-            
-            # Initialiser les permissions (comme dans create_user)
-            logger.info("Initialisation des permissions...")
+            logger.info(f"Utilisateur cree avec ID: {admin_user.id}")
+
+            # Initialiser les permissions
             initialize_user_permissions(db, admin_user.id)
-            logger.info("✅ Permissions initialisées")
-            
-            # Assigner le rôle Admin
-            logger.info("Assignation du rôle Admin...")
-            admin_user.roles.append(admin_role)
+
+            # Assigner les roles super_admin + Admin
+            admin_user.roles.append(super_admin_role)
+            if admin_role:
+                admin_user.roles.append(admin_role)
             db.commit()
-            logger.info("✅ Rôle Admin assigné")
-            
-            # Mettre à jour toutes les permissions à True pour l'admin
-            logger.info("Activation de toutes les permissions admin...")
+            logger.info("Roles super_admin + Admin assignes")
+
+            # Mettre a jour toutes les permissions a True
             update_all_permissions_to_true(db, admin_user.id)
             db.commit()
-            
+
         except Exception as create_error:
             db.rollback()
-            logger.error(f"❌ Erreur lors de la création: {create_error}")
+            logger.error(f"Erreur lors de la creation: {create_error}")
             raise
-        
-        logger.info("")
+
         logger.info("=" * 60)
-        logger.info("✅ UTILISATEUR ADMIN CRÉÉ AVEC SUCCÈS!")
+        logger.info("UTILISATEUR SUPER ADMIN CREE AVEC SUCCES!")
         logger.info("=" * 60)
         logger.info(f"Username: {default_username}")
         logger.info(f"Password: {default_password}")
         logger.info(f"Email: {default_email}")
         logger.info(f"User ID: {admin_user.id}")
         logger.info("=" * 60)
-        logger.warning("⚠️  IMPORTANT: Changez le mot de passe par défaut dès la première connexion!")
-        
-        if default_password == "Admin@2024!":
-            logger.warning("⚠️  Mot de passe par défaut utilisé. Définissez ADMIN_PASSWORD dans les variables d'environnement pour plus de sécurité.")
-        
+        logger.warning("IMPORTANT: Changez le mot de passe par defaut!")
         logger.info("=" * 60)
         
     except SQLAlchemyError as e:

@@ -9,6 +9,7 @@ from app.models import Role, UserRole, Permission,RolePermission
 from app.utils import utils
 from core.auth import oauth2
 from fastapi import Response
+from app.db.crud.crud_roles import get_user_max_hierarchy, count_users_with_role
 
 
 from app.db.crud.crud_users import (
@@ -25,7 +26,6 @@ from app.db.crud.crud_users import (
 )
 from app.db.database import get_db
 from app.db.crud.crud_audit_logs import log_action
-# from app.db.init_db_rolePermissions import create_default_role_and_permission
 
 router = APIRouter(
         prefix="/users",
@@ -219,16 +219,36 @@ def update_user_info(id: int, user: UserInDB, db: Session = Depends(get_db), cur
     return updated_user
 
 @router.delete("/del/{id}")
-def delete_user_info(id: int, db: Session = Depends(get_db)):
+def delete_user_info(id: int, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
     """
-    Supprimer un utilisateur (soft delete).
+    Supprimer un utilisateur (soft delete) avec protection hierarchique.
     """
+    # Protection hierarchique : verifier les niveaux
+    actor_level = get_user_max_hierarchy(db, current_user.id)
+    target_level = get_user_max_hierarchy(db, id)
+
+    # Impossible de supprimer un utilisateur de niveau >= au sien
+    if target_level >= actor_level:
+        raise HTTPException(
+            status_code=403,
+            detail="Vous ne pouvez pas supprimer un utilisateur de niveau egal ou superieur au votre"
+        )
+
+    # Protection dernier super_admin
+    if target_level >= 100:
+        sa_count = count_users_with_role(db, "super_admin")
+        if sa_count <= 1:
+            raise HTTPException(
+                status_code=403,
+                detail="Impossible de supprimer le dernier super administrateur"
+            )
+
     if not delete_user(db, id):
         return JSONResponse(
             status_code=404,
             content={"detail": "User non trouvé"}
         )
-    log_action(db, id, "soft_delete", "users", id)
+    log_action(db, current_user.id, "soft_delete", "users", id)
     return JSONResponse(
             status_code=204,
             content={"detail": "User soft-deleted successfully"}

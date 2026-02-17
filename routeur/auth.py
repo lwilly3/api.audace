@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Response, status, Depends, APIRouter, Query
+from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 # import app.database as database, app.schemas as schemas, app.table_models as table_models, app.utils as utils, app.oauth2 as oauth2
@@ -17,8 +18,8 @@ from app.db.crud.crud_auth import revoke_token
 from pydantic import BaseModel, EmailStr
 from app.db.crud.crud_users import create_user
 from routeur.users_route import assign_default_role_to_user
-from app.schemas.schema_invite import InviteRequest, InviteResponse, ValidateInviteResponse, SignupWithInviteRequest
-from app.db.crud.crud_invite_token import create_invite_token, get_invite_token, mark_token_used
+from app.schemas.schema_invite import InviteRequest, InviteResponse, ValidateInviteResponse, SignupWithInviteRequest, InviteTokenListItem
+from app.db.crud.crud_invite_token import create_invite_token, get_invite_token, mark_token_used, get_all_invite_tokens
 from app.models.model_user_permissions import UserPermissions
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
@@ -171,6 +172,20 @@ def signup_with_invite(request: SignupWithInviteRequest, db: Session = Depends(g
     mark_token_used(db, request.token)
     log_action(db, new_user.id, "signup_with_invite", "users", new_user.id)
     return new_user
+
+
+# Liste des invitations
+@router.get('/invitations', response_model=List[InviteTokenListItem], status_code=status.HTTP_200_OK)
+def list_invitations(
+    status_filter: Optional[str] = Query(None, alias="status", regex="^(pending|used|expired)$"),
+    db: Session = Depends(get_db),
+    current_user: model_user.User = Depends(oauth2.get_current_user)
+):
+    """Liste toutes les invitations avec filtre optionnel par statut (pending, used, expired)"""
+    perms = db.query(UserPermissions).filter(UserPermissions.user_id == current_user.id).first()
+    if not perms or not perms.can_acces_users_section:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission requise")
+    return get_all_invite_tokens(db, token_status=status_filter)
 
 
 class ResetTokenRequest(BaseModel):

@@ -3,6 +3,18 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base #metadata
+
+# Noms des roles systeme (ne peuvent pas etre supprimes ni renommes)
+BUILTIN_ROLE_NAMES = ['super_admin', 'Admin', 'public', 'invite']
+
+# Hierarchie par defaut des roles builtin
+BUILTIN_ROLES = [
+    {"name": "super_admin", "hierarchy_level": 100},
+    {"name": "Admin", "hierarchy_level": 50},
+    {"name": "public", "hierarchy_level": 10},
+    {"name": "invite", "hierarchy_level": 0},
+]
+
 # -------------------------
 # Table pour les Rôles
 # -------------------------
@@ -11,6 +23,7 @@ class Role(Base):
 
     id = Column(Integer, primary_key=True)  # Identifiant unique pour chaque rôle
     name = Column(String, nullable=False, unique=True)  # Nom unique du rôle
+    hierarchy_level = Column(Integer, nullable=False, default=20)  # Niveau hierarchique
 
     # Relations
     # permissions = relationship("RolePermission", back_populates="role")  # Permissions associées via RolePermission
