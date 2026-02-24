@@ -159,6 +159,13 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "inventory_manage_settings": permissions.inventory_manage_settings,
     "inventory_manage_locations": permissions.inventory_manage_locations,
 
+    # Permissions pour les abonnements/services (Inventaire)
+    "inventory_subscriptions_view": permissions.inventory_subscriptions_view,
+    "inventory_subscriptions_create": permissions.inventory_subscriptions_create,
+    "inventory_subscriptions_edit": permissions.inventory_subscriptions_edit,
+    "inventory_subscriptions_delete": permissions.inventory_subscriptions_delete,
+    "inventory_subscriptions_manage": permissions.inventory_subscriptions_manage,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
@@ -275,7 +282,14 @@ def initialize_user_permissions(db: Session, user_id: int):
     quotes_publish=False,
     stream_transcription_view=False,
     stream_transcription_create=False,
-    quotes_capture_live=False
+    quotes_capture_live=False,
+
+    # Abonnements/services (Inventaire)
+    inventory_subscriptions_view=False,
+    inventory_subscriptions_create=False,
+    inventory_subscriptions_edit=False,
+    inventory_subscriptions_delete=False,
+    inventory_subscriptions_manage=False
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -528,7 +542,14 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'inventory_maintenance_manage',
     'inventory_manage_documents',
     'inventory_manage_settings',
-    'inventory_manage_locations'
+    'inventory_manage_locations',
+
+    # Permissions pour les abonnements/services (Inventaire)
+    'inventory_subscriptions_view',
+    'inventory_subscriptions_create',
+    'inventory_subscriptions_edit',
+    'inventory_subscriptions_delete',
+    'inventory_subscriptions_manage'
 }
 
         # Vérifier les permissions fournies

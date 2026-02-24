@@ -156,6 +156,13 @@ class UserPermissionsSchema(BaseModel):
     inventory_manage_settings: Optional[bool] = False  # Configurer les listes (catégories, statuts...)
     inventory_manage_locations: Optional[bool] = False  # Gérer les sites et locaux
 
+    # Permissions pour les abonnements/services (Inventaire)
+    inventory_subscriptions_view: Optional[bool] = False  # Voir les services/abonnements
+    inventory_subscriptions_create: Optional[bool] = False  # Créer des abonnements
+    inventory_subscriptions_edit: Optional[bool] = False  # Modifier des abonnements
+    inventory_subscriptions_delete: Optional[bool] = False  # Supprimer des abonnements
+    inventory_subscriptions_manage: Optional[bool] = False  # Gestion complète des services
+
     model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour créer un modèle de rôle

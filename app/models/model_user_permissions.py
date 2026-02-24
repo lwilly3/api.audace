@@ -137,6 +137,13 @@ class UserPermissions(Base):
     inventory_manage_settings = Column(Boolean, default=False, nullable=False)  # Configurer les listes (catégories, statuts...)
     inventory_manage_locations = Column(Boolean, default=False, nullable=False)  # Gérer les sites et locaux
 
+    # Permissions pour les abonnements/services (Inventaire)
+    inventory_subscriptions_view = Column(Boolean, default=False, nullable=False)  # Voir les services/abonnements
+    inventory_subscriptions_create = Column(Boolean, default=False, nullable=False)  # Créer des abonnements
+    inventory_subscriptions_edit = Column(Boolean, default=False, nullable=False)  # Modifier des abonnements
+    inventory_subscriptions_delete = Column(Boolean, default=False, nullable=False)  # Supprimer des abonnements
+    inventory_subscriptions_manage = Column(Boolean, default=False, nullable=False)  # Gestion complète des services
+
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
 
