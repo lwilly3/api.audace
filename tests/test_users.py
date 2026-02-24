@@ -1,15 +1,21 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.orm import Session
 import uuid
+
+from app.models import UserPermissions
+from app.models.model_role import Role
+from app.models.model_user_role import UserRole
+
 
 # Marque le test comme asynchrone (nécessite pytest-asyncio)
 @pytest.mark.asyncio
-async def test_create_get_update_delete_user(client: AsyncClient):
+async def test_create_get_update_delete_user(client: AsyncClient, db: Session):
     # Générer un email unique pour éviter les conflits dans la base de données
     email = f"user_{uuid.uuid4().hex}@example.com"
     password = "TestPass123!"
 
-    # ➤ 1. Inscription de l'utilisateur
+    # ➤ 1. Inscription de l'utilisateur cible
     signup_resp = await client.post(
         "/auth/signup",
         json={"email": email, "password": password}
@@ -51,14 +57,46 @@ async def test_create_get_update_delete_user(client: AsyncClient):
     # Vérifie que le nom a bien été mis à jour
     assert update_resp.json().get("name") == new_name
 
-    # ➤ 5. Suppression de l'utilisateur
-    delete_resp = await client.delete(f"/users/del/{user_id}", headers=headers)
+    # ➤ 5. Créer un admin avec hierarchie supérieure pour pouvoir supprimer
+    admin_email = f"admin_{uuid.uuid4().hex}@example.com"
+    admin_signup = await client.post(
+        "/auth/signup",
+        json={"email": admin_email, "password": password}
+    )
+    assert admin_signup.status_code == 201
+    admin_id = admin_signup.json().get("id")
+
+    # Donner un rôle avec hierarchy_level élevé à l'admin via DB
+    admin_role = Role(name=f"test_admin_{uuid.uuid4().hex[:6]}", hierarchy_level=100)
+    db.add(admin_role)
+    db.commit()
+    db.refresh(admin_role)
+
+    db.add(UserRole(user_id=admin_id, role_id=admin_role.id))
+    db.commit()
+
+    # Connexion de l'admin
+    admin_login = await client.post(
+        "/auth/login",
+        data={"username": admin_email, "password": password}
+    )
+    assert admin_login.status_code == 200
+    admin_token = admin_login.json().get("access_token")
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # ➤ 6. Suppression de l'utilisateur par l'admin
+    delete_resp = await client.delete(f"/users/del/{user_id}", headers=admin_headers)
     # Vérifie que la suppression a renvoyé un code 204 (No Content)
     assert delete_resp.status_code == 204
-    # Vérifie que la réponse est vide (comme attendu pour une suppression 204)
+    # Vérifie que la réponse contient le message attendu
     assert delete_resp.json() == {"detail": "User soft-deleted successfully"}
 
-    # ➤ 6. Vérification que l'utilisateur n'existe plus
-    get_after_delete = await client.get(f"/users/users/{user_id}", headers=headers)
+    # ➤ 7. Vérification que l'utilisateur n'existe plus
+    get_after_delete = await client.get(f"/users/users/{user_id}", headers=admin_headers)
     # On s'attend maintenant à un code 404 (utilisateur introuvable)
     assert get_after_delete.status_code == 404
+
+    # Nettoyage : supprimer le rôle et l'admin de test
+    db.query(UserRole).filter(UserRole.user_id == admin_id).delete()
+    db.query(Role).filter(Role.id == admin_role.id).delete()
+    db.commit()
