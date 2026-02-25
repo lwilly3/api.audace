@@ -171,9 +171,11 @@ def get_service_info(service_type: str, service_name: str) -> dict:
 
 
 def get_bills(count: int = 20) -> list[dict]:
-    """Recupere les dernieres factures OVH."""
+    """Recupere les dernieres factures OVH, triees par date decroissante."""
     client = get_ovh_client()
     bill_ids = _ovh_call(client, "GET", "/me/bill")
+    # Trier les IDs par ordre decroissant pour prioriser les plus recents
+    bill_ids = sorted(bill_ids, reverse=True)
     # Limiter le nombre de factures recuperees
     bill_ids = bill_ids[:count] if len(bill_ids) > count else bill_ids
     bills = []
@@ -184,6 +186,8 @@ def get_bills(count: int = 20) -> list[dict]:
         except HTTPException:
             logger.warning(f"Impossible de recuperer la facture {bill_id}")
             continue
+    # Tri final par date decroissante (plus recente en premier)
+    bills.sort(key=lambda b: b.get("date", ""), reverse=True)
     return bills
 
 
