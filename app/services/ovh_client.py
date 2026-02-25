@@ -47,11 +47,15 @@ def get_ovh_client() -> ovh.Client:
         )
 
 
-def _ovh_call(client: ovh.Client, method: str, path: str):
-    """Wrapper pour les appels OVH avec gestion d'erreurs."""
+def _ovh_call(client: ovh.Client, method: str, path: str, **kwargs):
+    """Wrapper pour les appels OVH avec gestion d'erreurs.
+    
+    Les kwargs sont passes directement au SDK OVH comme parametres de requete.
+    Ex: _ovh_call(client, "GET", "/vps/xxx/monitoring", period="lastday", type="cpu:used")
+    """
     try:
         if method == "GET":
-            return client.get(path)
+            return client.get(path, **kwargs)
         raise ValueError(f"Methode non supportee: {method}")
     except ovh.exceptions.NotCredential:
         raise HTTPException(
@@ -320,6 +324,8 @@ def get_vps_monitoring(vps_name: str, period: str = "lastday") -> dict:
     - cpu, mem, net: donnees de monitoring avec timestamps et valeurs
     - ips: liste des IPs du VPS
     - model: infos du modele VPS
+    - monitoringAvailable: boolean indiquant si le monitoring est supporte
+    - monitoringError: message d'erreur si monitoring non disponible
     """
     client = get_ovh_client()
     result = {
@@ -331,31 +337,51 @@ def get_vps_monitoring(vps_name: str, period: str = "lastday") -> dict:
         "netTx": None,
         "ips": [],
         "model": None,
+        "monitoringAvailable": True,
+        "monitoringError": None,
     }
+
+    monitoring_errors = []
 
     # CPU
     try:
-        result["cpu"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=cpu:used")
-    except HTTPException:
-        logger.warning(f"Monitoring CPU non disponible pour {vps_name}")
+        result["cpu"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring",
+                                   period=period, type="cpu:used")
+    except HTTPException as e:
+        monitoring_errors.append(f"CPU: {e.detail}")
+        logger.warning(f"Monitoring CPU non disponible pour {vps_name}: {e.detail}")
 
     # Memoire
     try:
-        result["mem"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=mem:used")
-    except HTTPException:
-        logger.warning(f"Monitoring memoire non disponible pour {vps_name}")
+        result["mem"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring",
+                                   period=period, type="mem:used")
+    except HTTPException as e:
+        monitoring_errors.append(f"MEM: {e.detail}")
+        logger.warning(f"Monitoring memoire non disponible pour {vps_name}: {e.detail}")
 
     # Reseau entrant
     try:
-        result["netRx"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=net:rx")
-    except HTTPException:
-        logger.warning(f"Monitoring reseau RX non disponible pour {vps_name}")
+        result["netRx"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring",
+                                     period=period, type="net:rx")
+    except HTTPException as e:
+        monitoring_errors.append(f"NET RX: {e.detail}")
+        logger.warning(f"Monitoring reseau RX non disponible pour {vps_name}: {e.detail}")
 
     # Reseau sortant
     try:
-        result["netTx"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=net:tx")
-    except HTTPException:
-        logger.warning(f"Monitoring reseau TX non disponible pour {vps_name}")
+        result["netTx"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring",
+                                     period=period, type="net:tx")
+    except HTTPException as e:
+        monitoring_errors.append(f"NET TX: {e.detail}")
+        logger.warning(f"Monitoring reseau TX non disponible pour {vps_name}: {e.detail}")
+
+    # Si aucune metrique n'est disponible, marquer comme non supporte
+    if result["cpu"] is None and result["mem"] is None and result["netRx"] is None and result["netTx"] is None:
+        result["monitoringAvailable"] = False
+        result["monitoringError"] = (
+            "Le monitoring n'est pas disponible pour ce modèle de VPS. "
+            "L'API OVH ne supporte pas cette fonctionnalité pour tous les modèles."
+        )
 
     # IPs
     try:
