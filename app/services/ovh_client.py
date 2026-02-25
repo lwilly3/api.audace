@@ -90,7 +90,7 @@ def get_account_info() -> dict:
 
 
 def get_all_services() -> list[dict]:
-    """Recupere tous les services avec leurs infos (expiration, statut) en iterant par type."""
+    """Recupere tous les services avec leurs infos (expiration, statut, displayName) en iterant par type."""
     client = get_ovh_client()
     services = []
 
@@ -105,6 +105,15 @@ def get_all_services() -> list[dict]:
                     info = _ovh_call(client, "GET", f"{endpoint}/{name}/serviceInfos")
                     info["serviceType"] = svc_type
                     info["serviceName"] = str(name)
+
+                    # Recuperer le displayName depuis le detail du service
+                    try:
+                        detail = _ovh_call(client, "GET", f"{endpoint}/{name}")
+                        if isinstance(detail, dict) and detail.get("displayName"):
+                            info["displayName"] = detail["displayName"]
+                    except HTTPException:
+                        pass  # displayName est optionnel, on continue sans
+
                     services.append(info)
                 except HTTPException:
                     # Si un service specifique echoue, on ajoute un placeholder
