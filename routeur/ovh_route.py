@@ -14,6 +14,7 @@ from app.schemas.schema_ovh import (
     OvhServiceInfo,
     OvhBill,
     OvhDashboard,
+    OvhEmailProAccount,
 )
 from app.services.ovh_client import (
     get_account_info,
@@ -24,6 +25,7 @@ from app.services.ovh_client import (
     get_bills,
     get_bill_detail,
     get_services_dashboard,
+    get_email_pro_accounts,
     SERVICE_TYPE_MAP,
 )
 
@@ -205,6 +207,33 @@ def get_ovh_bills(
     result = get_bills(count=count)
     log_action(db, current_user.id, "read", "ovh_bills", 0)
     return result
+
+
+@router.get("/email-pro/{service_name}/accounts")
+def get_ovh_email_pro_accounts(
+    service_name: str,
+    db: Session = Depends(get_db),
+    current_user: model_user.User = Depends(oauth2.get_current_user)
+):
+    """
+    Recupere la liste des comptes Email Pro d'un service avec details.
+
+    Retourne pour chaque compte: email, displayName, expirationDate,
+    renewPeriod (monthly/yearly/none), deleteAtExpiration, quota, usage, state.
+    """
+    _check_ovh_permission(db, current_user.id, "ovh_view_services")
+    try:
+        result = get_email_pro_accounts(service_name)
+        log_action(db, current_user.id, "read", f"ovh_email_pro_accounts_{service_name}", 0)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la recuperation des comptes Email Pro {service_name}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erreur lors de la recuperation des comptes Email Pro: {str(e)}"
+        )
 
 
 @router.get("/billing/bills/{bill_id}", response_model=OvhBill)

@@ -88,6 +88,31 @@ class OvhExpiringService(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OvhEmailProAccount(BaseModel):
+    """Compte Email Pro individuel avec details de renouvellement."""
+    email: Optional[str] = None
+    displayName: Optional[str] = None
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    login: Optional[str] = None
+    domain: Optional[str] = None
+    configured: Optional[bool] = None
+    state: Optional[str] = None
+    expirationDate: Optional[str] = None
+    creationDate: Optional[str] = None
+    renewPeriod: Optional[str] = None
+    deleteAtExpiration: Optional[bool] = None
+    currentUsage: Optional[int] = None
+    quota: Optional[int] = None
+    id: Optional[int] = None
+    primaryEmailAddress: Optional[str] = None
+    lastLogonDate: Optional[str] = None
+    passwordLastUpdate: Optional[str] = None
+    spamDetected: Optional[bool] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class OvhDashboard(BaseModel):
     """Tableau de bord synthetique des services OVH."""
     total_services: int = 0

@@ -170,6 +170,32 @@ def get_service_info(service_type: str, service_name: str) -> dict:
     return _ovh_call(client, "GET", f"{endpoint}/{service_name}/serviceInfos")
 
 
+def get_email_pro_accounts(service_name: str) -> list[dict]:
+    """Recupere les comptes Email Pro d'un service avec details (expiration, renouvellement)."""
+    client = get_ovh_client()
+    endpoint = SERVICE_TYPE_MAP.get("email_pro")
+    if not endpoint:
+        raise HTTPException(status_code=500, detail="Type email_pro non configure")
+
+    account_emails = _ovh_call(client, "GET", f"{endpoint}/{service_name}/account")
+    if not isinstance(account_emails, list):
+        return []
+
+    accounts = []
+    for email in account_emails:
+        try:
+            detail = _ovh_call(client, "GET", f"{endpoint}/{service_name}/account/{email}")
+            detail["email"] = email
+            accounts.append(detail)
+        except HTTPException:
+            logger.warning(f"Impossible de recuperer le detail du compte email: {email}")
+            accounts.append({"email": email, "state": "unknown"})
+
+    # Trier par date d'expiration
+    accounts.sort(key=lambda a: a.get("expirationDate", "") or "", reverse=False)
+    return accounts
+
+
 def get_bills(count: int = 20) -> list[dict]:
     """Recupere les dernieres factures OVH, triees par date decroissante."""
     client = get_ovh_client()
