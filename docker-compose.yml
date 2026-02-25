@@ -59,10 +59,18 @@ services:
       - "traefik.http.services.audace-api-service.loadbalancer.server.port=8000"
       
       # Middlewares de sécurité
-      - "traefik.http.routers.audace-api-prod.middlewares=api-security,api-compress"
+      - "traefik.http.routers.audace-api-prod.middlewares=api-cors,api-security,api-compress"
       - "traefik.http.middlewares.api-compress.compress=true"
       
-      # Headers de sécurité
+      # CORS — middleware dédié (s'applique avant tout, y compris sur les erreurs)
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowOriginList=https://app.cloud.audace.ovh,https://app.radio.audace.ovh"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Authorization,Content-Type,Accept,Origin,X-Requested-With"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowCredentials=true"
+      - "traefik.http.middlewares.api-cors.headers.accessControlMaxAge=3600"
+      - "traefik.http.middlewares.api-cors.headers.addVaryHeader=true"
+      
+      # Headers de sécurité (séparé du CORS)
       - "traefik.http.middlewares.api-security.headers.sslredirect=true"
       - "traefik.http.middlewares.api-security.headers.stsSeconds=31536000"
       - "traefik.http.middlewares.api-security.headers.stsIncludeSubdomains=true"
@@ -72,13 +80,6 @@ services:
       - "traefik.http.middlewares.api-security.headers.browserXssFilter=true"
       - "traefik.http.middlewares.api-security.headers.referrerPolicy=strict-origin-when-cross-origin"
       - "traefik.http.middlewares.api-security.headers.customFrameOptionsValue=SAMEORIGIN"
-      
-      # CORS — origines autorisées
-      - "traefik.http.middlewares.api-security.headers.accessControlAllowOriginList=https://app.cloud.audace.ovh,https://app.radio.audace.ovh"
-      - "traefik.http.middlewares.api-security.headers.accessControlAllowMethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
-      - "traefik.http.middlewares.api-security.headers.accessControlAllowHeaders=Authorization,Content-Type,Accept,Origin,X-Requested-With"
-      - "traefik.http.middlewares.api-security.headers.accessControlAllowCredentials=true"
-      - "traefik.http.middlewares.api-security.headers.accessControlMaxAge=3600"
     environment:
       # Variables pour le code FastAPI (config.py)
       DATABASE_HOSTNAME: db

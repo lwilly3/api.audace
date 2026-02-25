@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional
 from sqlalchemy.orm import Session
@@ -25,6 +26,8 @@ from app.services.ovh_client import (
     get_services_dashboard,
     SERVICE_TYPE_MAP,
 )
+
+logger = logging.getLogger("hapson-api")
 
 
 router = APIRouter(
@@ -74,19 +77,28 @@ def get_ovh_account(
     return result
 
 
-@router.get("/services", response_model=list[OvhServiceSummary])
+@router.get("/services")
 def get_ovh_services(
     db: Session = Depends(get_db),
     current_user: model_user.User = Depends(oauth2.get_current_user)
 ):
     """Recupere la liste de tous les services OVH avec statut et echeances."""
     _check_ovh_permission(db, current_user.id, "ovh_view_services")
-    result = get_all_services()
-    log_action(db, current_user.id, "read", "ovh_services", 0)
-    return result
+    try:
+        result = get_all_services()
+        log_action(db, current_user.id, "read", "ovh_services", 0)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la recuperation des services OVH: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erreur lors de la recuperation des services OVH: {str(e)}"
+        )
 
 
-@router.get("/services/dashboard", response_model=OvhDashboard)
+@router.get("/services/dashboard")
 def get_ovh_dashboard(
     days: int = Query(default=30, ge=1, le=365, description="Nombre de jours pour l'alerte d'expiration"),
     db: Session = Depends(get_db),
@@ -100,9 +112,18 @@ def get_ovh_dashboard(
     de services actifs/suspendus.
     """
     _check_ovh_permission(db, current_user.id, "ovh_view_dashboard")
-    result = get_services_dashboard(days_threshold=days)
-    log_action(db, current_user.id, "read", "ovh_dashboard", 0)
-    return result
+    try:
+        result = get_services_dashboard(days_threshold=days)
+        log_action(db, current_user.id, "read", "ovh_dashboard", 0)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la construction du dashboard OVH: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erreur lors de la construction du dashboard OVH: {str(e)}"
+        )
 
 
 @router.get("/services/types")
