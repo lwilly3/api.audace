@@ -18,6 +18,10 @@ SERVICE_TYPE_MAP = {
     "cloud": "/cloud/project",
     "ip": "/ip",
     "alldom": "/allDom",
+    "email_pro": "/email/pro",
+    "email_exchange": "/email/exchange",
+    "email_mxplan": "/email/mxplan",
+    "email_domain": "/email/domain",
 }
 
 
