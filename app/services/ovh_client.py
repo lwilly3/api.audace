@@ -90,18 +90,34 @@ def get_account_info() -> dict:
 
 
 def get_all_services() -> list[dict]:
-    """Recupere tous les services avec leurs infos (expiration, statut)."""
+    """Recupere tous les services avec leurs infos (expiration, statut) en iterant par type."""
     client = get_ovh_client()
-    service_ids = _ovh_call(client, "GET", "/me/service")
     services = []
-    for service_id in service_ids:
+
+    for svc_type, endpoint in SERVICE_TYPE_MAP.items():
         try:
-            detail = _ovh_call(client, "GET", f"/me/service/{service_id}")
-            services.append(detail)
-        except HTTPException:
-            # Si un service specifique echoue, on continue avec les autres
-            logger.warning(f"Impossible de recuperer le service {service_id}")
+            names = _ovh_call(client, "GET", endpoint)
+            if not isinstance(names, list):
+                continue
+            for name in names:
+                try:
+                    # Recuperer les infos de service (expiration, renouvellement, etc.)
+                    info = _ovh_call(client, "GET", f"{endpoint}/{name}/serviceInfos")
+                    info["serviceType"] = svc_type
+                    info["serviceName"] = str(name)
+                    services.append(info)
+                except HTTPException:
+                    # Si un service specifique echoue, on ajoute un placeholder
+                    logger.warning(f"Impossible de recuperer les infos du service {svc_type}/{name}")
+                    services.append({
+                        "serviceType": svc_type,
+                        "serviceName": str(name),
+                        "status": "unknown",
+                    })
+        except HTTPException as e:
+            logger.warning(f"Impossible de lister les services de type {svc_type}: {e.detail}")
             continue
+
     return services
 
 
@@ -191,19 +207,20 @@ def get_services_dashboard(days_threshold: int = 30) -> dict:
     }
 
     for svc in all_services:
-        # Compter par type
-        route = svc.get("route", {})
-        svc_type = route.get("path", "unknown") if isinstance(route, dict) else "unknown"
+        # Compter par type (utilise serviceType injecte par get_all_services)
+        svc_type = svc.get("serviceType", "unknown")
         dashboard["services_by_type"][svc_type] = dashboard["services_by_type"].get(svc_type, 0) + 1
 
         # Analyser le statut
         svc_status = svc.get("status", "unknown")
+        svc_name = svc.get("serviceName", svc.get("domain", "N/A"))
         if svc_status == "ok":
             dashboard["active_count"] += 1
         elif svc_status in ("expired", "unPaid"):
             dashboard["expired"].append({
                 "serviceId": svc.get("serviceId"),
-                "resource": svc.get("resource", {}).get("name", "N/A") if isinstance(svc.get("resource"), dict) else "N/A",
+                "resource": svc_name,
+                "serviceType": svc_type,
                 "status": svc_status,
                 "expiration": svc.get("expiration"),
             })
@@ -218,7 +235,8 @@ def get_services_dashboard(days_threshold: int = 30) -> dict:
                 if now < exp_date <= threshold:
                     dashboard["expiring_soon"].append({
                         "serviceId": svc.get("serviceId"),
-                        "resource": svc.get("resource", {}).get("name", "N/A") if isinstance(svc.get("resource"), dict) else "N/A",
+                        "resource": svc_name,
+                        "serviceType": svc_type,
                         "status": svc_status,
                         "expiration": expiration_str,
                         "days_remaining": (exp_date - now).days,
