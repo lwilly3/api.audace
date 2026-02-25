@@ -234,7 +234,27 @@ def get_email_pro_accounts(service_name: str) -> list[dict]:
             accounts.append(detail)
         except HTTPException:
             logger.warning(f"Impossible de recuperer le detail du compte email: {email}")
-            accounts.append({"email": email, "state": "unknown"})
+            accounts.append({
+                "email": email,
+                "state": "unknown",
+                "displayName": None,
+                "firstName": None,
+                "lastName": None,
+                "login": None,
+                "domain": None,
+                "configured": None,
+                "expirationDate": None,
+                "creationDate": None,
+                "renewPeriod": None,
+                "deleteAtExpiration": None,
+                "currentUsage": None,
+                "quota": None,
+                "id": None,
+                "primaryEmailAddress": None,
+                "lastLogonDate": None,
+                "passwordLastUpdate": None,
+                "spamDetected": None,
+            })
 
     # Trier par date d'expiration
     accounts.sort(key=lambda a: a.get("expirationDate", "") or "", reverse=False)
