@@ -33,6 +33,7 @@ from routeur import (
      setup_route,  # Route de configuration initiale (sans auth)
      version_route,  # Route d'information sur la version
      ovh_route,  # Routes pour la consultation des services OVH
+     scaleway_route,  # Routes pour la consultation des services Scaleway
 
 
 
@@ -194,6 +195,7 @@ app.include_router(segment_route.router) # Routes pour les segments
 app.include_router(notification_route.router) # Routes pour les notifications
 app.include_router(audit_log_route.router) # Routes pour les journaux d'audit
 app.include_router(ovh_route.router) # Routes pour la consultation des services OVH
+app.include_router(scaleway_route.router) # Routes pour la consultation des services Scaleway
 
 
 

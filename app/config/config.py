@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     OVH_APPLICATION_SECRET:str = ""
     OVH_CONSUMER_KEY:str = ""
 
+    # Scaleway API
+    SCW_SECRET_KEY:str = ""
+    SCW_ORGANIZATION_ID:str = ""
+    SCW_DEFAULT_PROJECT_ID:str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
    
     # class Config:

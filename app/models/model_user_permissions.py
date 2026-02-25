@@ -152,6 +152,15 @@ class UserPermissions(Base):
     ovh_view_account = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les infos du compte OVH
     ovh_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gestion complète du module OVH
 
+    # Permissions pour le module Scaleway (consultation API)
+    scw_access_section = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Accéder à la section Scaleway
+    scw_view_instances = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les instances/serveurs
+    scw_view_dashboard = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir le tableau de bord Scaleway
+    scw_view_billing = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir la facturation Scaleway
+    scw_view_domains = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les domaines/DNS Scaleway
+    scw_view_account = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les infos du compte Scaleway
+    scw_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gestion complète du module Scaleway
+
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
 
