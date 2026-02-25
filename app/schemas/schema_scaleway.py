@@ -1,136 +1,109 @@
-"""Schemas Pydantic pour les reponses Scaleway."""
+"""Schemas Pydantic pour les reponses Dedibox (Online.net API)."""
 
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Any
 
 
-class ScwMoneyValue(BaseModel):
-    """Valeur monetaire formatee."""
-    value: float = 0.0
-    currency_code: str = "EUR"
-    text: str = "0.00 EUR"
+class DediboxUser(BaseModel):
+    """Informations du compte utilisateur Dedibox."""
+    id: Optional[int] = None
+    login: Optional[str] = None
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    company: Optional[str] = None
 
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ScwProject(BaseModel):
-    """Projet Scaleway."""
-    id: Optional[str] = None
-    name: Optional[str] = None
-    organization_id: Optional[str] = None
-    description: Optional[str] = None
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
 
-class ScwAccountInfo(BaseModel):
-    """Informations du compte/organisation Scaleway."""
-    organization_id: Optional[str] = None
-    projects: list[dict] = []
-    total_projects: int = 0
+class DediboxServerLocation(BaseModel):
+    """Localisation physique d'un serveur."""
+    datacenter: Optional[str] = None
+    room: Optional[str] = None
+    bay: Optional[str] = None
+    block: Optional[str] = None
+    position: Optional[int] = None
 
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ScwInstance(BaseModel):
-    """Instance (serveur) Scaleway."""
-    id: Optional[str] = None
-    name: Optional[str] = None
-    state: Optional[str] = None
-    arch: Optional[str] = None
-    commercial_type: Optional[str] = None
-    image: Optional[dict] = None
-    public_ip: Optional[dict] = None
-    public_ips: list[dict] = []
-    private_ip: Optional[str] = None
-    volumes: Optional[dict] = None
-    tags: list[str] = []
-    zone: Optional[str] = None
-    creation_date: Optional[str] = None
-    modification_date: Optional[str] = None
-    project: Optional[str] = None
-    organization: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
 
-class ScwConsumptionItem(BaseModel):
-    """Element de consommation Scaleway."""
-    category: Optional[str] = None
-    product: Optional[str] = None
-    project_id: Optional[str] = None
-    value: Optional[ScwMoneyValue] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ScwConsumption(BaseModel):
-    """Consommation globale Scaleway."""
-    billing_period: str = ""
-    consumptions: list[dict] = []
-    total: Optional[ScwMoneyValue] = None
-    updated_at: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ScwInvoice(BaseModel):
-    """Facture Scaleway."""
-    id: Optional[str] = None
-    organization_id: Optional[str] = None
-    start_date: Optional[str] = None
-    stop_date: Optional[str] = None
-    billing_period: Optional[str] = None
-    issued_date: Optional[str] = None
-    due_date: Optional[str] = None
-    total_taxed: Optional[ScwMoneyValue] = None
-    total_untaxed: Optional[ScwMoneyValue] = None
-    total_tax: Optional[ScwMoneyValue] = None
-    invoice_type: Optional[str] = None
-    state: Optional[str] = None
-    number: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ScwDnsZone(BaseModel):
-    """Zone DNS Scaleway."""
-    domain: Optional[str] = None
-    subdomain: Optional[str] = None
-    ns: list[str] = []
-    ns_default: list[str] = []
-    ns_master: list[str] = []
-    project_id: Optional[str] = None
-    status: Optional[str] = None
-    message: Optional[str] = None
-    updated_at: Optional[str] = None
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class ScwDnsRecord(BaseModel):
-    """Enregistrement DNS."""
-    id: Optional[str] = None
-    name: Optional[str] = None
+class DediboxServerIp(BaseModel):
+    """Adresse IP d'un serveur."""
+    address: Optional[str] = None
     type: Optional[str] = None
-    data: Optional[str] = None
-    ttl: Optional[int] = None
-    priority: Optional[int] = None
-    comment: Optional[str] = None
+    reverse: Optional[str] = None
+    mac: Optional[str] = None
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra="allow")
 
 
-class ScwDashboard(BaseModel):
-    """Tableau de bord synthetique Scaleway."""
-    total_instances: int = 0
-    instances_by_state: dict = {}
-    instances_by_zone: dict = {}
-    running_count: int = 0
-    stopped_count: int = 0
-    dns_zones_count: int = 0
-    consumption: Optional[dict] = None
+class DediboxServer(BaseModel):
+    """Serveur dedie Dedibox."""
+    id: Optional[int] = None
+    offer: Optional[str] = None
+    hostname: Optional[str] = None
+    location: Optional[dict] = None
+    boot_mode: Optional[str] = None
+    last_reboot: Optional[str] = None
+    power_status: Optional[str] = None
+    abuse: Optional[str] = None
+    os: Optional[dict] = None
+    contacts: Optional[dict] = None
+    disks: Optional[list] = None
+    network: Optional[dict] = None
+    ip: Optional[list] = None
+    service_expiration: Optional[str] = None
+    status: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
+
+class DediboxHosting(BaseModel):
+    """Service d'hebergement web Dedibox."""
+    id: Optional[int] = None
+    offer: Optional[str] = None
+    hostname: Optional[str] = None
+    fqdn: Optional[str] = None
+    status: Optional[str] = None
+    platform: Optional[dict] = None
+    disk: Optional[dict] = None
+    contacts: Optional[dict] = None
+
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
+
+class DediboxDomain(BaseModel):
+    """Domaine gere sur Dedibox."""
+    id: Optional[int] = None
+    name: Optional[str] = None
+    dns_zone_status: Optional[str] = None
+    status: Optional[str] = None
+    contacts: Optional[dict] = None
+    expiration_date: Optional[str] = None
+    creation_date: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
+
+class DediboxFailoverIp(BaseModel):
+    """IP failover Dedibox."""
+    address: Optional[str] = None
+    type: Optional[str] = None
+    reverse: Optional[str] = None
+    server_id: Optional[int] = None
+    destination: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True, extra="allow")
+
+
+class DediboxDashboard(BaseModel):
+    """Tableau de bord synthetique Dedibox."""
+    total_servers: int = 0
+    servers_by_status: dict = {}
+    active_count: int = 0
+    total_hostings: int = 0
+    total_domains: int = 0
+    failover_ips_count: int = 0
+    user: Optional[dict] = None
 
     model_config = ConfigDict(from_attributes=True)
