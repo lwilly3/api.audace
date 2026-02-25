@@ -54,7 +54,7 @@ def _ovh_call(client: ovh.Client, method: str, path: str):
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Credentials OVH invalides ou permissions insuffisantes."
         )
-    except ovh.exceptions.NotGranted:
+    except ovh.exceptions.NotGrantedCall:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Acces non autorise pour cette ressource OVH. Verifiez les droits du consumer_key."
