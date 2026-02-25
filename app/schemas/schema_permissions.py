@@ -163,6 +163,33 @@ class UserPermissionsSchema(BaseModel):
     inventory_subscriptions_delete: Optional[bool] = False  # Supprimer des abonnements
     inventory_subscriptions_manage: Optional[bool] = False  # Gestion complète des services
 
+    # Permissions pour les citations
+    quotes_view: Optional[bool] = False
+    quotes_create: Optional[bool] = False
+    quotes_edit: Optional[bool] = False
+    quotes_delete: Optional[bool] = False
+    quotes_publish: Optional[bool] = False
+    stream_transcription_view: Optional[bool] = False
+    stream_transcription_create: Optional[bool] = False
+    quotes_capture_live: Optional[bool] = False
+
+    # Permissions pour le module OVH
+    ovh_access_section: Optional[bool] = False  # Accéder à la section OVH
+    ovh_view_services: Optional[bool] = False  # Voir les services OVH
+    ovh_view_dashboard: Optional[bool] = False  # Voir le tableau de bord OVH
+    ovh_view_billing: Optional[bool] = False  # Voir les factures OVH
+    ovh_view_account: Optional[bool] = False  # Voir les infos du compte OVH
+    ovh_manage: Optional[bool] = False  # Gestion complète du module OVH
+
+    # Permissions pour le module Scaleway Dedibox
+    scw_access_section: Optional[bool] = False  # Accéder à la section Scaleway
+    scw_view_instances: Optional[bool] = False  # Voir les serveurs dédiés
+    scw_view_dashboard: Optional[bool] = False  # Voir le tableau de bord Scaleway
+    scw_view_billing: Optional[bool] = False  # Voir les hébergements
+    scw_view_domains: Optional[bool] = False  # Voir les domaines
+    scw_view_account: Optional[bool] = False  # Voir les infos du compte Scaleway
+    scw_manage: Optional[bool] = False  # Gestion complète du module Scaleway
+
     model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour créer un modèle de rôle
