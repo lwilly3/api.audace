@@ -144,8 +144,17 @@ app.add_middleware(LoggerMiddleware)
 from app.middleware.version_middleware import APIVersionMiddleware
 app.add_middleware(APIVersionMiddleware)
 
-# Ajout du middleware CORS pour autoriser les requêtes provenant de tous les domaines
-origins = ["*"]  # Permet l'accès depuis n'importe quelle origine
+# Ajout du middleware CORS pour autoriser les requêtes provenant des domaines autorisés
+origins = [
+    "https://app.cloud.audace.ovh",
+    "https://api.cloud.audace.ovh",
+    "https://app.radio.audace.ovh",
+    "https://api.radio.audace.ovh",
+    "http://localhost:5180",
+    "http://localhost:5173",
+    "http://127.0.0.1:5180",
+    "http://127.0.0.1:5173",
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # Liste des origines autorisées
