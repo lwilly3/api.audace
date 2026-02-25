@@ -166,6 +166,14 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "inventory_subscriptions_delete": permissions.inventory_subscriptions_delete,
     "inventory_subscriptions_manage": permissions.inventory_subscriptions_manage,
 
+    # Permissions pour le module OVH (consultation API)
+    "ovh_access_section": permissions.ovh_access_section,
+    "ovh_view_services": permissions.ovh_view_services,
+    "ovh_view_dashboard": permissions.ovh_view_dashboard,
+    "ovh_view_billing": permissions.ovh_view_billing,
+    "ovh_view_account": permissions.ovh_view_account,
+    "ovh_manage": permissions.ovh_manage,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
@@ -289,7 +297,15 @@ def initialize_user_permissions(db: Session, user_id: int):
     inventory_subscriptions_create=False,
     inventory_subscriptions_edit=False,
     inventory_subscriptions_delete=False,
-    inventory_subscriptions_manage=False
+    inventory_subscriptions_manage=False,
+
+    # OVH (consultation API)
+    ovh_access_section=False,
+    ovh_view_services=False,
+    ovh_view_dashboard=False,
+    ovh_view_billing=False,
+    ovh_view_account=False,
+    ovh_manage=False
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -549,7 +565,15 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'inventory_subscriptions_create',
     'inventory_subscriptions_edit',
     'inventory_subscriptions_delete',
-    'inventory_subscriptions_manage'
+    'inventory_subscriptions_manage',
+
+    # Permissions pour le module OVH (consultation API)
+    'ovh_access_section',
+    'ovh_view_services',
+    'ovh_view_dashboard',
+    'ovh_view_billing',
+    'ovh_view_account',
+    'ovh_manage'
 }
 
         # Vérifier les permissions fournies

@@ -12,6 +12,12 @@ class Settings(BaseSettings):
     ALGORITHM:str
     ACCESS_TOKEN_EXPIRATION_MINUTE:int
 
+    # OVH API
+    OVH_ENDPOINT:str = "ovh-eu"
+    OVH_APPLICATION_KEY:str = ""
+    OVH_APPLICATION_SECRET:str = ""
+    OVH_CONSUMER_KEY:str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
    
     # class Config:

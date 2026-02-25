@@ -107,6 +107,12 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@audace.local}
       ADMIN_NAME: ${ADMIN_NAME:-Administrateur}
       ADMIN_FAMILY_NAME: ${ADMIN_FAMILY_NAME:-Système}
+
+      # OVH API (consultation des services)
+      OVH_ENDPOINT: ${OVH_ENDPOINT:-ovh-eu}
+      OVH_APPLICATION_KEY: ${OVH_APPLICATION_KEY:-}
+      OVH_APPLICATION_SECRET: ${OVH_APPLICATION_SECRET:-}
+      OVH_CONSUMER_KEY: ${OVH_CONSUMER_KEY:-}
       
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0

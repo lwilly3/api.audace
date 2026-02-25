@@ -72,6 +72,8 @@ ALL_PERMISSIONS_TRUE = {
     "inventory_category_view": True, "inventory_category_create": True,
     "inventory_category_edit": True, "inventory_category_delete": True,
     "inventory_location_view": True, "inventory_location_manage": True,
+    "ovh_access_section": True, "ovh_view_services": True, "ovh_view_dashboard": True,
+    "ovh_view_billing": True, "ovh_view_account": True, "ovh_manage": True,
 }
 
 # Admin = tout sauf destruction archives (reservee au super_admin)
@@ -367,7 +369,15 @@ def update_all_permissions_to_true(db: Session, user_id: int) -> None:
         permissions.stream_transcription_view = True
         permissions.stream_transcription_create = True
         permissions.quotes_capture_live = True
-        
+
+        # OVH (module consultation API)
+        permissions.ovh_access_section = True
+        permissions.ovh_view_services = True
+        permissions.ovh_view_dashboard = True
+        permissions.ovh_view_billing = True
+        permissions.ovh_view_account = True
+        permissions.ovh_manage = True
+
         logger.info(f"✅ Toutes les permissions admin activées pour l'utilisateur {user_id}")
         
     except SQLAlchemyError as e:

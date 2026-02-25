@@ -14,27 +14,28 @@ from routeur.search_route import (
 )
 
 from routeur import (
-    #  posts, 
-     
+    #  posts,
+
        auth,
         #  votes,
-       audit_log_route, 
+       audit_log_route,
        guest_route,
          notification_route,
-     permissions_route, 
-     role_route, 
-     users_route, 
+     permissions_route,
+     role_route,
+     users_route,
      presenter_route,
      guest_route,
      emission_route,
-     show_route, 
+     show_route,
      dashbord_route,role_route,
      segment_route, # Ajout de l'importation du routeur de segments
      setup_route,  # Route de configuration initiale (sans auth)
-     version_route  # Route d'information sur la version
+     version_route,  # Route d'information sur la version
+     ovh_route,  # Routes pour la consultation des services OVH
 
 
-   
+
 )  # Importation des routeurs de l'appication
 
 
@@ -183,6 +184,7 @@ app.include_router(segment_route.router) # Routes pour les segments
 # /// add pour test
 app.include_router(notification_route.router) # Routes pour les notifications
 app.include_router(audit_log_route.router) # Routes pour les journaux d'audit
+app.include_router(ovh_route.router) # Routes pour la consultation des services OVH
 
 
 
