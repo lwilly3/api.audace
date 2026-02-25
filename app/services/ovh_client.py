@@ -94,7 +94,8 @@ def get_account_info() -> dict:
 
 
 def get_all_services() -> list[dict]:
-    """Recupere tous les services avec leurs infos (expiration, statut, displayName) en iterant par type."""
+    """Recupere tous les services avec leurs infos (expiration, statut, displayName) en iterant par type.
+    Pour les services Email Pro, ajoute aussi chaque compte email comme un sous-service."""
     client = get_ovh_client()
     services = []
 
@@ -119,6 +120,35 @@ def get_all_services() -> list[dict]:
                         pass  # displayName est optionnel, on continue sans
 
                     services.append(info)
+
+                    # Pour Email Pro, ajouter chaque compte email comme sous-service
+                    if svc_type == "email_pro":
+                        try:
+                            account_emails = _ovh_call(client, "GET", f"{endpoint}/{name}/account")
+                            if isinstance(account_emails, list):
+                                for email_addr in account_emails:
+                                    try:
+                                        acct = _ovh_call(client, "GET", f"{endpoint}/{name}/account/{email_addr}")
+                                        # Mapper les champs du compte vers le format service standard
+                                        services.append({
+                                            "serviceType": "email_pro_account",
+                                            "serviceName": email_addr,
+                                            "displayName": acct.get("displayName") or email_addr,
+                                            "status": "ok" if acct.get("state") == "ok" else acct.get("state", "unknown"),
+                                            "expiration": acct.get("expirationDate"),
+                                            "creation": acct.get("creationDate"),
+                                            "domain": acct.get("domain"),
+                                            "renewPeriod": acct.get("renewPeriod"),
+                                            "deleteAtExpiration": acct.get("deleteAtExpiration", False),
+                                            "currentUsage": acct.get("currentUsage"),
+                                            "quota": acct.get("quota"),
+                                            "parentService": str(name),
+                                        })
+                                    except HTTPException:
+                                        logger.warning(f"Impossible de recuperer le compte email: {email_addr}")
+                        except HTTPException:
+                            logger.warning(f"Impossible de lister les comptes Email Pro de {name}")
+
                 except HTTPException:
                     # Si un service specifique echoue, on ajoute un placeholder
                     logger.warning(f"Impossible de recuperer les infos du service {svc_type}/{name}")
@@ -271,6 +301,7 @@ def get_services_dashboard(days_threshold: int = 30) -> dict:
             dashboard["suspended_count"] += 1
 
         # Verifier les expirations proches
+        # Les comptes email_pro_account utilisent "expiration" (deja mappe dans get_all_services)
         expiration_str = svc.get("expiration")
         if expiration_str:
             try:

@@ -150,8 +150,8 @@ Module de consultation des services OVH en lecture seule. Appels API en temps re
 ```
 app/config/config.py         # OVH_ENDPOINT, OVH_APPLICATION_KEY, OVH_APPLICATION_SECRET, OVH_CONSUMER_KEY
 app/services/ovh_client.py   # Client OVH : get_ovh_client(), fonctions d'appel API, gestion d'erreurs
-app/schemas/schema_ovh.py    # Schemas Pydantic (OvhAccountInfo, OvhServiceSummary, OvhServiceInfo, OvhBill, OvhDashboard)
-routeur/ovh_route.py         # 9 endpoints GET sous /ovh/*
+app/schemas/schema_ovh.py    # Schemas Pydantic (OvhAccountInfo, OvhServiceSummary, OvhServiceInfo, OvhBill, OvhDashboard, OvhEmailProAccount)
+routeur/ovh_route.py         # 10 endpoints GET sous /ovh/*
 ```
 
 ### Endpoints
@@ -159,18 +159,21 @@ routeur/ovh_route.py         # 9 endpoints GET sous /ovh/*
 | Methode | Endpoint | Permission | Description |
 |---------|----------|-----------|-------------|
 | GET | `/ovh/account` | `ovh_view_account` | Infos du compte OVH (nichandle, email, organisation) |
-| GET | `/ovh/services` | `ovh_view_services` | Liste de tous les services avec statut et echeances |
+| GET | `/ovh/services` | `ovh_view_services` | Liste de tous les services avec statut, echeances et displayName |
 | GET | `/ovh/services/dashboard?days=30` | `ovh_view_dashboard` | Tableau de bord : total, par type, expirations proches, expires |
 | GET | `/ovh/services/types` | `ovh_access_section` | Liste des types de services supportes |
 | GET | `/ovh/services/{type}` | `ovh_view_services` | Noms des services d'un type (dedicated, vps, domain...) |
 | GET | `/ovh/services/{type}/{name}` | `ovh_view_services` | Detail complet d'un service |
 | GET | `/ovh/services/{type}/{name}/status` | `ovh_view_services` | Statut, expiration, renouvellement, contacts |
-| GET | `/ovh/billing/bills?count=20` | `ovh_view_billing` | Liste des dernieres factures |
+| GET | `/ovh/email-pro/{service_name}/accounts` | `ovh_view_services` | Comptes Email Pro avec details renouvellement |
+| GET | `/ovh/billing/bills?count=20` | `ovh_view_billing` | Liste des dernieres factures (triees par date decroissante) |
 | GET | `/ovh/billing/bills/{bill_id}` | `ovh_view_billing` | Detail d'une facture |
 
 ### Types de services (parametre `{type}`)
 
-`dedicated` (serveurs dedies), `vps`, `domain` (noms de domaine), `hosting` (hebergement web), `cloud` (projets cloud), `ip` (blocs IP), `alldom` (packs domaines).
+`dedicated` (serveurs dedies), `vps`, `domain` (noms de domaine), `hosting` (hebergement web), `cloud` (projets cloud), `ip` (blocs IP), `alldom` (packs domaines), `email_pro` (Email Pro), `email_exchange` (Exchange), `email_mxplan` (MXPlan), `email_domain` (Email domaine).
+
+`get_all_services()` itere sur tous les types du `SERVICE_TYPE_MAP` pour recuperer chaque service avec ses `serviceInfos` et son `displayName` (optionnel, recupere depuis le detail du service).
 
 ### Permissions
 
