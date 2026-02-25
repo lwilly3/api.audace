@@ -140,3 +140,83 @@ FRONTEND_URL, BACKEND_URL, ENVIRONMENT, DEBUG, WORKERS
 - Gunicorn + Uvicorn workers
 - Traefik reverse proxy (docker-compose)
 - OVH Python SDK (`ovh>=1.1.0`)
+
+## Module OVH (consultation API)
+
+Module de consultation des services OVH en lecture seule. Appels API en temps reel (pas de cache, pas de stockage BDD).
+
+### Fichiers
+
+```
+app/config/config.py         # OVH_ENDPOINT, OVH_APPLICATION_KEY, OVH_APPLICATION_SECRET, OVH_CONSUMER_KEY
+app/services/ovh_client.py   # Client OVH : get_ovh_client(), fonctions d'appel API, gestion d'erreurs
+app/schemas/schema_ovh.py    # Schemas Pydantic (OvhAccountInfo, OvhServiceSummary, OvhServiceInfo, OvhBill, OvhDashboard)
+routeur/ovh_route.py         # 9 endpoints GET sous /ovh/*
+```
+
+### Endpoints
+
+| Methode | Endpoint | Permission | Description |
+|---------|----------|-----------|-------------|
+| GET | `/ovh/account` | `ovh_view_account` | Infos du compte OVH (nichandle, email, organisation) |
+| GET | `/ovh/services` | `ovh_view_services` | Liste de tous les services avec statut et echeances |
+| GET | `/ovh/services/dashboard?days=30` | `ovh_view_dashboard` | Tableau de bord : total, par type, expirations proches, expires |
+| GET | `/ovh/services/types` | `ovh_access_section` | Liste des types de services supportes |
+| GET | `/ovh/services/{type}` | `ovh_view_services` | Noms des services d'un type (dedicated, vps, domain...) |
+| GET | `/ovh/services/{type}/{name}` | `ovh_view_services` | Detail complet d'un service |
+| GET | `/ovh/services/{type}/{name}/status` | `ovh_view_services` | Statut, expiration, renouvellement, contacts |
+| GET | `/ovh/billing/bills?count=20` | `ovh_view_billing` | Liste des dernieres factures |
+| GET | `/ovh/billing/bills/{bill_id}` | `ovh_view_billing` | Detail d'une facture |
+
+### Types de services (parametre `{type}`)
+
+`dedicated` (serveurs dedies), `vps`, `domain` (noms de domaine), `hosting` (hebergement web), `cloud` (projets cloud), `ip` (blocs IP), `alldom` (packs domaines).
+
+### Permissions
+
+6 permissions dediees, toutes verifient `ovh_access_section` en prealable :
+
+| Permission | Role |
+|---|---|
+| `ovh_access_section` | Acces a la section OVH (prerequis pour toutes les routes) |
+| `ovh_view_services` | Consulter les services et leurs details |
+| `ovh_view_dashboard` | Voir le tableau de bord synthetique |
+| `ovh_view_billing` | Consulter les factures |
+| `ovh_view_account` | Voir les infos du compte OVH |
+| `ovh_manage` | Gestion complete (reserve pour futures evolutions) |
+
+### Gestion d'erreurs
+
+Le client OVH (`ovh_client.py`) convertit les exceptions OVH en HTTPException :
+
+| Situation | Code HTTP |
+|---|---|
+| Credentials OVH absents dans `.env` | 503 Service Unavailable |
+| Credentials invalides / droits insuffisants | 502 Bad Gateway |
+| Ressource OVH introuvable | 404 Not Found |
+| Parametres invalides | 400 Bad Request |
+| Erreur API OVH generique | 502 Bad Gateway |
+
+### Configuration requise
+
+Variables dans `.env` (et `docker-compose.yml`) :
+```
+OVH_ENDPOINT=ovh-eu
+OVH_APPLICATION_KEY=votre_application_key
+OVH_APPLICATION_SECRET=votre_application_secret
+OVH_CONSUMER_KEY=votre_consumer_key
+```
+
+Generer les credentials :
+1. Creer l'application : https://eu.api.ovh.com/createApp/
+2. Generer un consumer_key en lecture seule :
+```python
+import ovh
+client = ovh.Client(endpoint='ovh-eu', application_key='...', application_secret='...')
+ck = client.new_consumer_key_request()
+ck.add_rules(ovh.API_READ_ONLY, '/*')
+validation = ck.request()
+print(validation['consumerKey'], validation['validationUrl'])
+```
+3. Ouvrir `validationUrl` dans le navigateur et autoriser l'acces.
+
