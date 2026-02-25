@@ -119,6 +119,17 @@ def get_all_services() -> list[dict]:
                     except HTTPException:
                         pass  # displayName est optionnel, on continue sans
 
+                    # Pour Email Domain, ne garder que ceux qui ont des comptes email
+                    if svc_type == "email_domain":
+                        try:
+                            email_accounts = _ovh_call(client, "GET", f"{endpoint}/{name}/account")
+                            if not isinstance(email_accounts, list) or len(email_accounts) == 0:
+                                logger.info(f"Email Domain {name} ignore: aucun compte email configure")
+                                continue  # Passer au service suivant, ne pas ajouter
+                        except HTTPException:
+                            logger.info(f"Email Domain {name} ignore: impossible de verifier les comptes")
+                            continue
+
                     services.append(info)
 
                     # Pour Email Pro, ajouter chaque compte email comme sous-service
