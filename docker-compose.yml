@@ -121,6 +121,9 @@ services:
       OVH_APPLICATION_KEY: ${OVH_APPLICATION_KEY:-}
       OVH_APPLICATION_SECRET: ${OVH_APPLICATION_SECRET:-}
       OVH_CONSUMER_KEY: ${OVH_CONSUMER_KEY:-}
+
+      # Scaleway Dedibox API (api.online.net)
+      SCW_SECRET_KEY: ${SCW_SECRET_KEY:-}
       
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0
