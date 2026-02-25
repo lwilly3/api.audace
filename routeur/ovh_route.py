@@ -26,6 +26,9 @@ from app.services.ovh_client import (
     get_bill_detail,
     get_services_dashboard,
     get_email_pro_accounts,
+    get_account_balance,
+    get_vps_monitoring,
+    get_active_tasks,
     SERVICE_TYPE_MAP,
 )
 
@@ -247,3 +250,95 @@ def get_ovh_bill_detail(
     result = get_bill_detail(bill_id)
     log_action(db, current_user.id, "read", "ovh_bill_detail", 0)
     return result
+
+
+# ══════════════════════════════════════════════════════════════════
+# SOLDE / DETTES / PAIEMENT
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/account/balance")
+def get_ovh_account_balance(
+    db: Session = Depends(get_db),
+    current_user: model_user.User = Depends(oauth2.get_current_user)
+):
+    """
+    Recupere le solde, les dettes et les methodes de paiement du compte OVH.
+
+    Retourne: balance, debtAccount (total dettes), paymentMethods (CB, etc.)
+    """
+    _check_ovh_permission(db, current_user.id, "ovh_view_billing")
+    try:
+        result = get_account_balance()
+        log_action(db, current_user.id, "read", "ovh_balance", 0)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la recuperation du solde OVH: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erreur lors de la recuperation du solde OVH: {str(e)}"
+        )
+
+
+# ══════════════════════════════════════════════════════════════════
+# MONITORING VPS
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/vps/{vps_name}/monitoring")
+def get_ovh_vps_monitoring(
+    vps_name: str,
+    period: str = Query(default="lastday", regex="^(lastday|lastweek|lastmonth|lastyear)$",
+                         description="Periode de monitoring"),
+    db: Session = Depends(get_db),
+    current_user: model_user.User = Depends(oauth2.get_current_user)
+):
+    """
+    Recupere les statistiques de monitoring d'un VPS (CPU, RAM, reseau).
+
+    Periodes: lastday, lastweek, lastmonth, lastyear
+    """
+    _check_ovh_permission(db, current_user.id, "ovh_view_services")
+    try:
+        result = get_vps_monitoring(vps_name, period=period)
+        log_action(db, current_user.id, "read", f"ovh_monitoring_{vps_name}", 0)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur monitoring VPS {vps_name}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erreur lors de la recuperation du monitoring VPS: {str(e)}"
+        )
+
+
+# ══════════════════════════════════════════════════════════════════
+# TACHES ACTIVES
+# ══════════════════════════════════════════════════════════════════
+
+@router.get("/tasks")
+def get_ovh_active_tasks(
+    db: Session = Depends(get_db),
+    current_user: model_user.User = Depends(oauth2.get_current_user)
+):
+    """
+    Recupere les taches actives et recentes sur les VPS et serveurs dedies.
+
+    Retourne la liste des taches (maintenance, migration, reboot, etc.)
+    avec statut, progression et timestamps.
+    """
+    _check_ovh_permission(db, current_user.id, "ovh_view_services")
+    try:
+        result = get_active_tasks()
+        log_action(db, current_user.id, "read", "ovh_tasks", 0)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la recuperation des taches OVH: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erreur lors de la recuperation des taches OVH: {str(e)}"
+        )
+

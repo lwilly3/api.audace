@@ -264,6 +264,173 @@ def get_bill_detail(bill_id: str) -> dict:
     return _ovh_call(client, "GET", f"/me/bill/{bill_id}")
 
 
+def get_account_balance() -> dict:
+    """
+    Recupere le solde, les dettes et les methodes de paiement du compte OVH.
+
+    Retourne:
+    - balance: solde /me/balance (ou null si indisponible)
+    - debtAccount: compte de dettes /me/debtAccount (ou null)
+    - paymentMethods: liste des methodes de paiement actives
+    """
+    client = get_ovh_client()
+    result = {
+        "balance": None,
+        "debtAccount": None,
+        "paymentMethods": [],
+    }
+
+    # Solde du compte
+    try:
+        result["balance"] = _ovh_call(client, "GET", "/me/balance")
+    except HTTPException:
+        logger.info("Endpoint /me/balance non disponible")
+
+    # Dettes
+    try:
+        result["debtAccount"] = _ovh_call(client, "GET", "/me/debtAccount")
+    except HTTPException:
+        logger.info("Endpoint /me/debtAccount non disponible")
+
+    # Methodes de paiement
+    try:
+        method_ids = _ovh_call(client, "GET", "/me/payment/method")
+        if isinstance(method_ids, list):
+            for mid in method_ids[:10]:  # Limiter a 10
+                try:
+                    detail = _ovh_call(client, "GET", f"/me/payment/method/{mid}")
+                    result["paymentMethods"].append(detail)
+                except HTTPException:
+                    pass
+    except HTTPException:
+        logger.info("Endpoint /me/payment/method non disponible")
+
+    return result
+
+
+def get_vps_monitoring(vps_name: str, period: str = "lastday") -> dict:
+    """
+    Recupere les statistiques de monitoring d'un VPS.
+
+    Args:
+        vps_name: Nom du VPS (ex: vps-xxx.vps.ovh.net)
+        period: Periode (lastday, lastweek, lastmonth, lastyear)
+
+    Retourne:
+    - cpu, mem, net: donnees de monitoring avec timestamps et valeurs
+    - ips: liste des IPs du VPS
+    - model: infos du modele VPS
+    """
+    client = get_ovh_client()
+    result = {
+        "vpsName": vps_name,
+        "period": period,
+        "cpu": None,
+        "mem": None,
+        "netRx": None,
+        "netTx": None,
+        "ips": [],
+        "model": None,
+    }
+
+    # CPU
+    try:
+        result["cpu"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=cpu:used")
+    except HTTPException:
+        logger.warning(f"Monitoring CPU non disponible pour {vps_name}")
+
+    # Memoire
+    try:
+        result["mem"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=mem:used")
+    except HTTPException:
+        logger.warning(f"Monitoring memoire non disponible pour {vps_name}")
+
+    # Reseau entrant
+    try:
+        result["netRx"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=net:rx")
+    except HTTPException:
+        logger.warning(f"Monitoring reseau RX non disponible pour {vps_name}")
+
+    # Reseau sortant
+    try:
+        result["netTx"] = _ovh_call(client, "GET", f"/vps/{vps_name}/monitoring?period={period}&type=net:tx")
+    except HTTPException:
+        logger.warning(f"Monitoring reseau TX non disponible pour {vps_name}")
+
+    # IPs
+    try:
+        result["ips"] = _ovh_call(client, "GET", f"/vps/{vps_name}/ips")
+    except HTTPException:
+        pass
+
+    # Modele
+    try:
+        vps_detail = _ovh_call(client, "GET", f"/vps/{vps_name}")
+        if isinstance(vps_detail, dict):
+            result["model"] = vps_detail.get("model")
+    except HTTPException:
+        pass
+
+    return result
+
+
+def get_active_tasks() -> list[dict]:
+    """
+    Recupere les taches actives sur tous les services VPS et serveurs dedies.
+
+    Retourne une liste de taches avec type, statut, date, progression.
+    """
+    client = get_ovh_client()
+    tasks = []
+
+    # Taches VPS
+    try:
+        vps_names = _ovh_call(client, "GET", "/vps")
+        if isinstance(vps_names, list):
+            for vps_name in vps_names:
+                try:
+                    task_ids = _ovh_call(client, "GET", f"/vps/{vps_name}/tasks")
+                    if isinstance(task_ids, list):
+                        for task_id in task_ids[:20]:  # Limiter par VPS
+                            try:
+                                task = _ovh_call(client, "GET", f"/vps/{vps_name}/tasks/{task_id}")
+                                task["resourceName"] = vps_name
+                                task["resourceType"] = "vps"
+                                tasks.append(task)
+                            except HTTPException:
+                                pass
+                except HTTPException:
+                    pass
+    except HTTPException:
+        logger.warning("Impossible de lister les VPS pour les taches")
+
+    # Taches serveurs dedies
+    try:
+        server_names = _ovh_call(client, "GET", "/dedicated/server")
+        if isinstance(server_names, list):
+            for server_name in server_names:
+                try:
+                    task_ids = _ovh_call(client, "GET", f"/dedicated/server/{server_name}/task")
+                    if isinstance(task_ids, list):
+                        for task_id in task_ids[:20]:
+                            try:
+                                task = _ovh_call(client, "GET", f"/dedicated/server/{server_name}/task/{task_id}")
+                                task["resourceName"] = server_name
+                                task["resourceType"] = "dedicated"
+                                tasks.append(task)
+                            except HTTPException:
+                                pass
+                except HTTPException:
+                    pass
+    except HTTPException:
+        logger.warning("Impossible de lister les serveurs pour les taches")
+
+    # Trier par date decroissante (taches recentes en premier)
+    tasks.sort(key=lambda t: t.get("startDate", t.get("todoDate", "")), reverse=True)
+
+    return tasks
+
+
 def get_services_dashboard(days_threshold: int = 30) -> dict:
     """
     Construit un tableau de bord synthetique des services OVH.
@@ -331,5 +498,27 @@ def get_services_dashboard(days_threshold: int = 30) -> dict:
 
     # Trier expiring_soon par date
     dashboard["expiring_soon"].sort(key=lambda x: x.get("days_remaining", 999))
+
+    # Ajouter le solde / dettes
+    try:
+        balance_info = get_account_balance()
+        dashboard["balance"] = balance_info
+    except Exception:
+        dashboard["balance"] = None
+
+    # Ajouter les taches actives (filtrer uniquement celles en cours)
+    try:
+        all_tasks = get_active_tasks()
+        # Garder uniquement les taches non terminees (doing, todo, init, waitingAck)
+        active_tasks = [t for t in all_tasks if t.get("state", t.get("status", "")) in ("doing", "todo", "init", "waitingAck", "paused")]
+        dashboard["active_tasks"] = active_tasks
+        dashboard["active_tasks_count"] = len(active_tasks)
+        # Garder aussi les taches recentes (7 derniers jours) terminées pour historique
+        recent_done = [t for t in all_tasks if t.get("state", t.get("status", "")) in ("done", "cancelled", "error")][:10]
+        dashboard["recent_tasks"] = recent_done
+    except Exception:
+        dashboard["active_tasks"] = []
+        dashboard["active_tasks_count"] = 0
+        dashboard["recent_tasks"] = []
 
     return dashboard
