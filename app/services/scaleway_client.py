@@ -7,7 +7,7 @@ Supporte : Serveurs dedies, Hebergements, Domaines, Informations utilisateur.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 import httpx
 from fastapi import HTTPException, status
@@ -33,7 +33,7 @@ def _get_headers() -> dict:
     }
 
 
-def _dedibox_get(path: str, params: dict | None = None) -> dict | list:
+def _dedibox_get(path: str, params: Optional[dict] = None) -> Union[dict, list]:
     """
     Effectue un appel GET a l'API Dedibox avec gestion d'erreurs.
 
