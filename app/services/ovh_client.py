@@ -179,8 +179,15 @@ def get_all_services() -> list[dict]:
     return services
 
 
-def get_services_by_type(service_type: str) -> list:
-    """Recupere la liste des services d'un type donne."""
+def get_services_by_type(service_type: str, status_filter: str = None) -> list[dict]:
+    """Recupere la liste des services d'un type donne avec leurs details (serviceInfos, displayName).
+
+    Args:
+        service_type: Type de service (dedicated, vps, domain, etc.)
+        status_filter: Filtre optionnel par statut ('ok', 'expired', 'suspended', 'unPaid')
+
+    Retourne une liste de dicts avec serviceName, serviceType, status, expiration, creation, displayName, etc.
+    """
     if service_type not in SERVICE_TYPE_MAP:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -188,7 +195,41 @@ def get_services_by_type(service_type: str) -> list:
         )
     client = get_ovh_client()
     endpoint = SERVICE_TYPE_MAP[service_type]
-    return _ovh_call(client, "GET", endpoint)
+    names = _ovh_call(client, "GET", endpoint)
+    if not isinstance(names, list):
+        return []
+
+    services = []
+    for name in names:
+        try:
+            info = _ovh_call(client, "GET", f"{endpoint}/{name}/serviceInfos")
+            info["serviceType"] = service_type
+            info["serviceName"] = str(name)
+
+            # Recuperer le displayName depuis le detail du service
+            try:
+                detail = _ovh_call(client, "GET", f"{endpoint}/{name}")
+                if isinstance(detail, dict) and detail.get("displayName"):
+                    info["displayName"] = detail["displayName"]
+            except HTTPException:
+                pass
+
+            # Appliquer le filtre par statut si demande
+            if status_filter and info.get("status") != status_filter:
+                continue
+
+            services.append(info)
+        except HTTPException:
+            logger.warning(f"Impossible de recuperer les infos du service {service_type}/{name}")
+            # Ajouter un placeholder sauf si on filtre par statut
+            if not status_filter:
+                services.append({
+                    "serviceType": service_type,
+                    "serviceName": str(name),
+                    "status": "unknown",
+                })
+
+    return services
 
 
 def get_service_detail(service_type: str, service_name: str) -> dict:

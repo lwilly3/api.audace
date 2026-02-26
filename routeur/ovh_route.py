@@ -157,18 +157,30 @@ def get_ovh_service_types(
 @router.get("/services/{service_type}")
 def get_ovh_services_by_type(
     service_type: str,
+    status_filter: Optional[str] = Query(default=None, alias="status",
+                                          description="Filtrer par statut: ok, expired, suspended, unPaid"),
     db: Session = Depends(get_db),
     current_user: model_user.User = Depends(oauth2.get_current_user)
 ):
     """
-    Recupere la liste des services d'un type donne.
+    Recupere la liste des services d'un type donne avec details (statut, dates, expiration).
 
-    Types valides: dedicated, vps, domain, hosting, cloud, ip, alldom
+    Types valides: dedicated, vps, domain, hosting, cloud, ip, alldom, email_pro, email_exchange, email_mxplan, email_domain.
+    Filtre optionnel par statut: ?status=ok pour les services actifs uniquement.
     """
     _check_ovh_permission(db, current_user.id, "ovh_view_services")
-    result = get_services_by_type(service_type)
-    log_action(db, current_user.id, "read", f"ovh_services_{service_type}", 0)
-    return result
+    try:
+        result = get_services_by_type(service_type, status_filter=status_filter)
+        log_action(db, current_user.id, "read", f"ovh_services_{service_type}", 0)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la recuperation des services {service_type}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Erreur lors de la recuperation des services {service_type}: {str(e)}"
+        )
 
 
 @router.get("/services/{service_type}/{service_name}")
