@@ -129,12 +129,14 @@ def get_facebook_pages(user_access_token: str) -> list[dict]:
     """
     Recuperer la liste des pages Facebook gerees par l'utilisateur.
 
-    Chaque page contient un `access_token` specifique a la page
-    qui permet de lire/publier sur cette page.
+    Essaie d'abord /me/accounts (utilisateur classique).
+    Si vide, tente la voie Business API (/me/businesses -> /{biz}/owned_pages)
+    pour les System Users avec business_management.
 
     Returns:
         Liste de dicts : {id, name, access_token, category, picture, followers_count}
     """
+    # ── Tentative 1 : /me/accounts (chemin standard) ──
     url = f"{GRAPH_API_BASE}/me/accounts"
     params = {
         "access_token": user_access_token,
@@ -144,6 +146,53 @@ def get_facebook_pages(user_access_token: str) -> list[dict]:
 
     data = _graph_get(url, params, "GET /me/accounts")
     pages = data.get("data", [])
+
+    # ── Tentative 2 : Business API (System Users) ──
+    if not pages:
+        logger.info("[FB PAGES] /me/accounts vide, tentative via Business API...")
+        print("[FB PAGES] /me/accounts vide, tentative via Business API...", flush=True)
+        try:
+            biz_url = f"{GRAPH_API_BASE}/me/businesses"
+            biz_params = {"access_token": user_access_token, "fields": "id,name", "limit": 10}
+            biz_data = _graph_get(biz_url, biz_params, "GET /me/businesses")
+            businesses = biz_data.get("data", [])
+            print(f"[FB PAGES] {len(businesses)} business(es) trouve(s)", flush=True)
+
+            for biz in businesses:
+                biz_id = biz.get("id")
+                if not biz_id:
+                    continue
+                # Essayer owned_pages
+                try:
+                    pages_url = f"{GRAPH_API_BASE}/{biz_id}/owned_pages"
+                    pages_params = {
+                        "access_token": user_access_token,
+                        "fields": "id,name,access_token,category,picture,followers_count",
+                        "limit": 100,
+                    }
+                    pages_data = _graph_get(pages_url, pages_params, f"GET /{biz_id}/owned_pages")
+                    pages = pages_data.get("data", [])
+                    if pages:
+                        print(f"[FB PAGES] {len(pages)} page(s) via /{biz_id}/owned_pages", flush=True)
+                        break
+                except HTTPException as e:
+                    logger.warning(f"[FB PAGES] /{biz_id}/owned_pages echoue: {e.detail}")
+
+                # Essayer client_pages
+                if not pages:
+                    try:
+                        cp_url = f"{GRAPH_API_BASE}/{biz_id}/client_pages"
+                        cp_data = _graph_get(cp_url, pages_params, f"GET /{biz_id}/client_pages")
+                        pages = cp_data.get("data", [])
+                        if pages:
+                            print(f"[FB PAGES] {len(pages)} page(s) via /{biz_id}/client_pages", flush=True)
+                            break
+                    except HTTPException:
+                        pass
+
+        except HTTPException as e:
+            logger.warning(f"[FB PAGES] Business API echoue: {e.detail}")
+            print(f"[FB PAGES] Business API echoue: {e.detail}", flush=True)
 
     result = []
     for page in pages:
@@ -160,6 +209,7 @@ def get_facebook_pages(user_access_token: str) -> list[dict]:
         })
 
     logger.info(f"Facebook: {len(result)} page(s) trouvee(s)")
+    print(f"[FB PAGES] Resultat final: {len(result)} page(s)", flush=True)
     return result
 
 
