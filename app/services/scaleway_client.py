@@ -48,7 +48,7 @@ def _dedibox_get(path: str, params: Optional[dict] = None) -> Union[dict, list]:
     headers = _get_headers()
 
     try:
-        with httpx.Client(timeout=30.0) as client:
+        with httpx.Client(timeout=30.0, follow_redirects=True) as client:
             response = client.get(url, headers=headers, params=params)
 
         if response.status_code == 200:
