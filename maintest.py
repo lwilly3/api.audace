@@ -34,6 +34,7 @@ from routeur import (
      version_route,  # Route d'information sur la version
      ovh_route,  # Routes pour la consultation des services OVH
      scaleway_route,  # Routes pour la consultation des services Scaleway
+     social_route,  # Routes pour le module Social (réseaux sociaux)
 
 
 
@@ -196,6 +197,7 @@ app.include_router(notification_route.router) # Routes pour les notifications
 app.include_router(audit_log_route.router) # Routes pour les journaux d'audit
 app.include_router(ovh_route.router) # Routes pour la consultation des services OVH
 app.include_router(scaleway_route.router) # Routes pour la consultation des services Scaleway
+app.include_router(social_route.router) # Routes pour le module Social (réseaux sociaux)
 
 
 

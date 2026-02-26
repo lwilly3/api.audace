@@ -36,6 +36,10 @@ from .model_RoleTemplate import RoleTemplate
 from .model_auth_token import RevokedToken
 from .model_password_reset_token import PasswordResetToken
 from .model_invite_token import InviteToken
+from .model_social import (
+    SocialAccount, SocialPost, SocialPostResult,
+    SocialComment, SocialConversation, SocialMessage,
+)
 
 # from .model_show_segment import ShowSegment
 # from .model_show_presenter import ShowPresenter
