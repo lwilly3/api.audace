@@ -763,13 +763,16 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
     }
 
     # 1. Recuperer les pages Facebook
+    print(f"[SYNC] Compte #{account_id}: debut sync, platform={account.platform}, account_id={account.account_id}", flush=True)
     logger.info(f"[SYNC] Compte #{account_id}: debut sync, platform={account.platform}, account_id={account.account_id}")
     pages = get_facebook_pages(account.access_token)
     if not pages:
+        print(f"[SYNC] Aucune page Facebook trouvee pour le compte #{account_id}", flush=True)
         logger.warning(f"[SYNC] Aucune page Facebook trouvee pour le compte #{account_id}")
         return stats
 
     logger.info(f"[SYNC] Compte #{account_id}: {len(pages)} page(s) trouvee(s) -> {[p['name'] for p in pages]}")
+    print(f"[SYNC] Compte #{account_id}: {len(pages)} page(s) -> {[p['name'] for p in pages]}", flush=True)
 
     # Trouver la page correspondante au compte, ou utiliser la premiere
     target_page = None
@@ -802,6 +805,7 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
     # 2. Recuperer les posts de la page
     fb_posts = get_page_posts(page_token, page_id, limit=50)
     logger.info(f"[SYNC] Page {page_id}: {len(fb_posts)} post(s) recupere(s) depuis Facebook")
+    print(f"[SYNC] Page {page_id}: {len(fb_posts)} post(s) recupere(s)", flush=True)
 
     for fb_post in fb_posts:
         platform_post_id = fb_post["platform_post_id"]
@@ -999,6 +1003,7 @@ def sync_all_facebook_accounts(db: Session) -> dict:
     )
 
     logger.info(f"[SYNC ALL] {len(accounts)} compte(s) Facebook actif(s) a synchroniser")
+    print(f"[SYNC ALL] {len(accounts)} compte(s) Facebook actif(s) a synchroniser", flush=True)
 
     total_stats = {
         "accounts_synced": 0,
@@ -1019,6 +1024,7 @@ def sync_all_facebook_accounts(db: Session) -> dict:
             total_stats["comments_new"] += account_stats["comments_new"]
         except Exception as e:
             logger.error(f"Erreur sync compte #{account.id}: {e}")
+            print(f"[SYNC ALL] ERREUR compte #{account.id}: {e}", flush=True)
             total_stats["errors"].append({
                 "account_id": account.id,
                 "error": str(e)[:200],

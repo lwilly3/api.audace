@@ -28,12 +28,14 @@ def _graph_get(url: str, params: dict, description: str = "Graph API") -> dict:
     Appel GET generique vers la Graph API avec gestion d'erreurs.
     Logue la requete et la reponse pour faciliter le debug.
     """
+    print(f"[FB API] {description} -> GET {url}", flush=True)
     logger.info(f"[FB API] {description} -> GET {url} (params sans token)")
 
     try:
         with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
             response = client.get(url, params=params)
 
+        print(f"[FB API] {description} <- HTTP {response.status_code}", flush=True)
         logger.info(f"[FB API] {description} <- HTTP {response.status_code}")
 
         if response.status_code != 200:
@@ -47,6 +49,7 @@ def _graph_get(url: str, params: dict, description: str = "Graph API") -> dict:
             )
             error_code = error_data.get("error", {}).get("code", "?")
             error_subcode = error_data.get("error", {}).get("error_subcode", "?")
+            print(f"[FB API] ECHOUE: HTTP {response.status_code} code={error_code} subcode={error_subcode} msg={error_msg[:200]}", flush=True)
             logger.error(
                 f"[FB API] {description} ECHOUE: HTTP {response.status_code} "
                 f"code={error_code} subcode={error_subcode} msg={error_msg}"
@@ -59,6 +62,7 @@ def _graph_get(url: str, params: dict, description: str = "Graph API") -> dict:
         data = response.json()
         # Log le nombre d'elements si c'est une liste paginee
         if isinstance(data.get("data"), list):
+            print(f"[FB API] {description} -> {len(data['data'])} element(s)", flush=True)
             logger.info(f"[FB API] {description} -> {len(data['data'])} element(s)")
         return data
 

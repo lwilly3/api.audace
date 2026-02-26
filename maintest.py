@@ -63,7 +63,12 @@ file_handler = RotatingFileHandler(
     "api_logs.log", maxBytes=5 * 1024 * 1024, backupCount=3
 )  # Fichier de logs avec rotation (5 Mo max, 3 sauvegardes)
 file_handler.setFormatter(log_formatter)  # Appliquer le format au gestionnaire
-logging.basicConfig(level=logging.INFO, handlers=[file_handler])  # Configurer le niveau et le gestionnaire des logs
+
+# Handler console pour que les logs apparaissent dans Docker
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(log_formatter)
+
+logging.basicConfig(level=logging.INFO, handlers=[file_handler, stream_handler])  # Fichier + stdout
 logger = logging.getLogger("hapson-api")  # Créer un logger spécifique pour l'API
 
 @lru_cache
