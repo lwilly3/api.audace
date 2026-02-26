@@ -30,6 +30,9 @@ from app.db.crud.crud_social import (
     disconnect_social_account,
     check_account_token_status,
     upsert_social_account_from_oauth,
+    # Sync Facebook
+    sync_facebook_account,
+    sync_all_facebook_accounts,
     # Posts
     get_social_posts,
     get_social_post_by_id,
@@ -255,6 +258,44 @@ def account_status(
 ):
     """Vérifier le statut du token OAuth d'un compte."""
     return check_account_token_status(db, account_id)
+
+
+# ════════════════════════════════════════════════════════════════
+# SYNCHRONISATION FACEBOOK
+# ════════════════════════════════════════════════════════════════
+
+@router.post("/accounts/{account_id}/sync")
+def sync_account(
+    account_id: int,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Synchroniser les posts et commentaires Facebook pour un compte.
+
+    Recupere les derniers posts de la page Facebook connectee,
+    importe les nouveaux posts et commentaires, et met a jour
+    les metriques d'engagement des posts existants.
+    """
+    result = sync_facebook_account(db, account_id)
+    log_action(db, current_user.id, "sync", "social_accounts", account_id)
+    return result
+
+
+@router.post("/sync")
+def sync_all(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Synchroniser tous les comptes Facebook actifs.
+
+    Parcourt tous les comptes Facebook connectes et declenche
+    la synchronisation des posts et commentaires pour chacun.
+    """
+    result = sync_all_facebook_accounts(db)
+    log_action(db, current_user.id, "sync_all", "social_accounts", 0)
+    return result
 
 
 # ════════════════════════════════════════════════════════════════

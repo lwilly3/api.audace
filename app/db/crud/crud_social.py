@@ -3,8 +3,10 @@ Opérations CRUD pour le module Social.
 
 Gère les accès base de données pour les comptes sociaux,
 publications, commentaires, conversations et messages.
+Inclut les fonctions de synchronisation avec Facebook Graph API.
 """
 
+import logging
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, and_
 from fastapi import HTTPException, status
@@ -18,6 +20,8 @@ from app.models.model_social import (
 from app.schemas.schema_social import (
     SocialPostCreate, SocialPostUpdate,
 )
+
+logger = logging.getLogger("hapson-api")
 
 
 # ════════════════════════════════════════════════════════════════
@@ -238,7 +242,18 @@ def delete_social_post(db: Session, post_id: int) -> bool:
 
 
 def publish_social_post(db: Session, post_id: int) -> SocialPost:
-    """Marquer un post pour publication immédiate."""
+    """
+    Publier un post sur les plateformes cibles.
+
+    Pour chaque compte cible sur Facebook :
+    1. Recupere le page access token via /me/accounts
+    2. Publie sur la page via Graph API
+    3. Cree un SocialPostResult avec le platform_post_id
+
+    Pour les plateformes non-Facebook, simule le succes (TODO).
+    """
+    from app.services.social_facebook import get_facebook_pages, publish_to_page
+
     post = get_social_post_by_id(db, post_id)
 
     if post.status == "published":
@@ -248,13 +263,92 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
         )
 
     post.status = "publishing"
-    post.published_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(post)
 
-    # TODO: Déclencher la publication réelle via les APIs des plateformes
-    # Pour l'instant on simule le succès
-    post.status = "published"
+    has_error = False
+    now = datetime.now(timezone.utc)
+
+    # Recuperer les comptes cibles
+    target_account_ids = post.target_accounts or []
+
+    # Si aucun compte cible specifie, trouver tous les comptes pour les plateformes
+    if not target_account_ids:
+        accounts = (
+            db.query(SocialAccount)
+            .filter(
+                SocialAccount.platform.in_(post.platforms),
+                SocialAccount.is_active == True,
+                SocialAccount.is_deleted == False,
+            )
+            .all()
+        )
+    else:
+        accounts = (
+            db.query(SocialAccount)
+            .filter(
+                SocialAccount.id.in_([int(a) for a in target_account_ids if a.isdigit()]),
+                SocialAccount.is_active == True,
+                SocialAccount.is_deleted == False,
+            )
+            .all()
+        )
+
+    for account in accounts:
+        result = SocialPostResult(
+            post_id=post.id,
+            account_id=account.id,
+            platform=account.platform,
+            status="pending",
+        )
+
+        if account.platform == "facebook":
+            try:
+                # Recuperer les pages Facebook avec le user token
+                pages = get_facebook_pages(account.access_token)
+                if not pages:
+                    result.status = "error"
+                    result.error_message = "Aucune page Facebook trouvee"
+                    has_error = True
+                else:
+                    # Publier sur la premiere page (ou celle qui correspond a account_id)
+                    target_page = None
+                    for page in pages:
+                        if page["id"] == account.account_id:
+                            target_page = page
+                            break
+                    if not target_page:
+                        target_page = pages[0]
+
+                    fb_result = publish_to_page(
+                        page_access_token=target_page["access_token"],
+                        page_id=target_page["id"],
+                        message=post.content,
+                        link=post.link_url,
+                    )
+                    result.status = "published"
+                    result.platform_post_id = fb_result["id"]
+                    result.platform_post_url = fb_result["permalink_url"]
+                    result.platform_url = fb_result["permalink_url"]
+                    result.published_at = now
+            except Exception as e:
+                logger.error(f"Erreur publication Facebook: {e}")
+                result.status = "error"
+                result.error_message = str(e)[:500]
+                has_error = True
+        else:
+            # TODO: Implementer pour Instagram, LinkedIn, Twitter
+            result.status = "published"
+            result.published_at = now
+
+        db.add(result)
+
+    post.status = "error" if has_error and not any(
+        r.status == "published" for r in db.query(SocialPostResult).filter(
+            SocialPostResult.post_id == post.id
+        ).all()
+    ) else "published"
+    post.published_at = now
     db.commit()
     db.refresh(post)
 
@@ -619,3 +713,307 @@ def get_engagement_time_series(db: Session, period: str = "30d") -> list[dict]:
         })
 
     return series
+
+
+# ════════════════════════════════════════════════════════════════
+# SYNCHRONISATION FACEBOOK
+# ════════════════════════════════════════════════════════════════
+
+def sync_facebook_account(db: Session, account_id: int) -> dict:
+    """
+    Synchroniser les posts et commentaires Facebook pour un compte.
+
+    Processus :
+    1. Recuperer le page access token via /me/accounts
+    2. Mettre a jour les infos du compte (page_id, avatar, followers)
+    3. Importer les posts de la page
+    4. Pour chaque post, importer les commentaires
+    5. Mettre a jour les metriques d'engagement
+
+    Returns:
+        dict avec les compteurs : {posts_synced, comments_synced, posts_new, comments_new}
+    """
+    from app.services.social_facebook import (
+        get_facebook_pages,
+        get_page_posts,
+        get_post_comments,
+        get_post_reactions_count,
+        parse_facebook_datetime,
+    )
+
+    account = get_social_account_by_id(db, account_id)
+
+    if account.platform != "facebook":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La synchronisation n'est supportee que pour Facebook"
+        )
+
+    if not account.access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token d'acces manquant. Reconnectez le compte."
+        )
+
+    stats = {
+        "posts_synced": 0,
+        "posts_new": 0,
+        "comments_synced": 0,
+        "comments_new": 0,
+    }
+
+    # 1. Recuperer les pages Facebook
+    pages = get_facebook_pages(account.access_token)
+    if not pages:
+        logger.warning(f"Aucune page Facebook trouvee pour le compte #{account_id}")
+        return stats
+
+    # Trouver la page correspondante au compte, ou utiliser la premiere
+    target_page = None
+    for page in pages:
+        if page["id"] == account.account_id:
+            target_page = page
+            break
+    if not target_page:
+        # Si le account_id stocke est le user ID, prendre la premiere page
+        target_page = pages[0]
+        # Mettre a jour le account_id avec le page_id
+        account.account_id = target_page["id"]
+        account.account_name = target_page["name"]
+
+    page_token = target_page["access_token"]
+    page_id = target_page["id"]
+
+    # Mettre a jour les infos du compte
+    if target_page.get("picture_url"):
+        account.avatar_url = target_page["picture_url"]
+        account.profile_picture = target_page["picture_url"]
+    if target_page.get("followers_count"):
+        account.followers_count = target_page["followers_count"]
+    account.account_type = "page"
+    account.profile_url = f"https://www.facebook.com/{page_id}"
+    db.commit()
+
+    # 2. Recuperer les posts de la page
+    fb_posts = get_page_posts(page_token, page_id, limit=50)
+
+    for fb_post in fb_posts:
+        platform_post_id = fb_post["platform_post_id"]
+        if not platform_post_id:
+            continue
+
+        # Verifier si ce post existe deja (via SocialPostResult.platform_post_id)
+        existing_result = (
+            db.query(SocialPostResult)
+            .filter(
+                SocialPostResult.platform_post_id == platform_post_id,
+                SocialPostResult.account_id == account.id,
+            )
+            .first()
+        )
+
+        if existing_result:
+            # Mettre a jour les metriques du post existant
+            try:
+                reactions = get_post_reactions_count(page_token, platform_post_id)
+                existing_result.likes = reactions.get("likes", 0)
+                existing_result.comments = reactions.get("comments", 0)
+                existing_result.shares = fb_post.get("shares_count", 0)
+                existing_result.impressions = fb_post.get("impressions", 0)
+                existing_result.clicks = fb_post.get("clicks", 0)
+                total_eng = existing_result.likes + existing_result.comments + existing_result.shares + existing_result.clicks
+                if existing_result.impressions > 0:
+                    existing_result.engagement_rate = round((total_eng / existing_result.impressions) * 100, 2)
+            except Exception as e:
+                logger.warning(f"Erreur mise a jour metriques post {platform_post_id}: {e}")
+
+            post_obj = (
+                db.query(SocialPost)
+                .filter(SocialPost.id == existing_result.post_id)
+                .first()
+            )
+            stats["posts_synced"] += 1
+        else:
+            # Creer un nouveau SocialPost + SocialPostResult
+            published_at = parse_facebook_datetime(fb_post.get("created_time", ""))
+
+            post_obj = SocialPost(
+                content=fb_post.get("message", "") or "(Pas de texte)",
+                media_urls=fb_post.get("media_urls", []),
+                link_url=fb_post.get("permalink_url"),
+                hashtags=[],
+                platforms=["facebook"],
+                target_accounts=[str(account.id)],
+                status="published",
+                published_at=published_at,
+                created_at=published_at,
+                created_by=account.connected_by,
+            )
+            db.add(post_obj)
+            db.flush()  # Pour obtenir post_obj.id
+
+            # Recuperer les reactions/likes
+            try:
+                reactions = get_post_reactions_count(page_token, platform_post_id)
+                likes_count = reactions.get("likes", 0)
+                comments_count = reactions.get("comments", 0)
+            except Exception:
+                likes_count = 0
+                comments_count = 0
+
+            result_obj = SocialPostResult(
+                post_id=post_obj.id,
+                account_id=account.id,
+                platform="facebook",
+                status="published",
+                platform_post_id=platform_post_id,
+                platform_post_url=fb_post.get("permalink_url", ""),
+                platform_url=fb_post.get("permalink_url", ""),
+                published_at=published_at,
+                impressions=fb_post.get("impressions", 0),
+                clicks=fb_post.get("clicks", 0),
+                likes=likes_count,
+                shares=fb_post.get("shares_count", 0),
+                comments=comments_count,
+            )
+            total_eng = result_obj.likes + result_obj.comments + result_obj.shares + result_obj.clicks
+            if result_obj.impressions > 0:
+                result_obj.engagement_rate = round((total_eng / result_obj.impressions) * 100, 2)
+
+            db.add(result_obj)
+            stats["posts_new"] += 1
+            stats["posts_synced"] += 1
+
+        # 3. Synchroniser les commentaires de ce post
+        if post_obj:
+            try:
+                fb_comments = get_post_comments(page_token, platform_post_id, limit=100)
+                for fb_comment in fb_comments:
+                    comment_stats = _sync_single_comment(
+                        db, fb_comment, post_obj, account, parent_comment_id=None
+                    )
+                    stats["comments_synced"] += comment_stats["synced"]
+                    stats["comments_new"] += comment_stats["new"]
+
+                    # Sync replies
+                    for reply in fb_comment.get("replies", []):
+                        # On doit d'abord trouver le parent comment dans la BDD
+                        parent_db = (
+                            db.query(SocialComment)
+                            .filter(
+                                SocialComment.platform_comment_id == fb_comment["platform_comment_id"]
+                            )
+                            .first()
+                        )
+                        if parent_db:
+                            reply_stats = _sync_single_comment(
+                                db, reply, post_obj, account, parent_comment_id=parent_db.id
+                            )
+                            stats["comments_synced"] += reply_stats["synced"]
+                            stats["comments_new"] += reply_stats["new"]
+            except Exception as e:
+                logger.warning(f"Erreur sync commentaires pour {platform_post_id}: {e}")
+
+    db.commit()
+    logger.info(
+        f"Sync Facebook #{account_id} terminee: "
+        f"{stats['posts_synced']} posts ({stats['posts_new']} new), "
+        f"{stats['comments_synced']} comments ({stats['comments_new']} new)"
+    )
+    return stats
+
+
+def _sync_single_comment(
+    db: Session,
+    fb_comment: dict,
+    post_obj: SocialPost,
+    account: SocialAccount,
+    parent_comment_id: Optional[int] = None,
+) -> dict:
+    """
+    Synchroniser un seul commentaire Facebook vers la BDD.
+
+    Returns:
+        {"synced": 1, "new": 0 ou 1}
+    """
+    from app.services.social_facebook import parse_facebook_datetime
+
+    platform_comment_id = fb_comment.get("platform_comment_id", "")
+    if not platform_comment_id:
+        return {"synced": 0, "new": 0}
+
+    existing = (
+        db.query(SocialComment)
+        .filter(SocialComment.platform_comment_id == platform_comment_id)
+        .first()
+    )
+
+    if existing:
+        # Mettre a jour le compteur de likes
+        existing.likes_count = fb_comment.get("like_count", 0)
+        return {"synced": 1, "new": 0}
+
+    # Creer un nouveau commentaire
+    new_comment = SocialComment(
+        platform_comment_id=platform_comment_id,
+        post_id=post_obj.id,
+        post_content=post_obj.content[:200] if post_obj.content else None,
+        account_id=account.id,
+        platform="facebook",
+        author_name=fb_comment.get("author_name", "Utilisateur Facebook"),
+        author_avatar=None,
+        author_platform_id=fb_comment.get("author_platform_id", "unknown"),
+        content=fb_comment.get("message", ""),
+        parent_comment_id=parent_comment_id,
+        is_read=False,
+        is_hidden=False,
+        likes_count=fb_comment.get("like_count", 0),
+        created_at=parse_facebook_datetime(fb_comment.get("created_time", "")),
+    )
+    db.add(new_comment)
+    db.flush()  # Pour les replies qui referencent ce commentaire
+    return {"synced": 1, "new": 1}
+
+
+def sync_all_facebook_accounts(db: Session) -> dict:
+    """
+    Synchroniser tous les comptes Facebook actifs.
+
+    Returns:
+        dict avec les totaux et le detail par compte
+    """
+    accounts = (
+        db.query(SocialAccount)
+        .filter(
+            SocialAccount.platform == "facebook",
+            SocialAccount.is_active == True,
+            SocialAccount.is_deleted == False,
+        )
+        .all()
+    )
+
+    total_stats = {
+        "accounts_synced": 0,
+        "posts_synced": 0,
+        "posts_new": 0,
+        "comments_synced": 0,
+        "comments_new": 0,
+        "errors": [],
+    }
+
+    for account in accounts:
+        try:
+            account_stats = sync_facebook_account(db, account.id)
+            total_stats["accounts_synced"] += 1
+            total_stats["posts_synced"] += account_stats["posts_synced"]
+            total_stats["posts_new"] += account_stats["posts_new"]
+            total_stats["comments_synced"] += account_stats["comments_synced"]
+            total_stats["comments_new"] += account_stats["comments_new"]
+        except Exception as e:
+            logger.error(f"Erreur sync compte #{account.id}: {e}")
+            total_stats["errors"].append({
+                "account_id": account.id,
+                "error": str(e)[:200],
+            })
+
+    return total_stats
