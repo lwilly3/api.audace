@@ -763,10 +763,13 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
     }
 
     # 1. Recuperer les pages Facebook
+    logger.info(f"[SYNC] Compte #{account_id}: debut sync, platform={account.platform}, account_id={account.account_id}")
     pages = get_facebook_pages(account.access_token)
     if not pages:
-        logger.warning(f"Aucune page Facebook trouvee pour le compte #{account_id}")
+        logger.warning(f"[SYNC] Aucune page Facebook trouvee pour le compte #{account_id}")
         return stats
+
+    logger.info(f"[SYNC] Compte #{account_id}: {len(pages)} page(s) trouvee(s) -> {[p['name'] for p in pages]}")
 
     # Trouver la page correspondante au compte, ou utiliser la premiere
     target_page = None
@@ -780,9 +783,11 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
         # Mettre a jour le account_id avec le page_id
         account.account_id = target_page["id"]
         account.account_name = target_page["name"]
+        logger.info(f"[SYNC] account_id mis a jour: {account.account_id} -> {target_page['id']} ({target_page['name']})")
 
     page_token = target_page["access_token"]
     page_id = target_page["id"]
+    logger.info(f"[SYNC] Page cible: {target_page['name']} (ID: {page_id})")
 
     # Mettre a jour les infos du compte
     if target_page.get("picture_url"):
@@ -796,6 +801,7 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
 
     # 2. Recuperer les posts de la page
     fb_posts = get_page_posts(page_token, page_id, limit=50)
+    logger.info(f"[SYNC] Page {page_id}: {len(fb_posts)} post(s) recupere(s) depuis Facebook")
 
     for fb_post in fb_posts:
         platform_post_id = fb_post["platform_post_id"]
@@ -991,6 +997,8 @@ def sync_all_facebook_accounts(db: Session) -> dict:
         )
         .all()
     )
+
+    logger.info(f"[SYNC ALL] {len(accounts)} compte(s) Facebook actif(s) a synchroniser")
 
     total_stats = {
         "accounts_synced": 0,

@@ -26,44 +26,52 @@ DEFAULT_TIMEOUT = 30.0
 def _graph_get(url: str, params: dict, description: str = "Graph API") -> dict:
     """
     Appel GET generique vers la Graph API avec gestion d'erreurs.
-
-    Args:
-        url: URL complete de l'endpoint
-        params: Parametres de la requete (access_token inclus)
-        description: Description pour les logs d'erreur
-
-    Returns:
-        Reponse JSON parsee
-
-    Raises:
-        HTTPException en cas d'erreur API
+    Logue la requete et la reponse pour faciliter le debug.
     """
+    logger.info(f"[FB API] {description} -> GET {url} (params sans token)")
+
     try:
         with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
             response = client.get(url, params=params)
 
+        logger.info(f"[FB API] {description} <- HTTP {response.status_code}")
+
         if response.status_code != 200:
-            error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+            try:
+                error_data = response.json()
+            except Exception:
+                error_data = {}
             error_msg = (
-                error_data.get("error", {}).get("message", response.text[:300])
-                if isinstance(error_data, dict) else response.text[:300]
+                error_data.get("error", {}).get("message", response.text[:500])
+                if isinstance(error_data, dict) else response.text[:500]
             )
-            logger.error(f"{description} echoue: {response.status_code} - {error_msg}")
+            error_code = error_data.get("error", {}).get("code", "?")
+            error_subcode = error_data.get("error", {}).get("error_subcode", "?")
+            logger.error(
+                f"[FB API] {description} ECHOUE: HTTP {response.status_code} "
+                f"code={error_code} subcode={error_subcode} msg={error_msg}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Facebook API error: {error_msg}"
+                detail=f"Facebook API error (code {error_code}): {error_msg}"
             )
 
-        return response.json()
+        data = response.json()
+        # Log le nombre d'elements si c'est une liste paginee
+        if isinstance(data.get("data"), list):
+            logger.info(f"[FB API] {description} -> {len(data['data'])} element(s)")
+        return data
 
+    except HTTPException:
+        raise
     except httpx.TimeoutException:
-        logger.error(f"Timeout {description}")
+        logger.error(f"[FB API] Timeout {description}")
         raise HTTPException(
             status_code=status.HTTP_504_GATEWAY_TIMEOUT,
             detail=f"Timeout lors de l'appel Facebook ({description})"
         )
     except httpx.RequestError as e:
-        logger.error(f"Erreur reseau {description}: {e}")
+        logger.error(f"[FB API] Erreur reseau {description}: {e}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Erreur reseau Facebook ({description})"
@@ -163,43 +171,48 @@ def get_page_posts(
     """
     Recuperer les publications d'une page Facebook.
 
-    Utilise /{page-id}/published_posts pour obtenir uniquement
-    les posts publies (pas les brouillons/programmes).
+    Essaie d'abord /{page-id}/feed (plus permissif),
+    puis fallback sur /{page-id}/published_posts si necessaire.
+    N'inclut PAS les insights (necessite read_insights) — les metriques
+    sont recuperees separement via les reactions.
 
     Returns:
-        Liste de posts normalises : {id, message, created_time, full_picture,
-        permalink_url, shares_count, likes_count, comments_count}
+        Liste de posts normalises
     """
-    url = f"{GRAPH_API_BASE}/{page_id}/published_posts"
-    params = {
-        "access_token": page_access_token,
-        "fields": "id,message,created_time,full_picture,permalink_url,shares,attachments,insights.metric(post_impressions,post_clicks_by_type)",
-        "limit": limit,
-    }
+    # Champs simples — PAS de insights (evite le besoin de read_insights)
+    fields = "id,message,created_time,full_picture,permalink_url,shares,attachments"
 
-    data = _graph_get(url, params, f"GET /{page_id}/published_posts")
-    raw_posts = data.get("data", [])
+    # Essayer /{page-id}/feed d'abord (plus tolerant en permissions)
+    for endpoint in ["feed", "published_posts"]:
+        url = f"{GRAPH_API_BASE}/{page_id}/{endpoint}"
+        params = {
+            "access_token": page_access_token,
+            "fields": fields,
+            "limit": limit,
+        }
+
+        try:
+            data = _graph_get(url, params, f"GET /{page_id}/{endpoint}")
+            raw_posts = data.get("data", [])
+
+            if raw_posts:
+                logger.info(f"Facebook: {len(raw_posts)} post(s) via /{endpoint}")
+                break
+            else:
+                logger.info(f"Facebook: 0 posts via /{endpoint}, essai suivant...")
+                continue
+        except HTTPException as e:
+            logger.warning(f"Facebook: /{endpoint} echoue ({e.detail}), essai suivant...")
+            if endpoint == "published_posts":
+                # Dernier essai echoue, retourner vide
+                logger.error(f"Facebook: aucun endpoint n'a fonctionne pour la page {page_id}")
+                return []
+            continue
+    else:
+        raw_posts = []
 
     posts = []
     for raw in raw_posts:
-        # Extraire les metriques des insights
-        impressions = 0
-        clicks = 0
-        insights = raw.get("insights", {}).get("data", [])
-        for insight in insights:
-            if insight.get("name") == "post_impressions":
-                values = insight.get("values", [])
-                if values:
-                    impressions = values[0].get("value", 0)
-            elif insight.get("name") == "post_clicks_by_type":
-                values = insight.get("values", [])
-                if values:
-                    click_data = values[0].get("value", {})
-                    if isinstance(click_data, dict):
-                        clicks = sum(click_data.values())
-                    elif isinstance(click_data, (int, float)):
-                        clicks = int(click_data)
-
         # Extraire le media
         media_urls = []
         full_picture = raw.get("full_picture")
@@ -224,11 +237,11 @@ def get_page_posts(
             "permalink_url": raw.get("permalink_url", ""),
             "media_urls": media_urls,
             "shares_count": raw.get("shares", {}).get("count", 0) if isinstance(raw.get("shares"), dict) else 0,
-            "impressions": impressions,
-            "clicks": clicks,
+            "impressions": 0,  # Sera mis a jour via reactions separement
+            "clicks": 0,
         })
 
-    logger.info(f"Facebook: {len(posts)} post(s) recupere(s) pour la page {page_id}")
+    logger.info(f"Facebook: {len(posts)} post(s) normalise(s) pour la page {page_id}")
     return posts
 
 
@@ -245,12 +258,14 @@ def get_post_reactions_count(page_access_token: str, post_id: str) -> dict:
         "fields": "likes.summary(true),comments.summary(true)",
     }
 
-    data = _graph_get(url, params, f"GET /{post_id} reactions")
-
-    likes = data.get("likes", {}).get("summary", {}).get("total_count", 0)
-    comments = data.get("comments", {}).get("summary", {}).get("total_count", 0)
-
-    return {"likes": likes, "comments": comments}
+    try:
+        data = _graph_get(url, params, f"GET /{post_id} reactions")
+        likes = data.get("likes", {}).get("summary", {}).get("total_count", 0)
+        comments = data.get("comments", {}).get("summary", {}).get("total_count", 0)
+        return {"likes": likes, "comments": comments}
+    except HTTPException as e:
+        logger.warning(f"Impossible de recuperer les reactions de {post_id}: {e.detail}")
+        return {"likes": 0, "comments": 0}
 
 
 # ════════════════════════════════════════════════════════════════
@@ -265,11 +280,12 @@ def get_post_comments(
     """
     Recuperer les commentaires d'un post Facebook.
 
-    Inclut les sous-commentaires (replies) a un niveau de profondeur.
+    NOTE: Le champ 'from' peut ne pas etre disponible si l'app n'a pas
+    la permission pages_read_user_content. On le demande mais on gere
+    gracieusement son absence.
 
     Returns:
-        Liste de commentaires normalises : {id, message, from, created_time, 
-        like_count, comment_count, parent_id, replies}
+        Liste de commentaires normalises
     """
     url = f"{GRAPH_API_BASE}/{post_id}/comments"
     params = {
@@ -279,12 +295,23 @@ def get_post_comments(
         "limit": limit,
     }
 
-    data = _graph_get(url, params, f"GET /{post_id}/comments")
+    try:
+        data = _graph_get(url, params, f"GET /{post_id}/comments")
+    except HTTPException:
+        # Retry sans le champ 'from' (peut echouer si pas de pages_read_user_content)
+        logger.warning(f"Retry commentaires sans champ 'from' pour {post_id}")
+        params["fields"] = "id,message,created_time,like_count,comment_count,parent"
+        try:
+            data = _graph_get(url, params, f"GET /{post_id}/comments (sans from)")
+        except HTTPException as e:
+            logger.error(f"Impossible de recuperer les commentaires de {post_id}: {e.detail}")
+            return []
+
     raw_comments = data.get("data", [])
 
     comments = []
     for raw in raw_comments:
-        from_data = raw.get("from", {})
+        from_data = raw.get("from", {}) or {}
         comment = {
             "platform_comment_id": raw.get("id", ""),
             "message": raw.get("message", ""),
@@ -308,7 +335,7 @@ def get_post_comments(
                 }
                 reply_data = _graph_get(reply_url, reply_params, f"GET replies for {comment['platform_comment_id']}")
                 for reply_raw in reply_data.get("data", []):
-                    reply_from = reply_raw.get("from", {})
+                    reply_from = reply_raw.get("from", {}) or {}
                     comment["replies"].append({
                         "platform_comment_id": reply_raw.get("id", ""),
                         "message": reply_raw.get("message", ""),
