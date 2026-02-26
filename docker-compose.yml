@@ -124,6 +124,19 @@ services:
 
       # Scaleway Dedibox API (api.online.net)
       SCW_SECRET_KEY: ${SCW_SECRET_KEY:-}
+
+      # Facebook / Instagram OAuth (Meta App)
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
+      FACEBOOK_CONFIG_ID: ${FACEBOOK_CONFIG_ID:-}
+
+      # LinkedIn OAuth
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
+
+      # Twitter/X OAuth 2.0
+      TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID:-}
+      TWITTER_CLIENT_SECRET: ${TWITTER_CLIENT_SECRET:-}
       
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0

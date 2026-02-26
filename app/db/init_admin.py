@@ -74,6 +74,13 @@ ALL_PERMISSIONS_TRUE = {
     "inventory_location_view": True, "inventory_location_manage": True,
     "ovh_access_section": True, "ovh_view_services": True, "ovh_view_dashboard": True,
     "ovh_view_billing": True, "ovh_view_account": True, "ovh_manage": True,
+    "scw_access_section": True, "scw_view_instances": True, "scw_view_dashboard": True,
+    "scw_view_billing": True, "scw_view_domains": True, "scw_view_account": True, "scw_manage": True,
+    "social_access_section": True, "social_view_posts": True, "social_create_posts": True,
+    "social_edit_posts": True, "social_delete_posts": True, "social_publish_posts": True,
+    "social_view_inbox": True, "social_reply_comments": True, "social_delete_comments": True,
+    "social_reply_messages": True, "social_view_stats": True, "social_export_stats": True,
+    "social_manage_accounts": True, "social_manage_settings": True,
 }
 
 # Admin = tout sauf destruction archives (reservee au super_admin)
@@ -377,6 +384,31 @@ def update_all_permissions_to_true(db: Session, user_id: int) -> None:
         permissions.ovh_view_billing = True
         permissions.ovh_view_account = True
         permissions.ovh_manage = True
+
+        # Scaleway Dedibox (module consultation API)
+        permissions.scw_access_section = True
+        permissions.scw_view_instances = True
+        permissions.scw_view_dashboard = True
+        permissions.scw_view_billing = True
+        permissions.scw_view_domains = True
+        permissions.scw_view_account = True
+        permissions.scw_manage = True
+
+        # Social (reseaux sociaux)
+        permissions.social_access_section = True
+        permissions.social_view_posts = True
+        permissions.social_create_posts = True
+        permissions.social_edit_posts = True
+        permissions.social_delete_posts = True
+        permissions.social_publish_posts = True
+        permissions.social_view_inbox = True
+        permissions.social_reply_comments = True
+        permissions.social_delete_comments = True
+        permissions.social_reply_messages = True
+        permissions.social_view_stats = True
+        permissions.social_export_stats = True
+        permissions.social_manage_accounts = True
+        permissions.social_manage_settings = True
 
         logger.info(f"✅ Toutes les permissions admin activées pour l'utilisateur {user_id}")
         

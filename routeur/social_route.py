@@ -12,9 +12,13 @@ Endpoints :
 - /social/analytics         — Statistiques d'engagement
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
+import logging
 
 from app.db.database import get_db
 from core.auth import oauth2
@@ -25,6 +29,7 @@ from app.db.crud.crud_social import (
     get_social_account_by_id,
     disconnect_social_account,
     check_account_token_status,
+    upsert_social_account_from_oauth,
     # Posts
     get_social_posts,
     get_social_post_by_id,
@@ -65,6 +70,15 @@ from app.schemas.schema_social import (
     BestTimeSlotResponse,
     TimeSeriesPointResponse,
 )
+from app.services.social_oauth import (
+    build_authorization_url,
+    verify_oauth_state,
+    exchange_code_for_token,
+    fetch_user_profile,
+    SUPPORTED_PLATFORMS,
+)
+from app.config.config import settings
+from app.models.model_user_permissions import UserPermissions
 
 
 router = APIRouter(
@@ -93,30 +107,132 @@ def connect_account(
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """
-    Initier la connexion OAuth pour une plateforme.
-    
-    Retourne l'URL de redirection vers la page d'autorisation
-    de la plateforme sociale.
-    
-    TODO: Implémenter le flux OAuth réel pour chaque plateforme.
+    Initier la connexion OAuth pour une plateforme sociale.
+
+    Retourne l'URL de redirection vers la page d'autorisation OAuth
+    de la plateforme. Le frontend doit rediriger l'utilisateur vers cette URL.
+
+    Plateformes supportees : facebook, instagram, linkedin, twitter
     """
-    # TODO: Implémenter l'OAuth réel (Facebook Graph API, Instagram Basic Display, etc.)
-    # Pour l'instant, retourner un placeholder
-    import secrets
-    state = secrets.token_urlsafe(32)
+    # Verifier la permission
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
 
-    oauth_urls = {
-        "facebook": f"https://www.facebook.com/v18.0/dialog/oauth?client_id=YOUR_APP_ID&redirect_uri=YOUR_REDIRECT&state={state}&scope=pages_manage_posts,pages_read_engagement",
-        "instagram": f"https://api.instagram.com/oauth/authorize?client_id=YOUR_APP_ID&redirect_uri=YOUR_REDIRECT&state={state}&scope=user_profile,user_media",
-        "linkedin": f"https://www.linkedin.com/oauth/v2/authorization?client_id=YOUR_APP_ID&redirect_uri=YOUR_REDIRECT&state={state}&scope=w_member_social",
-        "twitter": f"https://twitter.com/i/oauth2/authorize?client_id=YOUR_APP_ID&redirect_uri=YOUR_REDIRECT&state={state}&scope=tweet.read%20tweet.write%20users.read",
-    }
+    if platform not in SUPPORTED_PLATFORMS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Plateforme '{platform}' non supportee. "
+                   f"Valides: {', '.join(sorted(SUPPORTED_PLATFORMS))}"
+        )
 
-    redirect_url = oauth_urls.get(platform, f"https://oauth.example.com/{platform}?state={state}")
+    redirect_url, state = build_authorization_url(platform, current_user.id)
 
     log_action(db, current_user.id, "oauth_init", "social_accounts", 0)
 
     return OAuthRedirectResponse(redirect_url=redirect_url, state=state)
+
+
+@router.get("/accounts/callback")
+def oauth_callback(
+    code: str = Query(None, description="Code d'autorisation de la plateforme"),
+    state: str = Query(None, description="Parametre state pour validation CSRF"),
+    error: str = Query(None, description="Erreur retournee par la plateforme"),
+    error_description: str = Query(None, description="Description de l'erreur"),
+    db: Session = Depends(get_db),
+):
+    """
+    Callback OAuth2 — recoit le code d'autorisation depuis la plateforme.
+
+    Cet endpoint est appele par le navigateur apres que l'utilisateur
+    a autorise l'application sur la plateforme sociale.
+
+    IMPORTANT: Cet endpoint ne requiert PAS d'authentification JWT
+    car il est appele via redirect du navigateur depuis la plateforme.
+    L'identite utilisateur est recuperee depuis le parametre state signe.
+    """
+    logger = logging.getLogger("hapson-api")
+    frontend_callback = f"{settings.FRONTEND_URL}/social/callback"
+
+    # Erreur retournee par la plateforme
+    if error:
+        params = urlencode({
+            "status": "error",
+            "message": error_description or error,
+        })
+        return RedirectResponse(url=f"{frontend_callback}?{params}")
+
+    # Parametres manquants
+    if not code or not state:
+        params = urlencode({
+            "status": "error",
+            "message": "Parametres OAuth manquants (code ou state)",
+        })
+        return RedirectResponse(url=f"{frontend_callback}?{params}")
+
+    try:
+        # 1. Verifier et decoder le state
+        state_data = verify_oauth_state(state)
+        user_id = state_data["user_id"]
+        platform = state_data["platform"]
+
+        # 2. Echanger le code contre des tokens
+        token_data = exchange_code_for_token(platform, code, state)
+        access_token = token_data["access_token"]
+        refresh_token = token_data.get("refresh_token")
+
+        # Calculer l'expiration du token
+        token_expires_at = None
+        expires_in = token_data.get("expires_in")
+        if expires_in:
+            token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=int(expires_in))
+
+        # 3. Recuperer le profil utilisateur
+        profile = fetch_user_profile(platform, access_token)
+
+        # 4. Sauvegarder / mettre a jour le SocialAccount en BDD
+        account = upsert_social_account_from_oauth(
+            db=db,
+            platform=platform,
+            platform_user_id=profile["platform_user_id"],
+            account_name=profile["name"],
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_expires_at=token_expires_at,
+            avatar_url=profile.get("picture_url"),
+            connected_by=user_id,
+        )
+
+        # 5. Audit log
+        log_action(db, user_id, "oauth_connect", "social_accounts", account.id)
+
+        # 6. Rediriger vers le frontend avec succes
+        params = urlencode({
+            "status": "success",
+            "platform": platform,
+            "account": profile["name"],
+            "account_id": str(account.id),
+        })
+        return RedirectResponse(url=f"{frontend_callback}?{params}")
+
+    except HTTPException as e:
+        params = urlencode({
+            "status": "error",
+            "message": e.detail if isinstance(e.detail, str) else "Erreur OAuth",
+        })
+        return RedirectResponse(url=f"{frontend_callback}?{params}")
+    except Exception as e:
+        logger.error(f"Erreur callback OAuth: {e}", exc_info=True)
+        params = urlencode({
+            "status": "error",
+            "message": "Erreur interne lors de la connexion OAuth",
+        })
+        return RedirectResponse(url=f"{frontend_callback}?{params}")
 
 
 @router.delete("/accounts/{account_id}")

@@ -72,6 +72,75 @@ def check_account_token_status(db: Session, account_id: int) -> dict:
     }
 
 
+def upsert_social_account_from_oauth(
+    db: Session,
+    platform: str,
+    platform_user_id: str,
+    account_name: str,
+    access_token: str,
+    refresh_token: Optional[str],
+    token_expires_at: Optional[datetime],
+    avatar_url: Optional[str],
+    connected_by: int,
+) -> SocialAccount:
+    """
+    Creer ou mettre a jour un SocialAccount depuis les donnees OAuth.
+
+    Si un compte avec le meme platform + account_id + connected_by existe
+    (non supprime), met a jour ses tokens. Sinon, cree un nouveau record.
+    """
+    try:
+        existing = (
+            db.query(SocialAccount)
+            .filter(
+                SocialAccount.platform == platform,
+                SocialAccount.account_id == platform_user_id,
+                SocialAccount.connected_by == connected_by,
+                SocialAccount.is_deleted == False,
+            )
+            .first()
+        )
+
+        if existing:
+            existing.access_token = access_token
+            existing.refresh_token = refresh_token
+            existing.token_expires_at = token_expires_at
+            existing.account_name = account_name
+            existing.avatar_url = avatar_url
+            existing.is_active = True
+            db.commit()
+            db.refresh(existing)
+            return existing
+
+        new_account = SocialAccount(
+            platform=platform,
+            account_name=account_name,
+            account_id=platform_user_id,
+            account_type="profile",
+            avatar_url=avatar_url,
+            profile_picture=avatar_url,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_expires_at=token_expires_at,
+            connected_by=connected_by,
+            is_active=True,
+            permissions=[],
+        )
+        db.add(new_account)
+        db.commit()
+        db.refresh(new_account)
+        return new_account
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la sauvegarde du compte social: {str(e)}"
+        )
+
+
 # ════════════════════════════════════════════════════════════════
 # PUBLICATIONS
 # ════════════════════════════════════════════════════════════════
