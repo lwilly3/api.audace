@@ -56,6 +56,7 @@ def _dedibox_get(path: str, params: Optional[dict] = None) -> Union[dict, list]:
 
         # Log detaille pour tout code != 200
         error_body = response.text[:500] if response.text else "(corps vide)"
+        print(f"[DEDIBOX ERROR] {response.status_code} {path}: {error_body}")
         logger.error(
             f"Dedibox API {response.status_code} {path}: {error_body}"
         )
@@ -156,19 +157,11 @@ def get_hosting_detail(hosting_id: int) -> dict:
 # ════════════════════════════════════════════════════════════════
 
 def get_domains() -> list[dict]:
-    """Recupere la liste de tous les domaines geres.
-
-    Retourne une liste vide si l'API Dedibox refuse l'acces
-    (endpoint non disponible pour certains comptes).
-    """
-    try:
-        data = _dedibox_get("/domain")
-        if isinstance(data, list):
-            return data
-        return []
-    except HTTPException as e:
-        logger.warning(f"Domaines Dedibox indisponibles ({e.status_code}): {e.detail}")
-        return []
+    """Recupere la liste de tous les domaines geres."""
+    data = _dedibox_get("/domain")
+    if isinstance(data, list):
+        return data
+    return []
 
 
 def get_domain_detail(domain_id: int) -> dict:
