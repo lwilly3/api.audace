@@ -16,7 +16,7 @@ from sqlalchemy import (
     Column, Integer, String, Text, DateTime, Boolean, Float,
     ForeignKey, func, Enum as SAEnum
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from app.db.database import Base
 
@@ -168,7 +168,13 @@ class SocialComment(SocialBaseModel):
 
     # Relations
     account = relationship("SocialAccount", back_populates="comments")
-    replies = relationship("SocialComment", backref="parent", remote_side=[id], cascade="all, delete-orphan")
+    replies = relationship(
+        "SocialComment",
+        backref=backref("parent", remote_side=[id]),
+        foreign_keys=[parent_comment_id],
+        cascade="all, delete-orphan",
+        single_parent=True,
+    )
 
 
 # ────────────────────────────────────────────────────────────────
