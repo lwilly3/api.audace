@@ -161,6 +161,22 @@ class UserPermissions(Base):
     scw_view_account = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les infos du compte Scaleway
     scw_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gestion complète du module Scaleway
 
+    # Permissions pour le module Social (réseaux sociaux)
+    social_access_section = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Accéder au module Social
+    social_view_posts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les publications
+    social_create_posts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Créer des publications
+    social_edit_posts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Modifier des publications
+    social_delete_posts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Supprimer des publications
+    social_publish_posts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Publier des publications
+    social_view_inbox = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir l'inbox social
+    social_reply_comments = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Répondre aux commentaires
+    social_delete_comments = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Supprimer des commentaires
+    social_reply_messages = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Répondre aux messages privés
+    social_view_stats = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les statistiques
+    social_export_stats = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Exporter les statistiques
+    social_manage_accounts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gérer les comptes sociaux
+    social_manage_settings = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gérer les paramètres Social
+
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
 

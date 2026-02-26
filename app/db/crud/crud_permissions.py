@@ -183,6 +183,22 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "scw_view_account": permissions.scw_view_account,
     "scw_manage": permissions.scw_manage,
 
+    # Permissions pour le module Social (réseaux sociaux)
+    "social_access_section": permissions.social_access_section,
+    "social_view_posts": permissions.social_view_posts,
+    "social_create_posts": permissions.social_create_posts,
+    "social_edit_posts": permissions.social_edit_posts,
+    "social_delete_posts": permissions.social_delete_posts,
+    "social_publish_posts": permissions.social_publish_posts,
+    "social_view_inbox": permissions.social_view_inbox,
+    "social_reply_comments": permissions.social_reply_comments,
+    "social_delete_comments": permissions.social_delete_comments,
+    "social_reply_messages": permissions.social_reply_messages,
+    "social_view_stats": permissions.social_view_stats,
+    "social_export_stats": permissions.social_export_stats,
+    "social_manage_accounts": permissions.social_manage_accounts,
+    "social_manage_settings": permissions.social_manage_settings,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
@@ -323,7 +339,23 @@ def initialize_user_permissions(db: Session, user_id: int):
     scw_view_billing=False,
     scw_view_domains=False,
     scw_view_account=False,
-    scw_manage=False
+    scw_manage=False,
+
+    # Social (réseaux sociaux)
+    social_access_section=False,
+    social_view_posts=False,
+    social_create_posts=False,
+    social_edit_posts=False,
+    social_delete_posts=False,
+    social_publish_posts=False,
+    social_view_inbox=False,
+    social_reply_comments=False,
+    social_delete_comments=False,
+    social_reply_messages=False,
+    social_view_stats=False,
+    social_export_stats=False,
+    social_manage_accounts=False,
+    social_manage_settings=False
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -600,7 +632,23 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'scw_view_billing',
     'scw_view_domains',
     'scw_view_account',
-    'scw_manage'
+    'scw_manage',
+
+    # Permissions pour le module Social (réseaux sociaux)
+    'social_access_section',
+    'social_view_posts',
+    'social_create_posts',
+    'social_edit_posts',
+    'social_delete_posts',
+    'social_publish_posts',
+    'social_view_inbox',
+    'social_reply_comments',
+    'social_delete_comments',
+    'social_reply_messages',
+    'social_view_stats',
+    'social_export_stats',
+    'social_manage_accounts',
+    'social_manage_settings'
 }
 
         # Vérifier les permissions fournies
