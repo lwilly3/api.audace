@@ -397,6 +397,68 @@ def publish_to_page(
 
 
 # ════════════════════════════════════════════════════════════════
+# DIAGNOSTIC / DEBUG
+# ════════════════════════════════════════════════════════════════
+
+def debug_token_permissions(access_token: str) -> list[str]:
+    """
+    Appelle /me/permissions pour voir les permissions accordees au token.
+    Appelle aussi /me pour voir l'identite associee au token.
+    Purement diagnostic — print dans stdout pour Docker logs.
+    """
+    granted = []
+
+    # 1. Identite du token
+    try:
+        url_me = f"{GRAPH_API_BASE}/me"
+        params_me = {"access_token": access_token, "fields": "id,name"}
+        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
+            resp = client.get(url_me, params=params_me)
+        me_data = resp.json() if resp.status_code == 200 else {}
+        print(f"[DEBUG TOKEN] /me -> {me_data}", flush=True)
+        logger.info(f"[DEBUG TOKEN] /me -> {me_data}")
+    except Exception as e:
+        print(f"[DEBUG TOKEN] /me ERREUR: {e}", flush=True)
+
+    # 2. Permissions du token
+    try:
+        url_perms = f"{GRAPH_API_BASE}/me/permissions"
+        params_perms = {"access_token": access_token}
+        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
+            resp = client.get(url_perms, params=params_perms)
+        if resp.status_code == 200:
+            perms_data = resp.json().get("data", [])
+            for p in perms_data:
+                status = p.get("status", "?")
+                perm = p.get("permission", "?")
+                granted.append(f"{perm}={status}")
+            print(f"[DEBUG TOKEN] Permissions: {granted}", flush=True)
+            logger.info(f"[DEBUG TOKEN] Permissions: {granted}")
+        else:
+            print(f"[DEBUG TOKEN] /me/permissions HTTP {resp.status_code}: {resp.text[:300]}", flush=True)
+    except Exception as e:
+        print(f"[DEBUG TOKEN] /me/permissions ERREUR: {e}", flush=True)
+
+    # 3. Appel direct /me/accounts avec log de la reponse brute
+    try:
+        url_accounts = f"{GRAPH_API_BASE}/me/accounts"
+        params_acc = {
+            "access_token": access_token,
+            "fields": "id,name",
+            "limit": 10,
+        }
+        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
+            resp = client.get(url_accounts, params=params_acc)
+        raw = resp.text[:500]
+        print(f"[DEBUG TOKEN] /me/accounts RAW: {raw}", flush=True)
+        logger.info(f"[DEBUG TOKEN] /me/accounts RAW: {raw}")
+    except Exception as e:
+        print(f"[DEBUG TOKEN] /me/accounts ERREUR: {e}", flush=True)
+
+    return granted
+
+
+# ════════════════════════════════════════════════════════════════
 # HELPERS
 # ════════════════════════════════════════════════════════════════
 

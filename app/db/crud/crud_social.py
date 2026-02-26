@@ -762,6 +762,10 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
         "comments_new": 0,
     }
 
+    # 0. DIAGNOSTIC — verifier les permissions du token
+    from app.services.social_facebook import debug_token_permissions
+    debug_token_permissions(account.access_token)
+
     # 1. Recuperer les pages Facebook
     print(f"[SYNC] Compte #{account_id}: debut sync, platform={account.platform}, account_id={account.account_id}", flush=True)
     logger.info(f"[SYNC] Compte #{account_id}: debut sync, platform={account.platform}, account_id={account.account_id}")
