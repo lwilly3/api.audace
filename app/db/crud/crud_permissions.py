@@ -174,6 +174,15 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "ovh_view_account": permissions.ovh_view_account,
     "ovh_manage": permissions.ovh_manage,
 
+    # Permissions pour le module Scaleway Dedibox
+    "scw_access_section": permissions.scw_access_section,
+    "scw_view_instances": permissions.scw_view_instances,
+    "scw_view_dashboard": permissions.scw_view_dashboard,
+    "scw_view_billing": permissions.scw_view_billing,
+    "scw_view_domains": permissions.scw_view_domains,
+    "scw_view_account": permissions.scw_view_account,
+    "scw_manage": permissions.scw_manage,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
@@ -305,7 +314,16 @@ def initialize_user_permissions(db: Session, user_id: int):
     ovh_view_dashboard=False,
     ovh_view_billing=False,
     ovh_view_account=False,
-    ovh_manage=False
+    ovh_manage=False,
+
+    # Scaleway Dedibox
+    scw_access_section=False,
+    scw_view_instances=False,
+    scw_view_dashboard=False,
+    scw_view_billing=False,
+    scw_view_domains=False,
+    scw_view_account=False,
+    scw_manage=False
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -573,7 +591,16 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'ovh_view_dashboard',
     'ovh_view_billing',
     'ovh_view_account',
-    'ovh_manage'
+    'ovh_manage',
+
+    # Permissions pour le module Scaleway Dedibox
+    'scw_access_section',
+    'scw_view_instances',
+    'scw_view_dashboard',
+    'scw_view_billing',
+    'scw_view_domains',
+    'scw_view_account',
+    'scw_manage'
 }
 
         # Vérifier les permissions fournies
