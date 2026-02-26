@@ -110,13 +110,43 @@ def get_user_info() -> dict:
 
 def get_servers() -> list[dict]:
     """
-    Recupere la liste de tous les serveurs dedies.
-    L'API retourne un tableau d'objets serveur.
+    Recupere la liste de tous les serveurs dedies, enrichie avec les details.
+
+    L'API Dedibox /server/ peut retourner des objets minimaux.
+    On enrichit chaque serveur en appelant /server/{id} si les champs
+    essentiels (hostname, offer, ip) sont absents.
     """
     data = _dedibox_get("/server")
-    if isinstance(data, list):
-        return data
-    return []
+    if not isinstance(data, list):
+        return []
+
+    enriched: list[dict] = []
+    for item in data:
+        server_id = None
+        if isinstance(item, dict):
+            # Si l'objet a deja les champs essentiels, pas besoin d'enrichir
+            if item.get("hostname") and item.get("offer"):
+                enriched.append(item)
+                continue
+            server_id = item.get("id")
+        elif isinstance(item, (int, float)):
+            server_id = int(item)
+
+        if server_id:
+            try:
+                detail = get_server_detail(server_id)
+                if detail:
+                    enriched.append(detail)
+                    continue
+            except Exception:
+                pass
+
+        if isinstance(item, dict):
+            enriched.append(item)
+        else:
+            enriched.append({"id": item})
+
+    return enriched
 
 
 def get_server_detail(server_id: int) -> dict:
@@ -139,11 +169,42 @@ def get_server_status(server_id: int) -> dict:
 # ════════════════════════════════════════════════════════════════
 
 def get_hostings() -> list[dict]:
-    """Recupere la liste de tous les hebergements web."""
+    """
+    Recupere la liste de tous les hebergements web, enrichie avec les details.
+
+    L'API Dedibox /hosting/ peut retourner des objets minimaux.
+    On enrichit chaque hebergement si les champs essentiels sont absents.
+    """
     data = _dedibox_get("/hosting")
-    if isinstance(data, list):
-        return data
-    return []
+    if not isinstance(data, list):
+        return []
+
+    enriched: list[dict] = []
+    for item in data:
+        hosting_id = None
+        if isinstance(item, dict):
+            if item.get("hostname") or item.get("fqdn"):
+                enriched.append(item)
+                continue
+            hosting_id = item.get("id")
+        elif isinstance(item, (int, float)):
+            hosting_id = int(item)
+
+        if hosting_id:
+            try:
+                detail = get_hosting_detail(hosting_id)
+                if detail:
+                    enriched.append(detail)
+                    continue
+            except Exception:
+                pass
+
+        if isinstance(item, dict):
+            enriched.append(item)
+        else:
+            enriched.append({"id": item})
+
+    return enriched
 
 
 def get_hosting_detail(hosting_id: int) -> dict:
@@ -157,11 +218,41 @@ def get_hosting_detail(hosting_id: int) -> dict:
 # ════════════════════════════════════════════════════════════════
 
 def get_domains() -> list[dict]:
-    """Recupere la liste de tous les domaines geres."""
+    """
+    Recupere la liste de tous les domaines geres, enrichie avec les details.
+
+    L'API Dedibox /domain/ retourne souvent des objets minimaux (juste l'id).
+    On enrichit chaque domaine en appelant /domain/{id} pour obtenir
+    nom, dates, statut, contacts, etc.
+    """
     data = _dedibox_get("/domain")
-    if isinstance(data, list):
-        return data
-    return []
+    if not isinstance(data, list):
+        return []
+
+    enriched: list[dict] = []
+    for item in data:
+        domain_id = None
+        if isinstance(item, dict):
+            domain_id = item.get("id")
+        elif isinstance(item, (int, float)):
+            domain_id = int(item)
+
+        if domain_id:
+            try:
+                detail = get_domain_detail(domain_id)
+                if detail:
+                    enriched.append(detail)
+                    continue
+            except Exception:
+                pass
+
+        # Fallback: garder l'item tel quel
+        if isinstance(item, dict):
+            enriched.append(item)
+        else:
+            enriched.append({"id": item})
+
+    return enriched
 
 
 def get_domain_detail(domain_id: int) -> dict:
