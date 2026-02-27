@@ -233,8 +233,9 @@ def get_page_posts(
     Returns:
         Liste de posts normalises
     """
-    # Champs simples — PAS de insights (evite le besoin de read_insights)
-    fields = "id,message,created_time,full_picture,permalink_url,shares,attachments"
+    # Champs simples + summary des likes/comments (evite un appel separe)
+    # likes.summary(true) et comments.summary(true) fonctionnent avec le page token
+    fields = "id,message,created_time,full_picture,permalink_url,shares,attachments,likes.summary(true),comments.summary(true)"
 
     # Essayer /{page-id}/feed d'abord (plus tolerant en permissions)
     for endpoint in ["feed", "published_posts"]:
@@ -284,6 +285,22 @@ def get_page_posts(
                 if src and src not in media_urls:
                     media_urls.append(src)
 
+        # Extraire likes/comments depuis le summary inline
+        likes_count = 0
+        comments_count = 0
+        try:
+            likes_summary = raw.get("likes", {})
+            if isinstance(likes_summary, dict):
+                likes_count = likes_summary.get("summary", {}).get("total_count", 0)
+        except Exception:
+            pass
+        try:
+            comments_summary = raw.get("comments", {})
+            if isinstance(comments_summary, dict):
+                comments_count = comments_summary.get("summary", {}).get("total_count", 0)
+        except Exception:
+            pass
+
         posts.append({
             "platform_post_id": raw.get("id", ""),
             "message": raw.get("message", ""),
@@ -291,7 +308,9 @@ def get_page_posts(
             "permalink_url": raw.get("permalink_url", ""),
             "media_urls": media_urls,
             "shares_count": raw.get("shares", {}).get("count", 0) if isinstance(raw.get("shares"), dict) else 0,
-            "impressions": 0,  # Sera mis a jour via reactions separement
+            "likes_count": likes_count,
+            "comments_count": comments_count,
+            "impressions": 0,
             "clicks": 0,
         })
 
@@ -302,6 +321,7 @@ def get_page_posts(
 def get_post_reactions_count(page_access_token: str, post_id: str) -> dict:
     """
     Recuperer le nombre de reactions (likes) et commentaires d'un post.
+    Fallback: essaie d'abord likes.summary, puis reactions.summary.
 
     Returns:
         {likes: int, comments: int}
@@ -316,9 +336,23 @@ def get_post_reactions_count(page_access_token: str, post_id: str) -> dict:
         data = _graph_get(url, params, f"GET /{post_id} reactions")
         likes = data.get("likes", {}).get("summary", {}).get("total_count", 0)
         comments = data.get("comments", {}).get("summary", {}).get("total_count", 0)
+        logger.info(f"Reactions {post_id}: likes={likes}, comments={comments}")
+        return {"likes": likes, "comments": comments}
+    except HTTPException as e:
+        logger.warning(f"Reactions {post_id} echoue ({e.detail}), essai reactions.summary...")
+        print(f"[FB API] Reactions {post_id} echoue, fallback reactions.summary", flush=True)
+
+    # Fallback: reactions.summary (plus generique)
+    try:
+        params["fields"] = "reactions.summary(total_count),comments.summary(true)"
+        data = _graph_get(url, params, f"GET /{post_id} reactions (fallback)")
+        likes = data.get("reactions", {}).get("summary", {}).get("total_count", 0)
+        comments = data.get("comments", {}).get("summary", {}).get("total_count", 0)
+        logger.info(f"Reactions fallback {post_id}: likes={likes}, comments={comments}")
         return {"likes": likes, "comments": comments}
     except HTTPException as e:
         logger.warning(f"Impossible de recuperer les reactions de {post_id}: {e.detail}")
+        print(f"[FB API] Reactions {post_id} completement echoue: {e.detail}", flush=True)
         return {"likes": 0, "comments": 0}
 
 

@@ -973,18 +973,29 @@ def _sync_page_posts(
 
         if existing_result:
             # Mettre a jour les metriques du post existant
-            try:
-                reactions = get_post_reactions_count(page_token, platform_post_id)
-                existing_result.likes = reactions.get("likes", 0)
-                existing_result.comments = reactions.get("comments", 0)
-                existing_result.shares = fb_post.get("shares_count", 0)
-                existing_result.impressions = fb_post.get("impressions", 0)
-                existing_result.clicks = fb_post.get("clicks", 0)
-                total_eng = existing_result.likes + existing_result.comments + existing_result.shares + existing_result.clicks
-                if existing_result.impressions > 0:
-                    existing_result.engagement_rate = round((total_eng / existing_result.impressions) * 100, 2)
-            except Exception as e:
-                logger.warning(f"Erreur metriques post {platform_post_id}: {e}")
+            # Priorite 1 : likes/comments du feed (inline summary)
+            feed_likes = fb_post.get("likes_count", 0)
+            feed_comments = fb_post.get("comments_count", 0)
+
+            if feed_likes > 0 or feed_comments > 0:
+                existing_result.likes = feed_likes
+                existing_result.comments = feed_comments
+            else:
+                # Priorite 2 : appel separe get_post_reactions_count
+                try:
+                    reactions = get_post_reactions_count(page_token, platform_post_id)
+                    existing_result.likes = reactions.get("likes", 0)
+                    existing_result.comments = reactions.get("comments", 0)
+                except Exception as e:
+                    logger.warning(f"Erreur metriques post {platform_post_id}: {e}")
+                    print(f"[SYNC] Erreur metriques {platform_post_id}: {e}", flush=True)
+
+            existing_result.shares = fb_post.get("shares_count", 0)
+            existing_result.impressions = fb_post.get("impressions", 0)
+            existing_result.clicks = fb_post.get("clicks", 0)
+            total_eng = existing_result.likes + existing_result.comments + existing_result.shares + existing_result.clicks
+            if existing_result.impressions > 0:
+                existing_result.engagement_rate = round((total_eng / existing_result.impressions) * 100, 2)
 
             post_obj = (
                 db.query(SocialPost)
@@ -1011,13 +1022,22 @@ def _sync_page_posts(
             db.add(post_obj)
             db.flush()
 
-            try:
-                reactions = get_post_reactions_count(page_token, platform_post_id)
-                likes_count = reactions.get("likes", 0)
-                comments_count = reactions.get("comments", 0)
-            except Exception:
-                likes_count = 0
-                comments_count = 0
+            # Utiliser les likes/comments du feed en priorite
+            feed_likes = fb_post.get("likes_count", 0)
+            feed_comments = fb_post.get("comments_count", 0)
+
+            if feed_likes > 0 or feed_comments > 0:
+                likes_count = feed_likes
+                comments_count = feed_comments
+            else:
+                try:
+                    reactions = get_post_reactions_count(page_token, platform_post_id)
+                    likes_count = reactions.get("likes", 0)
+                    comments_count = reactions.get("comments", 0)
+                except Exception as e:
+                    logger.warning(f"Erreur reactions nouveau post {platform_post_id}: {e}")
+                    likes_count = 0
+                    comments_count = 0
 
             result_obj = SocialPostResult(
                 post_id=post_obj.id,
@@ -1046,6 +1066,7 @@ def _sync_page_posts(
         if post_obj:
             try:
                 fb_comments = get_post_comments(page_token, platform_post_id, limit=100)
+                print(f"[SYNC] Post {platform_post_id}: {len(fb_comments)} commentaire(s) FB", flush=True)
                 for fb_comment in fb_comments:
                     comment_stats = _sync_single_comment(
                         db, fb_comment, post_obj, page_account, parent_comment_id=None
@@ -1067,6 +1088,7 @@ def _sync_page_posts(
                             stats["comments_new"] += reply_stats["new"]
             except Exception as e:
                 logger.warning(f"Erreur sync commentaires pour {platform_post_id}: {e}")
+                print(f"[SYNC] ERREUR commentaires {platform_post_id}: {type(e).__name__}: {e}", flush=True)
 
     return stats
 
