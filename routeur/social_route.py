@@ -684,7 +684,7 @@ def analytics_engagement(
 
 
 # ════════════════════════════════════════════════════════════════
-# DIAGNOSTIC — TEST DES PERMISSIONS FACEBOOK
+# DIAGNOSTIC — TEST COMPLET DES PERMISSIONS FACEBOOK
 # ════════════════════════════════════════════════════════════════
 
 @router.get("/debug/test-page-api")
@@ -693,175 +693,272 @@ def debug_test_page_api(
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """
-    Test diagnostique des appels Facebook pour la premiere page active.
-    Teste: feed basique, feed enrichi, reactions count, comments edge.
+    Diagnostic complet Facebook : teste TOUS les tokens et approches.
+    - Token user (profil) : permissions, feed avec user_token
+    - Token page stocke (Radio Audace) : feed, engagement
+    - Token page frais (/me/accounts) : feed, engagement
     """
     import httpx
 
     GRAPH_API_BASE = "https://graph.facebook.com/v18.0"
     results = {}
 
-    # Trouver un compte page actif
-    page_account = (
-        db.query(SocialAccount)
-        .filter(SocialAccount.platform == "facebook", SocialAccount.account_type == "page", SocialAccount.is_active == True)
-        .first()
-    )
-    if not page_account:
-        return {"error": "Aucune page Facebook active"}
-
-    # Trouver le profil parent pour le user token
-    profile = (
-        db.query(SocialAccount)
-        .filter(SocialAccount.platform == "facebook", SocialAccount.account_type == "profile", SocialAccount.is_active == True)
-        .first()
-    )
-
-    page_token = page_account.access_token or (profile.access_token if profile else None)
-    if not page_token:
-        return {"error": "Pas de token disponible"}
-
-    page_id = page_account.account_id
-    results["page_from_db"] = {"id": page_id, "name": page_account.account_name}
-
-    # Utiliser TOKEN FRAIS depuis /me/accounts et prendre la PREMIERE page disponible
-    fresh_pages = []
-    if profile and profile.access_token:
-        try:
-            with httpx.Client(timeout=15.0) as client:
-                resp = client.get(f"{GRAPH_API_BASE}/me/accounts", params={
-                    "access_token": profile.access_token,
-                    "fields": "id,name,access_token",
-                    "limit": 10,
-                })
-            if resp.status_code == 200:
-                fresh_pages = resp.json().get("data", [])
-                results["available_pages"] = [{"id": p["id"], "name": p["name"]} for p in fresh_pages]
-
-                # Chercher la page du DB, sinon prendre la premiere
-                matched = None
-                for p in fresh_pages:
-                    if p["id"] == page_id:
-                        matched = p
-                        break
-                if matched:
-                    page_token = matched["access_token"]
-                    results["token_source"] = f"fresh_matched: {matched['name']}"
-                elif fresh_pages:
-                    page_token = fresh_pages[0]["access_token"]
-                    page_id = fresh_pages[0]["id"]
-                    results["token_source"] = f"fresh_first_available: {fresh_pages[0]['name']}"
-                    results["page_tested"] = {"id": page_id, "name": fresh_pages[0]["name"]}
-                else:
-                    results["token_source"] = "no_pages_found"
-            else:
-                results["token_source"] = f"me_accounts_failed_HTTP_{resp.status_code}"
-                results["me_accounts_error"] = resp.text[:300]
-        except Exception as e:
-            results["token_source"] = f"me_accounts_exception: {e}"
-    else:
-        results["token_source"] = "stored_page_token"
-
-    def safe_get(url, params, label):
+    def safe_get(url, params, label=""):
         try:
             with httpx.Client(timeout=15.0) as client:
                 resp = client.get(url, params=params)
             if resp.status_code == 200:
                 data = resp.json()
-                return {"status": "OK", "keys": list(data.keys()), "data_count": len(data.get("data", [])), "sample": str(data)[:500]}
+                return {
+                    "status": "OK",
+                    "data_count": len(data.get("data", [])),
+                    "sample": str(data)[:600],
+                }
             else:
-                return {"status": f"HTTP {resp.status_code}", "error": resp.text[:300]}
+                return {"status": f"HTTP {resp.status_code}", "error": resp.text[:400]}
         except Exception as e:
             return {"status": "EXCEPTION", "error": str(e)}
 
-    # Test 1: Feed basique
-    results["feed_basic"] = safe_get(
-        f"{GRAPH_API_BASE}/{page_id}/feed",
-        {"access_token": page_token, "fields": "id,message,shares", "limit": 2},
-        "feed_basic",
+    # ── 1. Charger tous les comptes FB ──
+    all_accounts = (
+        db.query(SocialAccount)
+        .filter(SocialAccount.platform == "facebook", SocialAccount.is_active == True)
+        .all()
+    )
+    results["db_accounts"] = [
+        {"id": a.id, "type": a.account_type, "name": a.account_name,
+         "fb_id": a.account_id, "has_token": bool(a.access_token)}
+        for a in all_accounts
+    ]
+
+    profile = next((a for a in all_accounts if a.account_type == "profile"), None)
+    page_accounts = [a for a in all_accounts if a.account_type == "page"]
+
+    if not profile:
+        return {**results, "error": "Aucun profil Facebook actif"}
+
+    user_token = profile.access_token
+    results["profile"] = {"name": profile.account_name, "fb_id": profile.account_id}
+
+    # ── 2. Permissions du USER token ──
+    results["user_token_permissions"] = safe_get(
+        f"{GRAPH_API_BASE}/me/permissions",
+        {"access_token": user_token},
     )
 
-    # Test 2: Feed avec likes.summary
-    results["feed_likes_summary"] = safe_get(
-        f"{GRAPH_API_BASE}/{page_id}/feed",
-        {"access_token": page_token, "fields": "id,message,likes.summary(true),comments.summary(true)", "limit": 2},
-        "feed_likes_summary",
-    )
-
-    # Trouver un post_id pour les tests suivants
-    post_id = None
+    # ── 3. Pages via /me/accounts (token frais) ──
+    fresh_pages = {}
     try:
         with httpx.Client(timeout=15.0) as client:
-            resp = client.get(f"{GRAPH_API_BASE}/{page_id}/feed", params={"access_token": page_token, "fields": "id", "limit": 1})
+            resp = client.get(f"{GRAPH_API_BASE}/me/accounts", params={
+                "access_token": user_token,
+                "fields": "id,name,access_token,tasks",
+                "limit": 50,
+            })
         if resp.status_code == 200:
-            posts = resp.json().get("data", [])
-            if posts:
-                post_id = posts[0]["id"]
-    except Exception:
-        pass
-
-    if post_id:
-        results["test_post_id"] = post_id
-
-        # Test 3: Post reactions via field expansion
-        results["post_likes_summary"] = safe_get(
-            f"{GRAPH_API_BASE}/{post_id}",
-            {"access_token": page_token, "fields": "likes.summary(true),comments.summary(true)"},
-            "post_likes_summary",
-        )
-
-        # Test 4: Post reactions via reactions edge
-        results["post_reactions_summary"] = safe_get(
-            f"{GRAPH_API_BASE}/{post_id}",
-            {"access_token": page_token, "fields": "reactions.summary(total_count)"},
-            "post_reactions_summary",
-        )
-
-        # Test 5: Comments edge
-        results["post_comments_edge"] = safe_get(
-            f"{GRAPH_API_BASE}/{post_id}/comments",
-            {"access_token": page_token, "fields": "id,message,from,created_time,like_count", "limit": 3},
-            "post_comments_edge",
-        )
-
-        # Test 6: Comments edge sans 'from'
-        results["post_comments_no_from"] = safe_get(
-            f"{GRAPH_API_BASE}/{post_id}/comments",
-            {"access_token": page_token, "fields": "id,message,created_time,like_count", "limit": 3},
-            "post_comments_no_from",
-        )
-
-        # Test 7: Reactions edge directe
-        results["post_reactions_edge"] = safe_get(
-            f"{GRAPH_API_BASE}/{post_id}/reactions",
-            {"access_token": page_token, "limit": 0, "summary": "total_count"},
-            "post_reactions_edge",
-        )
-
-        # Test 8: Likes edge directe
-        results["post_likes_edge"] = safe_get(
-            f"{GRAPH_API_BASE}/{post_id}/likes",
-            {"access_token": page_token, "limit": 0, "summary": "true"},
-            "post_likes_edge",
-        )
-
-        # Test 9: Feed avec reactions.summary au lieu de likes.summary
-        results["feed_reactions_summary"] = safe_get(
-            f"{GRAPH_API_BASE}/{page_id}/feed",
-            {"access_token": page_token, "fields": "id,reactions.summary(total_count),comments.summary(total_count)", "limit": 2},
-            "feed_reactions_summary",
-        )
-
-    # Test 8: Token permissions
-    try:
-        with httpx.Client(timeout=15.0) as client:
-            resp = client.get(f"{GRAPH_API_BASE}/me/permissions", params={"access_token": page_token})
-        if resp.status_code == 200:
-            perms = resp.json().get("data", [])
-            results["token_permissions"] = {p["permission"]: p["status"] for p in perms}
+            pages_data = resp.json().get("data", [])
+            results["me_accounts"] = [
+                {"id": p["id"], "name": p["name"], "tasks": p.get("tasks", [])}
+                for p in pages_data
+            ]
+            for p in pages_data:
+                fresh_pages[p["id"]] = p
         else:
-            results["token_permissions"] = {"error": resp.text[:200]}
+            results["me_accounts"] = {"error": resp.text[:300]}
     except Exception as e:
-        results["token_permissions"] = {"error": str(e)}
+        results["me_accounts"] = {"error": str(e)}
+
+    # ── 4. Test chaque page stockee en DB ──
+    for page_acc in page_accounts:
+        pid = page_acc.account_id
+        pname = page_acc.account_name
+        section = f"page_{page_acc.id}_{pname.replace(' ', '_')}"
+        page_results = {"fb_id": pid, "name": pname}
+
+        stored_token = page_acc.access_token
+        fresh_token = fresh_pages.get(pid, {}).get("access_token")
+        fresh_tasks = fresh_pages.get(pid, {}).get("tasks", [])
+        page_results["in_me_accounts"] = pid in fresh_pages
+        page_results["tasks"] = fresh_tasks
+        page_results["has_stored_token"] = bool(stored_token)
+        page_results["has_fresh_token"] = bool(fresh_token)
+
+        # Quel token utiliser : frais si dispo, sinon stocke
+        test_token = fresh_token or stored_token
+        token_label = "fresh" if fresh_token else "stored"
+        page_results["token_used"] = token_label
+
+        if not test_token:
+            page_results["error"] = "Aucun token disponible"
+            results[section] = page_results
+            continue
+
+        # 4a. Feed basique
+        page_results["feed_basic"] = safe_get(
+            f"{GRAPH_API_BASE}/{pid}/feed",
+            {"access_token": test_token, "fields": "id,message,shares", "limit": 2},
+        )
+
+        # 4b. Feed avec likes.summary + comments.summary
+        page_results["feed_likes_comments"] = safe_get(
+            f"{GRAPH_API_BASE}/{pid}/feed",
+            {"access_token": test_token,
+             "fields": "id,message,likes.summary(true),comments.summary(true),shares", "limit": 2},
+        )
+
+        # 4c. Feed avec reactions.summary + comments.summary
+        page_results["feed_reactions_comments"] = safe_get(
+            f"{GRAPH_API_BASE}/{pid}/feed",
+            {"access_token": test_token,
+             "fields": "id,reactions.summary(total_count),comments.summary(total_count),shares", "limit": 2},
+        )
+
+        # Trouver un post_id
+        post_id = None
+        feed_res = page_results["feed_basic"]
+        if feed_res.get("status") == "OK" and feed_res.get("data_count", 0) > 0:
+            try:
+                import json
+                # Le sample contient le JSON tronque, faire un vrai appel
+                with httpx.Client(timeout=15.0) as client:
+                    resp = client.get(f"{GRAPH_API_BASE}/{pid}/feed",
+                                      params={"access_token": test_token, "fields": "id", "limit": 1})
+                if resp.status_code == 200:
+                    posts = resp.json().get("data", [])
+                    if posts:
+                        post_id = posts[0]["id"]
+            except Exception:
+                pass
+
+        if post_id:
+            page_results["test_post_id"] = post_id
+
+            # 4d. Post engagement via field expansion
+            page_results["post_engagement"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}",
+                {"access_token": test_token,
+                 "fields": "likes.summary(true),comments.summary(true),reactions.summary(total_count),shares"},
+            )
+
+            # 4e. Comments edge
+            page_results["post_comments"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}/comments",
+                {"access_token": test_token,
+                 "fields": "id,message,created_time,like_count", "limit": 5},
+            )
+
+            # 4f. Reactions edge
+            page_results["post_reactions"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}/reactions",
+                {"access_token": test_token, "limit": 0, "summary": "total_count"},
+            )
+
+            # 4g. Meme tests avec USER token (profil)
+            page_results["user_token_feed"] = safe_get(
+                f"{GRAPH_API_BASE}/{pid}/feed",
+                {"access_token": user_token, "fields": "id,message,shares", "limit": 2},
+            )
+            page_results["user_token_feed_engagement"] = safe_get(
+                f"{GRAPH_API_BASE}/{pid}/feed",
+                {"access_token": user_token,
+                 "fields": "id,likes.summary(true),comments.summary(true),reactions.summary(total_count),shares",
+                 "limit": 2},
+            )
+            page_results["user_token_post_engagement"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}",
+                {"access_token": user_token,
+                 "fields": "likes.summary(true),comments.summary(true),reactions.summary(total_count),shares"},
+            )
+            page_results["user_token_comments"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}/comments",
+                {"access_token": user_token,
+                 "fields": "id,message,created_time,like_count", "limit": 5},
+            )
+        else:
+            page_results["note"] = "Aucun post trouve - tests post/engagement non effectues"
+
+        results[section] = page_results
+
+    # ── 5. Test pages fraiches non stockees en DB ──
+    stored_page_ids = {a.account_id for a in page_accounts}
+    for fp_id, fp_data in fresh_pages.items():
+        if fp_id in stored_page_ids:
+            continue  # Deja teste ci-dessus
+        section = f"fresh_page_{fp_data['name'].replace(' ', '_')}"
+        fp_results = {"fb_id": fp_id, "name": fp_data["name"], "tasks": fp_data.get("tasks", []),
+                      "note": "Page dans /me/accounts mais PAS en DB"}
+        fresh_tok = fp_data["access_token"]
+
+        fp_results["feed_basic"] = safe_get(
+            f"{GRAPH_API_BASE}/{fp_id}/feed",
+            {"access_token": fresh_tok, "fields": "id,message,shares", "limit": 2},
+        )
+        fp_results["feed_engagement"] = safe_get(
+            f"{GRAPH_API_BASE}/{fp_id}/feed",
+            {"access_token": fresh_tok,
+             "fields": "id,likes.summary(true),comments.summary(true),reactions.summary(total_count),shares",
+             "limit": 2},
+        )
+
+        # Post test
+        post_id = None
+        if fp_results["feed_basic"].get("status") == "OK":
+            try:
+                with httpx.Client(timeout=15.0) as client:
+                    resp = client.get(f"{GRAPH_API_BASE}/{fp_id}/feed",
+                                      params={"access_token": fresh_tok, "fields": "id", "limit": 1})
+                if resp.status_code == 200:
+                    posts = resp.json().get("data", [])
+                    if posts:
+                        post_id = posts[0]["id"]
+            except Exception:
+                pass
+
+        if post_id:
+            fp_results["post_engagement"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}",
+                {"access_token": fresh_tok,
+                 "fields": "likes.summary(true),comments.summary(true),reactions.summary(total_count),shares"},
+            )
+            fp_results["post_comments"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}/comments",
+                {"access_token": fresh_tok,
+                 "fields": "id,message,created_time,like_count", "limit": 5},
+            )
+
+        results[section] = fp_results
+
+    # ── 6. Recommandations ──
+    recommendations = []
+    # Verifier permissions user token
+    user_perms_res = results.get("user_token_permissions", {})
+    if user_perms_res.get("status") == "OK":
+        sample = user_perms_res.get("sample", "")
+        if "pages_read_engagement" not in sample:
+            recommendations.append(
+                "CRITIQUE: Le token user N'A PAS la permission 'pages_read_engagement'. "
+                "Allez sur Meta Developer Portal > Votre App > Facebook Login for Business > "
+                f"Configuration (config_id) et ajoutez 'pages_read_engagement' + 'pages_read_user_content'. "
+                "Puis reconnectez le compte Facebook dans l'app."
+            )
+        if "pages_read_user_content" not in sample:
+            recommendations.append(
+                "IMPORTANT: Permission 'pages_read_user_content' manquante — necessaire pour lire les commentaires."
+            )
+    else:
+        recommendations.append(f"Impossible de verifier les permissions du user token: {user_perms_res}")
+
+    if not fresh_pages:
+        recommendations.append("ALERTE: /me/accounts ne retourne aucune page. L'utilisateur n'a pas de page accessible.")
+    else:
+        for pa in page_accounts:
+            if pa.account_id not in fresh_pages:
+                recommendations.append(
+                    f"Page '{pa.account_name}' (id {pa.account_id}) n'est PAS dans /me/accounts. "
+                    "L'utilisateur connecte n'a pas acces a cette page. "
+                    "Connectez-vous avec un compte Facebook qui est admin/editeur de cette page."
+                )
+
+    results["recommendations"] = recommendations
 
     return results
