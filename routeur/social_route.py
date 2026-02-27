@@ -611,7 +611,7 @@ def database_stats(
 
 @router.post("/database/optimize")
 def optimize_database(
-    hard_delete_days: int = Query(30, ge=0, le=365, description="Purger les éléments supprimés depuis plus de X jours (0 = pas de purge)"),
+    hard_delete_days: int = Query(30, ge=-1, le=365, description="Purger les éléments supprimés depuis plus de X jours (0 = tout purger, -1 = orphelins uniquement)"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
@@ -619,8 +619,10 @@ def optimize_database(
     Optimiser la base de données du module social.
 
     1. Nettoie les orphelins (données liées à des comptes/posts supprimés)
-    2. Purge définitivement les enregistrements soft-deleted
-       depuis plus de `hard_delete_days` jours
+    2. Purge définitivement les enregistrements soft-deleted :
+       - hard_delete_days=0 : purge TOUT immédiatement
+       - hard_delete_days=N : purge les éléments supprimés depuis >N jours
+       - hard_delete_days=-1 : orphelins uniquement, pas de purge
 
     Requiert la permission social_manage_accounts.
     """

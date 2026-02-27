@@ -1545,65 +1545,59 @@ def cleanup_database(db: Session, hard_delete_days: int = 30) -> dict:
 
     # ── Étape 2 : Hard-delete les anciens soft-deleted ──
 
-    if hard_delete_days > 0:
-        cutoff = now - timedelta(days=hard_delete_days)
+    if hard_delete_days >= 0:
+        # 0 = purger TOUT immédiatement, >0 = purger les enregistrements plus vieux que X jours
+        # -1 = pas de purge (orphelins uniquement)
 
         # Ordre important : enfants d'abord, parents ensuite (FK constraints)
 
+        def _build_delete_filter(Model):
+            """Construire le filtre de suppression selon hard_delete_days."""
+            base = db.query(Model).filter(
+                Model.is_deleted == True,
+            )
+            if hard_delete_days > 0:
+                cutoff = now - timedelta(days=hard_delete_days)
+                base = base.filter(
+                    Model.deleted_at != None,
+                    Model.deleted_at < cutoff,
+                )
+            return base
+
         # Messages
-        n = db.query(SocialMessage).filter(
-            SocialMessage.is_deleted == True,
-            SocialMessage.deleted_at != None,
-            SocialMessage.deleted_at < cutoff,
-        ).delete(synchronize_session="fetch")
+        n = _build_delete_filter(SocialMessage).delete(synchronize_session="fetch")
         stats["hard_deleted"]["messages"] = n
 
         # Conversations
-        n = db.query(SocialConversation).filter(
-            SocialConversation.is_deleted == True,
-            SocialConversation.deleted_at != None,
-            SocialConversation.deleted_at < cutoff,
-        ).delete(synchronize_session="fetch")
+        n = _build_delete_filter(SocialConversation).delete(synchronize_session="fetch")
         stats["hard_deleted"]["conversations"] = n
 
         # Commentaires (replies d'abord via parent_comment_id)
-        # D'abord les replies (qui ont un parent_comment_id)
         n_replies = db.query(SocialComment).filter(
             SocialComment.is_deleted == True,
-            SocialComment.deleted_at != None,
-            SocialComment.deleted_at < cutoff,
             SocialComment.parent_comment_id != None,
-        ).delete(synchronize_session="fetch")
+        )
+        if hard_delete_days > 0:
+            cutoff = now - timedelta(days=hard_delete_days)
+            n_replies = n_replies.filter(
+                SocialComment.deleted_at != None,
+                SocialComment.deleted_at < cutoff,
+            )
+        n_replies = n_replies.delete(synchronize_session="fetch")
         # Puis les commentaires racine
-        n_root = db.query(SocialComment).filter(
-            SocialComment.is_deleted == True,
-            SocialComment.deleted_at != None,
-            SocialComment.deleted_at < cutoff,
-        ).delete(synchronize_session="fetch")
+        n_root = _build_delete_filter(SocialComment).delete(synchronize_session="fetch")
         stats["hard_deleted"]["comments"] = n_replies + n_root
 
         # PostResults
-        n = db.query(SocialPostResult).filter(
-            SocialPostResult.is_deleted == True,
-            SocialPostResult.deleted_at != None,
-            SocialPostResult.deleted_at < cutoff,
-        ).delete(synchronize_session="fetch")
+        n = _build_delete_filter(SocialPostResult).delete(synchronize_session="fetch")
         stats["hard_deleted"]["post_results"] = n
 
         # Posts
-        n = db.query(SocialPost).filter(
-            SocialPost.is_deleted == True,
-            SocialPost.deleted_at != None,
-            SocialPost.deleted_at < cutoff,
-        ).delete(synchronize_session="fetch")
+        n = _build_delete_filter(SocialPost).delete(synchronize_session="fetch")
         stats["hard_deleted"]["posts"] = n
 
-        # Comptes (page d'abord, puis profil)
-        n = db.query(SocialAccount).filter(
-            SocialAccount.is_deleted == True,
-            SocialAccount.deleted_at != None,
-            SocialAccount.deleted_at < cutoff,
-        ).delete(synchronize_session="fetch")
+        # Comptes
+        n = _build_delete_filter(SocialAccount).delete(synchronize_session="fetch")
         stats["hard_deleted"]["accounts"] = n
 
     db.commit()
