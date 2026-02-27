@@ -409,14 +409,18 @@ def get_post_comments(
             return []
 
     raw_comments = data.get("data", [])
+    logger.info(f"[COMMENTS] {len(raw_comments)} commentaires bruts pour {post_id}")
 
     comments = []
     for raw in raw_comments:
         from_data = raw.get("from", {}) or {}
+        author = from_data.get("name", "Utilisateur Facebook")
+        if not from_data:
+            logger.warning(f"[COMMENTS] Champ 'from' absent pour commentaire {raw.get('id')} — permission pages_read_user_content manquante ?")
         comment = {
             "platform_comment_id": raw.get("id", ""),
             "message": raw.get("message", ""),
-            "author_name": from_data.get("name", "Utilisateur Facebook"),
+            "author_name": author,
             "author_platform_id": from_data.get("id", "unknown"),
             "created_time": raw.get("created_time", ""),
             "like_count": raw.get("like_count", 0),

@@ -1258,6 +1258,13 @@ def _sync_single_comment(
     if existing:
         # Mettre a jour le compteur de likes
         existing.likes_count = fb_comment.get("like_count", 0)
+        # Mettre a jour le nom d'auteur si on a maintenant le vrai nom
+        new_name = fb_comment.get("author_name", "")
+        if new_name and new_name != "Utilisateur Facebook" and existing.author_name != new_name:
+            existing.author_name = new_name
+        new_platform_id = fb_comment.get("author_platform_id", "")
+        if new_platform_id and new_platform_id != "unknown" and existing.author_platform_id != new_platform_id:
+            existing.author_platform_id = new_platform_id
         return {"synced": 1, "new": 0}
 
     # Creer un nouveau commentaire
