@@ -380,7 +380,7 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
 
     Pour les plateformes non-Facebook, simule le succes (TODO).
     """
-    from app.services.social_facebook import get_facebook_pages, publish_to_page
+    from app.services.social_facebook import publish_to_page
 
     post = get_social_post_by_id(db, post_id)
 
@@ -432,25 +432,20 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
 
         if account.platform == "facebook":
             try:
-                # Recuperer les pages Facebook avec le user token
-                pages = get_facebook_pages(account.access_token)
-                if not pages:
+                # Utiliser directement le page access token stocké en BDD
+                # (pas besoin de /me/accounts car le token est déjà un Page token)
+                if not account.access_token:
                     result.status = "error"
-                    result.error_message = "Aucune page Facebook trouvee"
+                    result.error_message = "Aucun access token disponible pour ce compte"
+                    has_error = True
+                elif not account.account_id:
+                    result.status = "error"
+                    result.error_message = "Aucun Page ID disponible pour ce compte"
                     has_error = True
                 else:
-                    # Publier sur la premiere page (ou celle qui correspond a account_id)
-                    target_page = None
-                    for page in pages:
-                        if page["id"] == account.account_id:
-                            target_page = page
-                            break
-                    if not target_page:
-                        target_page = pages[0]
-
                     fb_result = publish_to_page(
-                        page_access_token=target_page["access_token"],
-                        page_id=target_page["id"],
+                        page_access_token=account.access_token,
+                        page_id=account.account_id,
                         message=post.content,
                         link=post.link_url,
                     )
