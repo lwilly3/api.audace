@@ -233,38 +233,51 @@ def get_page_posts(
     Returns:
         Liste de posts normalises
     """
-    # Champs simples + summary des likes/comments (evite un appel separe)
-    # likes.summary(true) et comments.summary(true) fonctionnent avec le page token
-    fields = "id,message,created_time,full_picture,permalink_url,shares,attachments,likes.summary(true),comments.summary(true)"
+    # Champs de base
+    base_fields = "id,message,created_time,full_picture,permalink_url,shares,attachments"
+    # Champs enrichis avec summary likes/comments (peut necessiter pages_read_engagement)
+    enriched_fields = base_fields + ",likes.summary(true),comments.summary(true)"
 
-    # Essayer /{page-id}/feed d'abord (plus tolerant en permissions)
-    for endpoint in ["feed", "published_posts"]:
-        url = f"{GRAPH_API_BASE}/{page_id}/{endpoint}"
-        params = {
-            "access_token": page_access_token,
-            "fields": fields,
-            "limit": limit,
-        }
+    raw_posts = []
+    used_enriched = False
 
-        try:
-            data = _graph_get(url, params, f"GET /{page_id}/{endpoint}")
-            raw_posts = data.get("data", [])
+    # Essayer avec les champs enrichis d'abord, puis basiques en fallback
+    for fields in [enriched_fields, base_fields]:
+        found = False
+        for endpoint in ["feed", "published_posts"]:
+            url = f"{GRAPH_API_BASE}/{page_id}/{endpoint}"
+            params = {
+                "access_token": page_access_token,
+                "fields": fields,
+                "limit": limit,
+            }
 
-            if raw_posts:
-                logger.info(f"Facebook: {len(raw_posts)} post(s) via /{endpoint}")
-                break
-            else:
-                logger.info(f"Facebook: 0 posts via /{endpoint}, essai suivant...")
+            try:
+                data = _graph_get(url, params, f"GET /{page_id}/{endpoint}")
+                raw_posts = data.get("data", [])
+
+                if raw_posts:
+                    used_enriched = (fields == enriched_fields)
+                    logger.info(f"Facebook: {len(raw_posts)} post(s) via /{endpoint} (enriched={used_enriched})")
+                    print(f"[FB POSTS] {len(raw_posts)} post(s) via /{endpoint} enriched={used_enriched}", flush=True)
+                    found = True
+                    break
+                else:
+                    logger.info(f"Facebook: 0 posts via /{endpoint}, essai suivant...")
+                    continue
+            except HTTPException as e:
+                logger.warning(f"Facebook: /{endpoint} echoue ({e.detail}), essai suivant...")
                 continue
-        except HTTPException as e:
-            logger.warning(f"Facebook: /{endpoint} echoue ({e.detail}), essai suivant...")
-            if endpoint == "published_posts":
-                # Dernier essai echoue, retourner vide
+
+        if found:
+            break
+        else:
+            if fields == enriched_fields:
+                logger.info(f"Facebook: champs enrichis echoues pour {page_id}, fallback basique...")
+                print(f"[FB POSTS] Enriched fields failed for {page_id}, falling back to basic", flush=True)
+            else:
                 logger.error(f"Facebook: aucun endpoint n'a fonctionne pour la page {page_id}")
                 return []
-            continue
-    else:
-        raw_posts = []
 
     posts = []
     for raw in raw_posts:
