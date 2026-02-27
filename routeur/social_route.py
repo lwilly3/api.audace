@@ -724,6 +724,31 @@ def debug_test_page_api(
     page_id = page_account.account_id
     results["page"] = {"id": page_id, "name": page_account.account_name}
 
+    # Utiliser TOKEN FRAIS depuis /me/accounts (pas le token stocke en BDD)
+    if profile and profile.access_token:
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.get(f"{GRAPH_API_BASE}/me/accounts", params={
+                    "access_token": profile.access_token,
+                    "fields": "id,name,access_token",
+                    "limit": 10,
+                })
+            if resp.status_code == 200:
+                pages_data = resp.json().get("data", [])
+                for p in pages_data:
+                    if p["id"] == page_id:
+                        page_token = p.get("access_token", page_token)
+                        results["token_source"] = "fresh_from_me_accounts"
+                        break
+                else:
+                    results["token_source"] = "stored_no_matching_page"
+            else:
+                results["token_source"] = f"me_accounts_failed_HTTP_{resp.status_code}"
+        except Exception as e:
+            results["token_source"] = f"me_accounts_exception: {e}"
+    else:
+        results["token_source"] = "stored_page_token"
+
     def safe_get(url, params, label):
         try:
             with httpx.Client(timeout=15.0) as client:
@@ -798,6 +823,20 @@ def debug_test_page_api(
             f"{GRAPH_API_BASE}/{post_id}/reactions",
             {"access_token": page_token, "limit": 0, "summary": "total_count"},
             "post_reactions_edge",
+        )
+
+        # Test 8: Likes edge directe
+        results["post_likes_edge"] = safe_get(
+            f"{GRAPH_API_BASE}/{post_id}/likes",
+            {"access_token": page_token, "limit": 0, "summary": "true"},
+            "post_likes_edge",
+        )
+
+        # Test 9: Feed avec reactions.summary au lieu de likes.summary
+        results["feed_reactions_summary"] = safe_get(
+            f"{GRAPH_API_BASE}/{page_id}/feed",
+            {"access_token": page_token, "fields": "id,reactions.summary(total_count),comments.summary(total_count)", "limit": 2},
+            "feed_reactions_summary",
         )
 
     # Test 8: Token permissions
