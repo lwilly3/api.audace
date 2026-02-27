@@ -455,19 +455,47 @@ def reply_to_comment(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Répondre à un commentaire."""
+    """Répondre à un commentaire — envoie la réponse sur Facebook puis sauvegarde en BDD."""
     parent = get_comment_by_id(db, comment_id)
-    # TODO: Envoyer la réponse via l'API de la plateforme
-    # Pour l'instant, créer un enregistrement local
     from app.models.model_social import SocialComment as SocialCommentModel
     import secrets
+
+    # Recuperer le compte (page) pour obtenir le page access token
+    page_account = get_social_account_by_id(db, parent.account_id)
+
+    fb_reply_id = None
+
+    # Envoyer sur Facebook si c'est un commentaire Facebook avec un vrai ID
+    if (
+        parent.platform == "facebook"
+        and page_account.access_token
+        and parent.platform_comment_id
+        and not parent.platform_comment_id.startswith("reply_")
+    ):
+        try:
+            from app.services.social_facebook import reply_to_facebook_comment
+            fb_result = reply_to_facebook_comment(
+                page_access_token=page_account.access_token,
+                comment_id=parent.platform_comment_id,
+                message=body.content,
+            )
+            fb_reply_id = fb_result.get("id", "")
+            print(f"[REPLY] Reponse envoyee sur Facebook: {fb_reply_id}", flush=True)
+        except HTTPException as e:
+            print(f"[REPLY] Erreur envoi Facebook: {e.detail}", flush=True)
+            raise HTTPException(
+                status_code=e.status_code,
+                detail=f"Impossible d'envoyer la reponse sur Facebook: {e.detail}"
+            )
+
+    # Sauvegarder en BDD avec le vrai ID Facebook ou un ID local
     reply = SocialCommentModel(
-        platform_comment_id=f"reply_{secrets.token_hex(8)}",
+        platform_comment_id=fb_reply_id if fb_reply_id else f"reply_{secrets.token_hex(8)}",
         post_id=parent.post_id,
         account_id=parent.account_id,
         platform=parent.platform,
-        author_name="Radio Manager",
-        author_platform_id="self",
+        author_name=page_account.account_name or "Radio Manager",
+        author_platform_id=page_account.account_id or "self",
         content=body.content,
         parent_comment_id=comment_id,
         is_read=True,
@@ -485,11 +513,30 @@ def like_comment(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Liker un commentaire."""
+    """Liker un commentaire — envoie le like sur Facebook puis met à jour en BDD."""
     comment = get_comment_by_id(db, comment_id)
+
+    # Envoyer le like sur Facebook
+    if (
+        comment.platform == "facebook"
+        and comment.platform_comment_id
+        and not comment.platform_comment_id.startswith("reply_")
+    ):
+        page_account = get_social_account_by_id(db, comment.account_id)
+        if page_account.access_token:
+            try:
+                from app.services.social_facebook import like_facebook_comment
+                like_facebook_comment(
+                    page_access_token=page_account.access_token,
+                    comment_id=comment.platform_comment_id,
+                )
+                print(f"[LIKE] Like envoye sur Facebook: {comment.platform_comment_id}", flush=True)
+            except HTTPException as e:
+                print(f"[LIKE] Erreur envoi Facebook: {e.detail}", flush=True)
+                # On continue quand meme pour mettre a jour localement
+
     comment.likes_count += 1
     db.commit()
-    # TODO: Envoyer le like via l'API plateforme
     return {"success": True}
 
 
@@ -499,7 +546,27 @@ def delete_comment(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Supprimer un commentaire et ses réponses."""
+    """Supprimer un commentaire — supprime sur Facebook si possible, puis en BDD."""
+    comment = get_comment_by_id(db, comment_id)
+
+    # Supprimer sur Facebook (uniquement pour les reponses faites par la page)
+    if (
+        comment.platform == "facebook"
+        and comment.platform_comment_id
+        and not comment.platform_comment_id.startswith("reply_")
+    ):
+        page_account = get_social_account_by_id(db, comment.account_id)
+        if page_account.access_token:
+            try:
+                from app.services.social_facebook import delete_facebook_comment
+                delete_facebook_comment(
+                    page_access_token=page_account.access_token,
+                    comment_id=comment.platform_comment_id,
+                )
+                print(f"[DELETE] Commentaire supprime sur Facebook: {comment.platform_comment_id}", flush=True)
+            except Exception as e:
+                print(f"[DELETE] Erreur suppression Facebook (continue localement): {e}", flush=True)
+
     result = delete_social_comment(db, comment_id)
     log_action(db, current_user.id, "delete", "social_comments", comment_id)
     return {"success": True, "cascade": result}
@@ -511,7 +578,28 @@ def hide_comment_route(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Masquer un commentaire."""
+    """Masquer un commentaire — masque sur Facebook puis en BDD."""
+    comment = get_comment_by_id(db, comment_id)
+
+    # Masquer sur Facebook
+    if (
+        comment.platform == "facebook"
+        and comment.platform_comment_id
+        and not comment.platform_comment_id.startswith("reply_")
+    ):
+        page_account = get_social_account_by_id(db, comment.account_id)
+        if page_account.access_token:
+            try:
+                from app.services.social_facebook import hide_facebook_comment
+                hide_facebook_comment(
+                    page_access_token=page_account.access_token,
+                    comment_id=comment.platform_comment_id,
+                    hide=True,
+                )
+                print(f"[HIDE] Commentaire masque sur Facebook: {comment.platform_comment_id}", flush=True)
+            except Exception as e:
+                print(f"[HIDE] Erreur masquage Facebook (continue localement): {e}", flush=True)
+
     result = hide_comment(db, comment_id)
     return {"success": result}
 

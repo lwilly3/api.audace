@@ -455,6 +455,127 @@ def get_post_comments(
 
 
 # ════════════════════════════════════════════════════════════════
+# REPONSES AUX COMMENTAIRES
+# ════════════════════════════════════════════════════════════════
+
+def reply_to_facebook_comment(
+    page_access_token: str,
+    comment_id: str,
+    message: str,
+) -> dict:
+    """
+    Repondre a un commentaire Facebook via la Graph API.
+
+    L'API Facebook permet de repondre a un commentaire en postant
+    sur /{comment_id}/comments avec le page access token.
+
+    Args:
+        page_access_token: Token d'acces de la page
+        comment_id: ID du commentaire Facebook (platform_comment_id)
+        message: Contenu de la reponse
+
+    Returns:
+        {id: "reply_comment_id"}
+    """
+    url = f"{GRAPH_API_BASE}/{comment_id}/comments"
+    data = {"message": message}
+
+    result = _graph_post(url, data, page_access_token, f"POST /{comment_id}/comments (reply)")
+
+    reply_id = result.get("id", "")
+    logger.info(f"Facebook: reponse publiee sur le commentaire {comment_id} -> {reply_id}")
+    return {"id": reply_id}
+
+
+def like_facebook_comment(
+    page_access_token: str,
+    comment_id: str,
+) -> bool:
+    """
+    Liker un commentaire Facebook via la Graph API.
+
+    Args:
+        page_access_token: Token d'acces de la page
+        comment_id: ID du commentaire Facebook (platform_comment_id)
+
+    Returns:
+        True si le like a ete envoye
+    """
+    url = f"{GRAPH_API_BASE}/{comment_id}/likes"
+    result = _graph_post(url, {}, page_access_token, f"POST /{comment_id}/likes (like)")
+    success = result.get("success", False)
+    logger.info(f"Facebook: like {'envoye' if success else 'echoue'} sur commentaire {comment_id}")
+    return success
+
+
+def hide_facebook_comment(
+    page_access_token: str,
+    comment_id: str,
+    hide: bool = True,
+) -> bool:
+    """
+    Masquer ou afficher un commentaire Facebook via la Graph API.
+
+    Args:
+        page_access_token: Token d'acces de la page
+        comment_id: ID du commentaire Facebook (platform_comment_id)
+        hide: True pour masquer, False pour afficher
+
+    Returns:
+        True si l'operation a reussi
+    """
+    url = f"{GRAPH_API_BASE}/{comment_id}"
+    try:
+        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
+            response = client.post(
+                url,
+                params={"access_token": page_access_token},
+                json={"is_hidden": hide},
+            )
+        if response.status_code == 200:
+            logger.info(f"Facebook: commentaire {comment_id} {'masque' if hide else 'affiche'}")
+            return True
+        logger.warning(f"Facebook: hide comment {comment_id} echoue: {response.status_code}")
+        return False
+    except Exception as e:
+        logger.error(f"Facebook: erreur hide comment {comment_id}: {e}")
+        return False
+
+
+def delete_facebook_comment(
+    page_access_token: str,
+    comment_id: str,
+) -> bool:
+    """
+    Supprimer un commentaire Facebook via la Graph API.
+
+    Seuls les commentaires faits par la page elle-meme peuvent etre supprimes.
+
+    Args:
+        page_access_token: Token d'acces de la page
+        comment_id: ID du commentaire Facebook (platform_comment_id)
+
+    Returns:
+        True si la suppression a reussi
+    """
+    url = f"{GRAPH_API_BASE}/{comment_id}"
+    try:
+        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
+            response = client.delete(
+                url,
+                params={"access_token": page_access_token},
+            )
+        if response.status_code == 200:
+            logger.info(f"Facebook: commentaire {comment_id} supprime")
+            return True
+        logger.warning(f"Facebook: delete comment {comment_id} echoue: {response.status_code}")
+        return False
+    except Exception as e:
+        logger.error(f"Facebook: erreur delete comment {comment_id}: {e}")
+        return False
+
+
+# ════════════════════════════════════════════════════════════════
 # PUBLICATION SUR FACEBOOK
 # ════════════════════════════════════════════════════════════════
 
