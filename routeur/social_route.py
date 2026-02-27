@@ -651,14 +651,45 @@ def reply_to_conversation(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Répondre dans une conversation."""
+    """Repondre dans une conversation — envoie le message via l'API Facebook."""
     conversation = get_conversation_by_id(db, conversation_id)
-    # TODO: Envoyer le message via l'API de la plateforme
+
+    # Recuperer le compte social pour le page access token
+    account = get_social_account_by_id(db, conversation.account_id)
+
+    # Trouver le PSID du destinataire (premier message inbound)
     from app.models.model_social import SocialMessage as SocialMessageModel
+    recipient_msg = (
+        db.query(SocialMessageModel)
+        .filter(
+            SocialMessageModel.conversation_id == conversation_id,
+            SocialMessageModel.direction == "inbound",
+            SocialMessageModel.is_deleted == False,
+        )
+        .order_by(SocialMessageModel.created_at.asc())
+        .first()
+    )
+
+    # Envoyer via l'API Facebook si c'est un compte Facebook
+    fb_message_id = None
+    if account and conversation.platform == "facebook" and recipient_msg:
+        try:
+            from app.services.social_facebook import send_facebook_message
+            result = send_facebook_message(
+                page_id=account.account_id,
+                recipient_psid=recipient_msg.sender_platform_id,
+                message_text=body.content,
+                page_access_token=account.access_token,
+            )
+            fb_message_id = result.get("message_id")
+        except Exception as e:
+            logger.warning(f"Echec envoi message Facebook: {e}")
+            # On continue quand meme pour sauvegarder localement
+
     import secrets
     message = SocialMessageModel(
         conversation_id=conversation_id,
-        platform_message_id=f"msg_{secrets.token_hex(8)}",
+        platform_message_id=fb_message_id or f"msg_{secrets.token_hex(8)}",
         account_id=conversation.account_id,
         platform=conversation.platform,
         sender_name="Radio Manager",
@@ -669,12 +700,12 @@ def reply_to_conversation(
         is_read=True,
     )
     db.add(message)
-    # Mettre à jour la conversation
+    # Mettre a jour la conversation
     from datetime import datetime, timezone
     conversation.last_message_at = datetime.now(timezone.utc)
     db.commit()
     log_action(db, current_user.id, "reply", "social_messages", conversation_id)
-    return {"success": True}
+    return {"success": True, "sent_to_platform": fb_message_id is not None}
 
 
 # ════════════════════════════════════════════════════════════════

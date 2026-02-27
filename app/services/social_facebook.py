@@ -693,3 +693,32 @@ def parse_facebook_datetime(dt_str: str) -> datetime:
         return datetime.fromisoformat(clean)
     except (ValueError, TypeError):
         return datetime.now(timezone.utc)
+
+
+# ================================================================
+# MESSAGES PRIVES - ENVOI VIA GRAPH API
+# ================================================================
+
+def send_facebook_message(
+    page_id: str,
+    recipient_psid: str,
+    message_text: str,
+    page_access_token: str,
+) -> dict:
+    """
+    Envoyer un message prive via la page Facebook.
+
+    Utilise l'API Send (POST /{page_id}/messages).
+    Le recipient_psid est le Page-Scoped ID du destinataire.
+
+    Docs: https://developers.facebook.com/docs/messenger-platform/send-messages
+    """
+    url = f"{GRAPH_BASE}/{page_id}/messages"
+    data = {
+        "recipient": {"id": recipient_psid},
+        "message": {"text": message_text},
+        "messaging_type": "RESPONSE",
+    }
+    result = _graph_post(url, data, page_access_token, "Send Facebook message")
+    logger.info(f"Message envoye a {recipient_psid} via page {page_id}")
+    return result
