@@ -824,6 +824,117 @@ def optimize_database(
 
 
 # ════════════════════════════════════════════════════════════════
+# SCHEDULER (TÂCHES PÉRIODIQUES)
+# ════════════════════════════════════════════════════════════════
+
+@router.get("/scheduler/settings")
+def get_scheduler_settings(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Récupérer les paramètres du scheduler (auto-sync, auto-optimize).
+    Inclut le statut courant et les dernières exécutions.
+    """
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+    from app.services.social_scheduler import scheduler
+    return scheduler.get_settings()
+
+
+@router.put("/scheduler/settings")
+def update_scheduler_settings(
+    settings: dict,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Mettre à jour les paramètres du scheduler.
+
+    Paramètres acceptés :
+    - auto_sync_enabled (bool)
+    - auto_sync_interval_minutes (int: 5, 15, 30, 60, 120, 360, 720)
+    - auto_sync_force (bool)
+    - auto_optimize_enabled (bool)
+    - auto_optimize_interval_hours (int: 6, 12, 24, 48, 168)
+    - auto_optimize_purge_days (int: 7, 30, 90)
+    """
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+    from app.services.social_scheduler import scheduler
+    result = scheduler.update_settings(settings)
+    log_action(db, current_user.id, "update", "social_scheduler", 0)
+    return result
+
+
+@router.post("/scheduler/trigger/sync")
+def trigger_scheduler_sync(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """Déclencher manuellement une sync via le scheduler (exécution immédiate)."""
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+    from app.services.social_scheduler import scheduler
+    settings = scheduler.get_settings()
+    force = settings.get("auto_sync_force", False)
+
+    # Lancer dans un thread séparé
+    def _run():
+        scheduler._run_sync(force)
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+    log_action(db, current_user.id, "trigger_sync", "social_scheduler", 0)
+    return {"message": "Synchronisation déclenchée"}
+
+
+@router.post("/scheduler/trigger/optimize")
+def trigger_scheduler_optimize(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """Déclencher manuellement une optimisation via le scheduler."""
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+    from app.services.social_scheduler import scheduler
+    settings = scheduler.get_settings()
+    purge_days = settings.get("auto_optimize_purge_days", 30)
+
+    def _run():
+        scheduler._run_optimize(purge_days)
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+    log_action(db, current_user.id, "trigger_optimize", "social_scheduler", 0)
+    return {"message": "Optimisation déclenchée"}
+
+
+# ════════════════════════════════════════════════════════════════
 # STATISTIQUES
 # ════════════════════════════════════════════════════════════════
 
