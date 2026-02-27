@@ -46,7 +46,7 @@ def _get_platform_config(platform: str) -> dict:
             "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
             "user_info_url": "https://graph.facebook.com/v18.0/me",
             "user_info_params": {"fields": "id,name,picture"},
-            "scopes": "pages_manage_posts,pages_read_engagement,pages_show_list",
+            "scopes": "pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_show_list,pages_manage_engagement",
             "config_id": settings.FACEBOOK_CONFIG_ID,
             "redirect_uri": callback_url,
         },
@@ -206,10 +206,13 @@ def build_authorization_url(platform: str, user_id: int) -> tuple:
         "response_type": "code",
     }
 
-    # Facebook Login for Business : config_id remplace scope
+    # Facebook Login for Business : config_id + scope
+    # Les permissions doivent etre configurees dans le config_id sur Meta Developer Portal
+    # On envoie aussi le scope en complement pour forcer les permissions necessaires
     if config.get("config_id"):
         params["config_id"] = config["config_id"]
-    else:
+    # Toujours envoyer le scope (requis pour les permissions non incluses dans config_id)
+    if config.get("scopes"):
         params["scope"] = config["scopes"]
 
     # PKCE pour Twitter
