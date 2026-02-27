@@ -684,6 +684,109 @@ def analytics_engagement(
 
 
 # ════════════════════════════════════════════════════════════════
+# VERIFICATION DES PERMISSIONS FACEBOOK
+# ════════════════════════════════════════════════════════════════
+
+@router.get("/accounts/permissions-check")
+def check_facebook_permissions(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Verifie les permissions Facebook du token utilisateur.
+    Retourne les permissions accordees, manquantes, et les pages accessibles.
+    Utilise par le frontend pour afficher des alertes de configuration.
+    """
+    import httpx
+
+    GRAPH_API_BASE = "https://graph.facebook.com/v18.0"
+
+    profile = (
+        db.query(SocialAccount)
+        .filter(SocialAccount.platform == "facebook", SocialAccount.account_type == "profile", SocialAccount.is_active == True)
+        .first()
+    )
+    if not profile or not profile.access_token:
+        return {
+            "status": "no_profile",
+            "message": "Aucun compte Facebook n'est connecte. Connectez un compte dans Parametres > Comptes sociaux.",
+            "permissions": [], "missing_permissions": [], "pages": [],
+        }
+
+    user_token = profile.access_token
+    result = {
+        "status": "ok",
+        "profile_name": profile.account_name,
+        "permissions": [],
+        "missing_permissions": [],
+        "pages": [],
+        "issues": [],
+    }
+
+    # Permissions requises pour l'engagement et les commentaires
+    required_permissions = {
+        "pages_read_engagement": "Lire les likes, commentaires, reactions, et le feed des pages",
+        "pages_read_user_content": "Lire les commentaires des visiteurs sur les pages",
+        "pages_show_list": "Lister les pages gerees par l'utilisateur",
+        "pages_manage_posts": "Publier et gerer les publications sur les pages",
+    }
+
+    # Verifier les permissions
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            resp = client.get(f"{GRAPH_API_BASE}/me/permissions", params={"access_token": user_token})
+        if resp.status_code == 200:
+            perms = resp.json().get("data", [])
+            granted = {p["permission"] for p in perms if p["status"] == "granted"}
+            result["permissions"] = sorted(granted)
+
+            for perm, description in required_permissions.items():
+                if perm not in granted:
+                    result["missing_permissions"].append({"permission": perm, "description": description})
+
+            if result["missing_permissions"]:
+                result["status"] = "missing_permissions"
+                result["issues"].append(
+                    "Des permissions Facebook sont manquantes. "
+                    "Allez sur Meta Developer Portal > Votre App > Facebook Login for Business > "
+                    "Configuration, ajoutez les permissions manquantes, puis reconnectez le compte."
+                )
+        else:
+            result["status"] = "token_error"
+            result["issues"].append(f"Impossible de verifier les permissions (HTTP {resp.status_code}). Le token est peut-etre expire.")
+    except Exception as e:
+        result["status"] = "error"
+        result["issues"].append(f"Erreur lors de la verification: {str(e)}")
+
+    # Verifier les pages accessibles
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            resp = client.get(f"{GRAPH_API_BASE}/me/accounts", params={
+                "access_token": user_token, "fields": "id,name", "limit": 50})
+        if resp.status_code == 200:
+            pages = resp.json().get("data", [])
+            result["pages"] = [{"id": p["id"], "name": p["name"]} for p in pages]
+
+            # Comparer avec les pages en DB
+            db_pages = (
+                db.query(SocialAccount)
+                .filter(SocialAccount.platform == "facebook", SocialAccount.account_type == "page", SocialAccount.is_active == True)
+                .all()
+            )
+            accessible_ids = {p["id"] for p in pages}
+            for db_page in db_pages:
+                if db_page.account_id not in accessible_ids:
+                    result["issues"].append(
+                        f"La page '{db_page.account_name}' n'est plus accessible. "
+                        "L'utilisateur connecte n'a peut-etre plus les droits admin/editeur sur cette page."
+                    )
+    except Exception:
+        pass
+
+    return result
+
+
+# ════════════════════════════════════════════════════════════════
 # DIAGNOSTIC — TEST COMPLET DES PERMISSIONS FACEBOOK
 # ════════════════════════════════════════════════════════════════
 
