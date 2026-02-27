@@ -681,3 +681,135 @@ def analytics_engagement(
 ):
     """Série temporelle de l'engagement."""
     return get_engagement_time_series(db, period)
+
+
+# ════════════════════════════════════════════════════════════════
+# DIAGNOSTIC — TEST DES PERMISSIONS FACEBOOK
+# ════════════════════════════════════════════════════════════════
+
+@router.get("/debug/test-page-api")
+def debug_test_page_api(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Test diagnostique des appels Facebook pour la premiere page active.
+    Teste: feed basique, feed enrichi, reactions count, comments edge.
+    """
+    import httpx
+
+    GRAPH_API_BASE = "https://graph.facebook.com/v18.0"
+    results = {}
+
+    # Trouver un compte page actif
+    page_account = (
+        db.query(SocialAccount)
+        .filter(SocialAccount.platform == "facebook", SocialAccount.account_type == "page", SocialAccount.is_active == True)
+        .first()
+    )
+    if not page_account:
+        return {"error": "Aucune page Facebook active"}
+
+    # Trouver le profil parent pour le user token
+    profile = (
+        db.query(SocialAccount)
+        .filter(SocialAccount.platform == "facebook", SocialAccount.account_type == "profile", SocialAccount.is_active == True)
+        .first()
+    )
+
+    page_token = page_account.access_token or (profile.access_token if profile else None)
+    if not page_token:
+        return {"error": "Pas de token disponible"}
+
+    page_id = page_account.account_id
+    results["page"] = {"id": page_id, "name": page_account.account_name}
+
+    def safe_get(url, params, label):
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.get(url, params=params)
+            if resp.status_code == 200:
+                data = resp.json()
+                return {"status": "OK", "keys": list(data.keys()), "data_count": len(data.get("data", [])), "sample": str(data)[:500]}
+            else:
+                return {"status": f"HTTP {resp.status_code}", "error": resp.text[:300]}
+        except Exception as e:
+            return {"status": "EXCEPTION", "error": str(e)}
+
+    # Test 1: Feed basique
+    results["feed_basic"] = safe_get(
+        f"{GRAPH_API_BASE}/{page_id}/feed",
+        {"access_token": page_token, "fields": "id,message,shares", "limit": 2},
+        "feed_basic",
+    )
+
+    # Test 2: Feed avec likes.summary
+    results["feed_likes_summary"] = safe_get(
+        f"{GRAPH_API_BASE}/{page_id}/feed",
+        {"access_token": page_token, "fields": "id,message,likes.summary(true),comments.summary(true)", "limit": 2},
+        "feed_likes_summary",
+    )
+
+    # Trouver un post_id pour les tests suivants
+    post_id = None
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            resp = client.get(f"{GRAPH_API_BASE}/{page_id}/feed", params={"access_token": page_token, "fields": "id", "limit": 1})
+        if resp.status_code == 200:
+            posts = resp.json().get("data", [])
+            if posts:
+                post_id = posts[0]["id"]
+    except Exception:
+        pass
+
+    if post_id:
+        results["test_post_id"] = post_id
+
+        # Test 3: Post reactions via field expansion
+        results["post_likes_summary"] = safe_get(
+            f"{GRAPH_API_BASE}/{post_id}",
+            {"access_token": page_token, "fields": "likes.summary(true),comments.summary(true)"},
+            "post_likes_summary",
+        )
+
+        # Test 4: Post reactions via reactions edge
+        results["post_reactions_summary"] = safe_get(
+            f"{GRAPH_API_BASE}/{post_id}",
+            {"access_token": page_token, "fields": "reactions.summary(total_count)"},
+            "post_reactions_summary",
+        )
+
+        # Test 5: Comments edge
+        results["post_comments_edge"] = safe_get(
+            f"{GRAPH_API_BASE}/{post_id}/comments",
+            {"access_token": page_token, "fields": "id,message,from,created_time,like_count", "limit": 3},
+            "post_comments_edge",
+        )
+
+        # Test 6: Comments edge sans 'from'
+        results["post_comments_no_from"] = safe_get(
+            f"{GRAPH_API_BASE}/{post_id}/comments",
+            {"access_token": page_token, "fields": "id,message,created_time,like_count", "limit": 3},
+            "post_comments_no_from",
+        )
+
+        # Test 7: Reactions edge directe
+        results["post_reactions_edge"] = safe_get(
+            f"{GRAPH_API_BASE}/{post_id}/reactions",
+            {"access_token": page_token, "limit": 0, "summary": "total_count"},
+            "post_reactions_edge",
+        )
+
+    # Test 8: Token permissions
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            resp = client.get(f"{GRAPH_API_BASE}/me/permissions", params={"access_token": page_token})
+        if resp.status_code == 200:
+            perms = resp.json().get("data", [])
+            results["token_permissions"] = {p["permission"]: p["status"] for p in perms}
+        else:
+            results["token_permissions"] = {"error": resp.text[:200]}
+    except Exception as e:
+        results["token_permissions"] = {"error": str(e)}
+
+    return results
