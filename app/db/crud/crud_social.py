@@ -65,6 +65,7 @@ def disconnect_social_account(db: Session, account_id: int) -> dict:
     now = datetime.now(timezone.utc)
     stats = {
         "accounts_deleted": 0,
+        "posts_deleted": 0,
         "post_results_deleted": 0,
         "comments_deleted": 0,
         "conversations_deleted": 0,
@@ -130,6 +131,26 @@ def disconnect_social_account(db: Session, account_id: int) -> dict:
 
     # Supprimer les données du compte principal
     _soft_delete_account_data(account)
+
+    # 5. Soft-delete les SocialPost qui n'ont plus AUCUN result actif
+    #    (posts devenus orphelins après suppression des results)
+    db.flush()  # S'assurer que les results sont bien marqués
+    orphan_posts = (
+        db.query(SocialPost)
+        .filter(
+            SocialPost.is_deleted == False,
+            ~SocialPost.id.in_(
+                db.query(SocialPostResult.post_id)
+                .filter(SocialPostResult.is_deleted == False)
+                .distinct()
+            )
+        )
+        .all()
+    )
+    for p in orphan_posts:
+        p.is_deleted = True
+        p.deleted_at = now
+        stats["posts_deleted"] += 1
 
     db.commit()
     logger.info(f"[DELETE] Compte #{account_id} supprimé avec cascade: {stats}")
@@ -230,7 +251,12 @@ def get_social_posts(
     date_to: Optional[str] = None,
     search: Optional[str] = None,
 ) -> list[SocialPost]:
-    """Récupérer les posts avec filtres optionnels."""
+    """
+    Récupérer les posts avec filtres optionnels.
+
+    Exclut automatiquement les posts qui n'ont aucun result actif
+    (par ex. après déconnexion d'un compte).
+    """
     query = (
         db.query(SocialPost)
         .options(joinedload(SocialPost.results))
@@ -248,11 +274,21 @@ def get_social_posts(
     if date_to:
         query = query.filter(SocialPost.created_at <= date_to)
 
-    return query.order_by(desc(SocialPost.created_at)).all()
+    posts = query.order_by(desc(SocialPost.created_at)).all()
+
+    # Filtrer côté Python : exclure les results soft-deleted
+    # et les posts qui n'ont plus aucun result actif (sauf drafts/scheduled)
+    for post in posts:
+        post.results = [r for r in post.results if not r.is_deleted]
+
+    return [
+        p for p in posts
+        if p.results or p.status in ("draft", "scheduled")
+    ]
 
 
 def get_social_post_by_id(db: Session, post_id: int) -> SocialPost:
-    """Récupérer un post par ID avec ses résultats."""
+    """Récupérer un post par ID avec ses résultats actifs."""
     post = (
         db.query(SocialPost)
         .options(joinedload(SocialPost.results))
@@ -264,6 +300,8 @@ def get_social_post_by_id(db: Session, post_id: int) -> SocialPost:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Publication #{post_id} introuvable"
         )
+    # Exclure les results soft-deleted
+    post.results = [r for r in post.results if not r.is_deleted]
     return post
 
 
@@ -1284,6 +1322,16 @@ def get_database_stats(db: Session) -> dict:
     posts_deleted = db.query(func.count(SocialPost.id)).filter(
         SocialPost.is_deleted == True
     ).scalar() or 0
+    # Orphelins : posts publiés sans aucun result actif
+    posts_orphaned = db.query(func.count(SocialPost.id)).filter(
+        SocialPost.is_deleted == False,
+        SocialPost.status.notin_(["draft", "scheduled"]),
+        ~SocialPost.id.in_(
+            db.query(SocialPostResult.post_id)
+            .filter(SocialPostResult.is_deleted == False)
+            .distinct()
+        )
+    ).scalar() or 0
 
     # --- PostResults ---
     results_active = db.query(func.count(SocialPostResult.id)).filter(
@@ -1351,13 +1399,14 @@ def get_database_stats(db: Session) -> dict:
     ).scalar() or 0
 
     total_orphans = (
-        results_orphaned_account + results_orphaned_post
+        posts_orphaned
+        + results_orphaned_account + results_orphaned_post
         + comments_orphaned + conversations_orphaned + messages_orphaned
     )
 
     return {
         "accounts": {"active": accounts_active, "deleted": accounts_deleted},
-        "posts": {"active": posts_active, "deleted": posts_deleted},
+        "posts": {"active": posts_active, "deleted": posts_deleted, "orphaned": posts_orphaned},
         "post_results": {
             "active": results_active,
             "deleted": results_deleted,
@@ -1399,6 +1448,7 @@ def cleanup_database(db: Session, hard_delete_days: int = 30) -> dict:
     now = datetime.now(timezone.utc)
     stats = {
         "orphans_cleaned": {
+            "posts": 0,
             "post_results": 0,
             "comments": 0,
             "conversations": 0,
@@ -1415,6 +1465,21 @@ def cleanup_database(db: Session, hard_delete_days: int = 30) -> dict:
     }
 
     # ── Étape 1 : Soft-delete les orphelins ──
+
+    # Posts publiés sans aucun result actif
+    orphan_posts = db.query(SocialPost).filter(
+        SocialPost.is_deleted == False,
+        SocialPost.status.notin_(["draft", "scheduled"]),
+        ~SocialPost.id.in_(
+            db.query(SocialPostResult.post_id)
+            .filter(SocialPostResult.is_deleted == False)
+            .distinct()
+        )
+    ).all()
+    for p in orphan_posts:
+        p.is_deleted = True
+        p.deleted_at = now
+        stats["orphans_cleaned"]["posts"] += 1
 
     # PostResults liés à un compte supprimé
     orphan_results_acc = db.query(SocialPostResult).filter(
