@@ -722,9 +722,10 @@ def debug_test_page_api(
         return {"error": "Pas de token disponible"}
 
     page_id = page_account.account_id
-    results["page"] = {"id": page_id, "name": page_account.account_name}
+    results["page_from_db"] = {"id": page_id, "name": page_account.account_name}
 
-    # Utiliser TOKEN FRAIS depuis /me/accounts (pas le token stocke en BDD)
+    # Utiliser TOKEN FRAIS depuis /me/accounts et prendre la PREMIERE page disponible
+    fresh_pages = []
     if profile and profile.access_token:
         try:
             with httpx.Client(timeout=15.0) as client:
@@ -734,16 +735,28 @@ def debug_test_page_api(
                     "limit": 10,
                 })
             if resp.status_code == 200:
-                pages_data = resp.json().get("data", [])
-                for p in pages_data:
+                fresh_pages = resp.json().get("data", [])
+                results["available_pages"] = [{"id": p["id"], "name": p["name"]} for p in fresh_pages]
+
+                # Chercher la page du DB, sinon prendre la premiere
+                matched = None
+                for p in fresh_pages:
                     if p["id"] == page_id:
-                        page_token = p.get("access_token", page_token)
-                        results["token_source"] = "fresh_from_me_accounts"
+                        matched = p
                         break
+                if matched:
+                    page_token = matched["access_token"]
+                    results["token_source"] = f"fresh_matched: {matched['name']}"
+                elif fresh_pages:
+                    page_token = fresh_pages[0]["access_token"]
+                    page_id = fresh_pages[0]["id"]
+                    results["token_source"] = f"fresh_first_available: {fresh_pages[0]['name']}"
+                    results["page_tested"] = {"id": page_id, "name": fresh_pages[0]["name"]}
                 else:
-                    results["token_source"] = "stored_no_matching_page"
+                    results["token_source"] = "no_pages_found"
             else:
                 results["token_source"] = f"me_accounts_failed_HTTP_{resp.status_code}"
+                results["me_accounts_error"] = resp.text[:300]
         except Exception as e:
             results["token_source"] = f"me_accounts_exception: {e}"
     else:
