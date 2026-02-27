@@ -82,6 +82,7 @@ from app.services.social_oauth import (
 )
 from app.config.config import settings
 from app.models.model_user_permissions import UserPermissions
+from app.models.model_social import SocialAccount
 
 
 router = APIRouter(
@@ -211,6 +212,10 @@ def oauth_callback(
             connected_by=user_id,
         )
 
+        # Marquer comme profil (c'est le compte utilisateur, pas une page)
+        account.account_type = "profile"
+        db.commit()
+
         # 5. Audit log
         log_action(db, user_id, "oauth_connect", "social_accounts", account.id)
 
@@ -314,11 +319,18 @@ def list_posts(
 ):
     """Lister les publications avec filtres."""
     posts = get_social_posts(db, status, platform, date_from, date_to, search)
-    # Enrichir avec le nom de l'auteur
+    # Enrichir avec le nom de l'auteur et le nom du compte par resultat
+    accounts_cache = {}
     for post in posts:
         from app.models import User
         user = db.query(User).filter(User.id == post.created_by).first()
         post.created_by_name = f"{user.name} {user.family_name}" if user else None
+        # Enrichir chaque result avec account_name (nom de la page)
+        for result in post.results:
+            if result.account_id not in accounts_cache:
+                acc = db.query(SocialAccount).filter(SocialAccount.id == result.account_id).first()
+                accounts_cache[result.account_id] = acc.account_name if acc else None
+            result.account_name = accounts_cache[result.account_id]
     return posts
 
 
@@ -333,6 +345,10 @@ def get_post(
     from app.models import User
     user = db.query(User).filter(User.id == post.created_by).first()
     post.created_by_name = f"{user.name} {user.family_name}" if user else None
+    # Enrichir les results avec account_name
+    for result in post.results:
+        acc = db.query(SocialAccount).filter(SocialAccount.id == result.account_id).first()
+        result.account_name = acc.account_name if acc else None
     return post
 
 

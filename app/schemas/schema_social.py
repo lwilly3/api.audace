@@ -53,6 +53,7 @@ class OAuthRedirectResponse(BaseModel):
 class SocialPostResultResponse(BaseModel):
     """Résultat de publication par plateforme/compte."""
     account_id: int
+    account_name: Optional[str] = None
     platform: str
     status: str = "pending"
     platform_post_id: Optional[str] = None
