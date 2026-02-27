@@ -937,9 +937,13 @@ def _sync_page_posts(
     page_account: SocialAccount,
     page_token: str,
     page_id: str,
+    limit: int = 100,
 ) -> dict:
     """
     Synchroniser les posts et commentaires d'une seule page Facebook.
+
+    Ne remplace JAMAIS une valeur non-nulle par 0 si l'API ne fournit
+    pas de donnees fiables (evite d'ecraser des metriques deja collectees).
 
     Returns:
         dict avec {posts_synced, posts_new, comments_synced, comments_new}
@@ -953,7 +957,7 @@ def _sync_page_posts(
 
     stats = {"posts_synced": 0, "posts_new": 0, "comments_synced": 0, "comments_new": 0}
 
-    fb_posts = get_page_posts(page_token, page_id, limit=50)
+    fb_posts = get_page_posts(page_token, page_id, limit=limit)
     print(f"[SYNC] Page '{page_account.account_name}' ({page_id}): {len(fb_posts)} post(s)", flush=True)
 
     for fb_post in fb_posts:
@@ -973,26 +977,54 @@ def _sync_page_posts(
 
         if existing_result:
             # Mettre a jour les metriques du post existant
+            # Strategie : ne JAMAIS remplacer une valeur > 0 par 0
+            # (evite d'ecraser des donnees valides quand les permissions manquent)
+
+            new_likes = 0
+            new_comments = 0
+            api_success = False
+
             # Priorite 1 : likes/comments du feed (inline summary)
             feed_likes = fb_post.get("likes_count", 0)
             feed_comments = fb_post.get("comments_count", 0)
 
             if feed_likes > 0 or feed_comments > 0:
-                existing_result.likes = feed_likes
-                existing_result.comments = feed_comments
+                new_likes = feed_likes
+                new_comments = feed_comments
+                api_success = True
             else:
                 # Priorite 2 : appel separe get_post_reactions_count
                 try:
                     reactions = get_post_reactions_count(page_token, platform_post_id)
-                    existing_result.likes = reactions.get("likes", 0)
-                    existing_result.comments = reactions.get("comments", 0)
+                    r_likes = reactions.get("likes", 0)
+                    r_comments = reactions.get("comments", 0)
+                    if r_likes > 0 or r_comments > 0:
+                        new_likes = r_likes
+                        new_comments = r_comments
+                        api_success = True
                 except Exception as e:
                     logger.warning(f"Erreur metriques post {platform_post_id}: {e}")
                     print(f"[SYNC] Erreur metriques {platform_post_id}: {e}", flush=True)
 
-            existing_result.shares = fb_post.get("shares_count", 0)
-            existing_result.impressions = fb_post.get("impressions", 0)
-            existing_result.clicks = fb_post.get("clicks", 0)
+            # Appliquer : ne remplace que si on a de meilleures donnees
+            if api_success:
+                existing_result.likes = new_likes
+                existing_result.comments = new_comments
+            # sinon on garde les valeurs precedentes
+
+            # Shares : toujours mis a jour (vient du feed basique, fiable)
+            new_shares = fb_post.get("shares_count", 0)
+            if new_shares > 0 or existing_result.shares == 0:
+                existing_result.shares = new_shares
+
+            # Impressions/clicks : seulement si > 0
+            new_impressions = fb_post.get("impressions", 0)
+            new_clicks = fb_post.get("clicks", 0)
+            if new_impressions > 0:
+                existing_result.impressions = new_impressions
+            if new_clicks > 0:
+                existing_result.clicks = new_clicks
+
             total_eng = existing_result.likes + existing_result.comments + existing_result.shares + existing_result.clicks
             if existing_result.impressions > 0:
                 existing_result.engagement_rate = round((total_eng / existing_result.impressions) * 100, 2)
@@ -1093,7 +1125,7 @@ def _sync_page_posts(
     return stats
 
 
-def sync_facebook_account(db: Session, account_id: int) -> dict:
+def sync_facebook_account(db: Session, account_id: int, force: bool = False) -> dict:
     """
     Synchroniser les posts et commentaires Facebook pour un compte.
 
@@ -1102,6 +1134,10 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
     - Pour CHAQUE page trouvee, cree/met a jour un SocialAccount dedie
     - Synchronise les posts de chaque page independamment
     - Deduplication par (platform, page_id, connected_by) → pas de doublons
+
+    Args:
+        force: Si True, synchronise davantage de posts (100 au lieu de 50)
+               pour rattraper les metriques manquantes.
 
     Returns:
         dict avec les compteurs globaux
@@ -1130,7 +1166,7 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
         "pages_synced": 0,
     }
 
-    print(f"[SYNC] Compte #{account_id}: debut sync, type={account.account_type}, id={account.account_id}", flush=True)
+    print(f"[SYNC] Compte #{account_id}: debut sync, type={account.account_type}, id={account.account_id}, force={force}", flush=True)
 
     # Recuperer les pages Facebook (utilise le user token)
     pages = get_facebook_pages(account.access_token)
@@ -1170,8 +1206,9 @@ def sync_facebook_account(db: Session, account_id: int) -> dict:
         page_account = _ensure_page_account(db, page, account.connected_by)
 
         # Syncer les posts de cette page
+        sync_limit = 100 if force else 100  # 100 posts max (API FB limite a 100)
         try:
-            page_stats = _sync_page_posts(db, page_account, page_token, page_id)
+            page_stats = _sync_page_posts(db, page_account, page_token, page_id, limit=sync_limit)
             stats["posts_synced"] += page_stats["posts_synced"]
             stats["posts_new"] += page_stats["posts_new"]
             stats["comments_synced"] += page_stats["comments_synced"]
@@ -1245,7 +1282,7 @@ def _sync_single_comment(
     return {"synced": 1, "new": 1}
 
 
-def sync_all_facebook_accounts(db: Session) -> dict:
+def sync_all_facebook_accounts(db: Session, force: bool = False) -> dict:
     """
     Synchroniser tous les comptes Facebook actifs.
 
@@ -1298,7 +1335,7 @@ def sync_all_facebook_accounts(db: Session) -> dict:
 
     for account in accounts:
         try:
-            account_stats = sync_facebook_account(db, account.id)
+            account_stats = sync_facebook_account(db, account.id, force=force)
             total_stats["accounts_synced"] += 1
             total_stats["posts_synced"] += account_stats["posts_synced"]
             total_stats["posts_new"] += account_stats["posts_new"]

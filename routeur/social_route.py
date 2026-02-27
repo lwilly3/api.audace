@@ -275,6 +275,7 @@ def account_status(
 @router.post("/accounts/{account_id}/sync")
 def sync_account(
     account_id: int,
+    force: bool = Query(False, description="Force la re-synchronisation complete des metriques"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
@@ -284,14 +285,18 @@ def sync_account(
     Recupere les derniers posts de la page Facebook connectee,
     importe les nouveaux posts et commentaires, et met a jour
     les metriques d'engagement des posts existants.
+
+    Si force=true, re-synchronise avec une limite plus haute pour
+    rattraper les metriques manquantes sur les anciens posts.
     """
-    result = sync_facebook_account(db, account_id)
+    result = sync_facebook_account(db, account_id, force=force)
     log_action(db, current_user.id, "sync", "social_accounts", account_id)
     return result
 
 
 @router.post("/sync")
 def sync_all(
+    force: bool = Query(False, description="Force la re-synchronisation complete des metriques"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
@@ -300,8 +305,10 @@ def sync_all(
 
     Parcourt tous les comptes Facebook connectes et declenche
     la synchronisation des posts et commentaires pour chacun.
+
+    Si force=true, re-synchronise toutes les metriques d'engagement.
     """
-    result = sync_all_facebook_accounts(db)
+    result = sync_all_facebook_accounts(db, force=force)
     log_action(db, current_user.id, "sync_all", "social_accounts", 0)
     return result
 
