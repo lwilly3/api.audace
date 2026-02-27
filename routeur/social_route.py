@@ -55,6 +55,9 @@ from app.db.crud.crud_social import (
     get_platform_stats,
     get_best_times,
     get_engagement_time_series,
+    # Nettoyage
+    get_database_stats,
+    cleanup_database,
 )
 from app.schemas.schema_social import (
     SocialAccountResponse,
@@ -249,10 +252,10 @@ def delete_account(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Déconnecter un compte social."""
+    """Déconnecter un compte social et supprimer toutes les données liées."""
     result = disconnect_social_account(db, account_id)
     log_action(db, current_user.id, "disconnect", "social_accounts", account_id)
-    return {"success": result}
+    return {"success": True, "cascade": result}
 
 
 @router.get("/accounts/{account_id}/status", response_model=SocialAccountStatusResponse)
@@ -383,10 +386,10 @@ def delete_post(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Supprimer une publication (soft delete)."""
+    """Supprimer une publication et ses résultats (soft delete)."""
     result = delete_social_post(db, post_id)
     log_action(db, current_user.id, "delete", "social_posts", post_id)
-    return {"success": result}
+    return {"success": True, "cascade": result}
 
 
 @router.post("/posts/{post_id}/publish", response_model=SocialPostResponse)
@@ -489,10 +492,10 @@ def delete_comment(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Supprimer un commentaire."""
+    """Supprimer un commentaire et ses réponses."""
     result = delete_social_comment(db, comment_id)
     log_action(db, current_user.id, "delete", "social_comments", comment_id)
-    return {"success": result}
+    return {"success": True, "cascade": result}
 
 
 @router.post("/comments/{comment_id}/hide")
@@ -577,6 +580,62 @@ def reply_to_conversation(
     db.commit()
     log_action(db, current_user.id, "reply", "social_messages", conversation_id)
     return {"success": True}
+
+
+# ════════════════════════════════════════════════════════════════
+# NETTOYAGE & OPTIMISATION BASE DE DONNÉES
+# ════════════════════════════════════════════════════════════════
+
+@router.get("/database/stats")
+def database_stats(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Statistiques de la base de données du module social.
+
+    Retourne les compteurs d'enregistrements actifs, soft-deletés
+    et orphelins pour chaque table.
+    Requiert la permission social_manage_accounts.
+    """
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+    return get_database_stats(db)
+
+
+@router.post("/database/optimize")
+def optimize_database(
+    hard_delete_days: int = Query(30, ge=0, le=365, description="Purger les éléments supprimés depuis plus de X jours (0 = pas de purge)"),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Optimiser la base de données du module social.
+
+    1. Nettoie les orphelins (données liées à des comptes/posts supprimés)
+    2. Purge définitivement les enregistrements soft-deleted
+       depuis plus de `hard_delete_days` jours
+
+    Requiert la permission social_manage_accounts.
+    """
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+
+    result = cleanup_database(db, hard_delete_days)
+    log_action(db, current_user.id, "optimize", "social_database", 0)
+    return result
 
 
 # ════════════════════════════════════════════════════════════════

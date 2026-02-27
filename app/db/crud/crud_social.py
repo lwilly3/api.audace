@@ -53,14 +53,87 @@ def get_social_account_by_id(db: Session, account_id: int) -> SocialAccount:
     return account
 
 
-def disconnect_social_account(db: Session, account_id: int) -> bool:
-    """Soft delete d'un compte social."""
+def disconnect_social_account(db: Session, account_id: int) -> dict:
+    """
+    Soft delete d'un compte social avec cascade sur toutes les données liées.
+
+    Supprime (soft) : le compte, ses page-accounts enfants,
+    les PostResults, Comments, Conversations et Messages associés.
+    Retourne un résumé des suppressions effectuées.
+    """
     account = get_social_account_by_id(db, account_id)
-    account.is_deleted = True
-    account.deleted_at = datetime.now(timezone.utc)
-    account.is_active = False
+    now = datetime.now(timezone.utc)
+    stats = {
+        "accounts_deleted": 0,
+        "post_results_deleted": 0,
+        "comments_deleted": 0,
+        "conversations_deleted": 0,
+        "messages_deleted": 0,
+    }
+
+    def _soft_delete_account_data(acc: SocialAccount):
+        """Cascade soft-delete sur toutes les données d'un compte."""
+        # 1. PostResults liés à ce compte
+        results = db.query(SocialPostResult).filter(
+            SocialPostResult.account_id == acc.id,
+            SocialPostResult.is_deleted == False,
+        ).all()
+        for r in results:
+            r.is_deleted = True
+            r.deleted_at = now
+            stats["post_results_deleted"] += 1
+
+        # 2. Commentaires liés à ce compte
+        comments = db.query(SocialComment).filter(
+            SocialComment.account_id == acc.id,
+            SocialComment.is_deleted == False,
+        ).all()
+        for c in comments:
+            c.is_deleted = True
+            c.deleted_at = now
+            stats["comments_deleted"] += 1
+
+        # 3. Conversations + leurs messages
+        conversations = db.query(SocialConversation).filter(
+            SocialConversation.account_id == acc.id,
+            SocialConversation.is_deleted == False,
+        ).all()
+        for conv in conversations:
+            msgs = db.query(SocialMessage).filter(
+                SocialMessage.conversation_id == conv.id,
+                SocialMessage.is_deleted == False,
+            ).all()
+            for m in msgs:
+                m.is_deleted = True
+                m.deleted_at = now
+                stats["messages_deleted"] += 1
+            conv.is_deleted = True
+            conv.deleted_at = now
+            stats["conversations_deleted"] += 1
+
+        # 4. Marquer le compte lui-même
+        acc.is_deleted = True
+        acc.deleted_at = now
+        acc.is_active = False
+        stats["accounts_deleted"] += 1
+
+    # Si c'est un profil, supprimer aussi les page-accounts enfants
+    if account.account_type == "profile":
+        child_pages = db.query(SocialAccount).filter(
+            SocialAccount.connected_by == account.connected_by,
+            SocialAccount.platform == account.platform,
+            SocialAccount.account_type == "page",
+            SocialAccount.is_deleted == False,
+        ).all()
+        for page_acc in child_pages:
+            _soft_delete_account_data(page_acc)
+
+    # Supprimer les données du compte principal
+    _soft_delete_account_data(account)
+
     db.commit()
-    return True
+    logger.info(f"[DELETE] Compte #{account_id} supprimé avec cascade: {stats}")
+    return stats
 
 
 def check_account_token_status(db: Session, account_id: int) -> dict:
@@ -232,13 +305,30 @@ def update_social_post(db: Session, post_id: int, post_data: SocialPostUpdate) -
     return post
 
 
-def delete_social_post(db: Session, post_id: int) -> bool:
-    """Soft delete d'un post."""
+def delete_social_post(db: Session, post_id: int) -> dict:
+    """
+    Soft delete d'un post avec cascade sur ses résultats.
+
+    Supprime (soft) le post et tous les SocialPostResult associés.
+    """
     post = get_social_post_by_id(db, post_id)
+    now = datetime.now(timezone.utc)
+    stats = {"post_results_deleted": 0}
+
+    # Cascade : supprimer les PostResults
+    results = db.query(SocialPostResult).filter(
+        SocialPostResult.post_id == post.id,
+        SocialPostResult.is_deleted == False,
+    ).all()
+    for r in results:
+        r.is_deleted = True
+        r.deleted_at = now
+        stats["post_results_deleted"] += 1
+
     post.is_deleted = True
-    post.deleted_at = datetime.now(timezone.utc)
+    post.deleted_at = now
     db.commit()
-    return True
+    return stats
 
 
 def publish_social_post(db: Session, post_id: int) -> SocialPost:
@@ -435,13 +525,33 @@ def hide_comment(db: Session, comment_id: int) -> bool:
     return True
 
 
-def delete_social_comment(db: Session, comment_id: int) -> bool:
-    """Soft delete d'un commentaire."""
+def delete_social_comment(db: Session, comment_id: int) -> dict:
+    """
+    Soft delete d'un commentaire avec cascade sur ses réponses.
+
+    Supprime (soft) le commentaire et toutes ses réponses (replies).
+    """
     comment = get_comment_by_id(db, comment_id)
+    now = datetime.now(timezone.utc)
+    stats = {"replies_deleted": 0}
+
+    # Cascade : supprimer les réponses récursivement
+    def _soft_delete_replies(parent_id: int):
+        replies = db.query(SocialComment).filter(
+            SocialComment.parent_comment_id == parent_id,
+            SocialComment.is_deleted == False,
+        ).all()
+        for reply in replies:
+            _soft_delete_replies(reply.id)
+            reply.is_deleted = True
+            reply.deleted_at = now
+            stats["replies_deleted"] += 1
+
+    _soft_delete_replies(comment.id)
     comment.is_deleted = True
-    comment.deleted_at = datetime.now(timezone.utc)
+    comment.deleted_at = now
     db.commit()
-    return True
+    return stats
 
 
 # ════════════════════════════════════════════════════════════════
@@ -1144,3 +1254,300 @@ def sync_all_facebook_accounts(db: Session) -> dict:
             })
 
     return total_stats
+
+
+# ════════════════════════════════════════════════════════════════
+# NETTOYAGE & OPTIMISATION BASE DE DONNÉES
+# ════════════════════════════════════════════════════════════════
+
+def get_database_stats(db: Session) -> dict:
+    """
+    Statistiques de la base de données sociale.
+
+    Retourne les compteurs actifs, soft-deletés et orphelins
+    pour chaque table du module social.
+    """
+    now = datetime.now(timezone.utc)
+
+    # --- Comptes ---
+    accounts_active = db.query(func.count(SocialAccount.id)).filter(
+        SocialAccount.is_deleted == False
+    ).scalar() or 0
+    accounts_deleted = db.query(func.count(SocialAccount.id)).filter(
+        SocialAccount.is_deleted == True
+    ).scalar() or 0
+
+    # --- Posts ---
+    posts_active = db.query(func.count(SocialPost.id)).filter(
+        SocialPost.is_deleted == False
+    ).scalar() or 0
+    posts_deleted = db.query(func.count(SocialPost.id)).filter(
+        SocialPost.is_deleted == True
+    ).scalar() or 0
+
+    # --- PostResults ---
+    results_active = db.query(func.count(SocialPostResult.id)).filter(
+        SocialPostResult.is_deleted == False
+    ).scalar() or 0
+    results_deleted = db.query(func.count(SocialPostResult.id)).filter(
+        SocialPostResult.is_deleted == True
+    ).scalar() or 0
+    # Orphelins : results liés à un compte supprimé mais eux-mêmes non supprimés
+    results_orphaned_account = db.query(func.count(SocialPostResult.id)).filter(
+        SocialPostResult.is_deleted == False,
+        SocialPostResult.account_id.in_(
+            db.query(SocialAccount.id).filter(SocialAccount.is_deleted == True)
+        )
+    ).scalar() or 0
+    # Orphelins : results liés à un post supprimé mais eux-mêmes non supprimés
+    results_orphaned_post = db.query(func.count(SocialPostResult.id)).filter(
+        SocialPostResult.is_deleted == False,
+        SocialPostResult.post_id.in_(
+            db.query(SocialPost.id).filter(SocialPost.is_deleted == True)
+        )
+    ).scalar() or 0
+
+    # --- Commentaires ---
+    comments_active = db.query(func.count(SocialComment.id)).filter(
+        SocialComment.is_deleted == False
+    ).scalar() or 0
+    comments_deleted = db.query(func.count(SocialComment.id)).filter(
+        SocialComment.is_deleted == True
+    ).scalar() or 0
+    # Orphelins : commentaires liés à un compte supprimé
+    comments_orphaned = db.query(func.count(SocialComment.id)).filter(
+        SocialComment.is_deleted == False,
+        SocialComment.account_id.in_(
+            db.query(SocialAccount.id).filter(SocialAccount.is_deleted == True)
+        )
+    ).scalar() or 0
+
+    # --- Conversations ---
+    conversations_active = db.query(func.count(SocialConversation.id)).filter(
+        SocialConversation.is_deleted == False
+    ).scalar() or 0
+    conversations_deleted = db.query(func.count(SocialConversation.id)).filter(
+        SocialConversation.is_deleted == True
+    ).scalar() or 0
+    conversations_orphaned = db.query(func.count(SocialConversation.id)).filter(
+        SocialConversation.is_deleted == False,
+        SocialConversation.account_id.in_(
+            db.query(SocialAccount.id).filter(SocialAccount.is_deleted == True)
+        )
+    ).scalar() or 0
+
+    # --- Messages ---
+    messages_active = db.query(func.count(SocialMessage.id)).filter(
+        SocialMessage.is_deleted == False
+    ).scalar() or 0
+    messages_deleted = db.query(func.count(SocialMessage.id)).filter(
+        SocialMessage.is_deleted == True
+    ).scalar() or 0
+    messages_orphaned = db.query(func.count(SocialMessage.id)).filter(
+        SocialMessage.is_deleted == False,
+        SocialMessage.conversation_id.in_(
+            db.query(SocialConversation.id).filter(SocialConversation.is_deleted == True)
+        )
+    ).scalar() or 0
+
+    total_orphans = (
+        results_orphaned_account + results_orphaned_post
+        + comments_orphaned + conversations_orphaned + messages_orphaned
+    )
+
+    return {
+        "accounts": {"active": accounts_active, "deleted": accounts_deleted},
+        "posts": {"active": posts_active, "deleted": posts_deleted},
+        "post_results": {
+            "active": results_active,
+            "deleted": results_deleted,
+            "orphaned_account": results_orphaned_account,
+            "orphaned_post": results_orphaned_post,
+        },
+        "comments": {"active": comments_active, "deleted": comments_deleted, "orphaned": comments_orphaned},
+        "conversations": {"active": conversations_active, "deleted": conversations_deleted, "orphaned": conversations_orphaned},
+        "messages": {"active": messages_active, "deleted": messages_deleted, "orphaned": messages_orphaned},
+        "total_records": (
+            accounts_active + accounts_deleted
+            + posts_active + posts_deleted
+            + results_active + results_deleted
+            + comments_active + comments_deleted
+            + conversations_active + conversations_deleted
+            + messages_active + messages_deleted
+        ),
+        "total_orphans": total_orphans,
+        "total_soft_deleted": (
+            accounts_deleted + posts_deleted + results_deleted
+            + comments_deleted + conversations_deleted + messages_deleted
+        ),
+    }
+
+
+def cleanup_database(db: Session, hard_delete_days: int = 30) -> dict:
+    """
+    Nettoyer la base de données du module social.
+
+    Effectue 3 opérations :
+    1. Soft-delete les orphelins (données liées à des comptes/posts supprimés)
+    2. Hard-delete les enregistrements soft-deleted depuis plus de `hard_delete_days` jours
+    3. Retourne les statistiques du nettoyage
+
+    Args:
+        db: Session SQLAlchemy
+        hard_delete_days: Nombre de jours après soft-delete pour le hard-delete (0 = pas de hard-delete)
+    """
+    now = datetime.now(timezone.utc)
+    stats = {
+        "orphans_cleaned": {
+            "post_results": 0,
+            "comments": 0,
+            "conversations": 0,
+            "messages": 0,
+        },
+        "hard_deleted": {
+            "accounts": 0,
+            "posts": 0,
+            "post_results": 0,
+            "comments": 0,
+            "conversations": 0,
+            "messages": 0,
+        },
+    }
+
+    # ── Étape 1 : Soft-delete les orphelins ──
+
+    # PostResults liés à un compte supprimé
+    orphan_results_acc = db.query(SocialPostResult).filter(
+        SocialPostResult.is_deleted == False,
+        SocialPostResult.account_id.in_(
+            db.query(SocialAccount.id).filter(SocialAccount.is_deleted == True)
+        )
+    ).all()
+    for r in orphan_results_acc:
+        r.is_deleted = True
+        r.deleted_at = now
+        stats["orphans_cleaned"]["post_results"] += 1
+
+    # PostResults liés à un post supprimé
+    orphan_results_post = db.query(SocialPostResult).filter(
+        SocialPostResult.is_deleted == False,
+        SocialPostResult.post_id.in_(
+            db.query(SocialPost.id).filter(SocialPost.is_deleted == True)
+        )
+    ).all()
+    for r in orphan_results_post:
+        r.is_deleted = True
+        r.deleted_at = now
+        stats["orphans_cleaned"]["post_results"] += 1
+
+    # Commentaires liés à un compte supprimé
+    orphan_comments = db.query(SocialComment).filter(
+        SocialComment.is_deleted == False,
+        SocialComment.account_id.in_(
+            db.query(SocialAccount.id).filter(SocialAccount.is_deleted == True)
+        )
+    ).all()
+    for c in orphan_comments:
+        c.is_deleted = True
+        c.deleted_at = now
+        stats["orphans_cleaned"]["comments"] += 1
+
+    # Conversations liées à un compte supprimé
+    orphan_convs = db.query(SocialConversation).filter(
+        SocialConversation.is_deleted == False,
+        SocialConversation.account_id.in_(
+            db.query(SocialAccount.id).filter(SocialAccount.is_deleted == True)
+        )
+    ).all()
+    for conv in orphan_convs:
+        conv.is_deleted = True
+        conv.deleted_at = now
+        stats["orphans_cleaned"]["conversations"] += 1
+
+    # Messages liés à une conversation supprimée
+    orphan_msgs = db.query(SocialMessage).filter(
+        SocialMessage.is_deleted == False,
+        SocialMessage.conversation_id.in_(
+            db.query(SocialConversation.id).filter(SocialConversation.is_deleted == True)
+        )
+    ).all()
+    for m in orphan_msgs:
+        m.is_deleted = True
+        m.deleted_at = now
+        stats["orphans_cleaned"]["messages"] += 1
+
+    db.flush()
+
+    # ── Étape 2 : Hard-delete les anciens soft-deleted ──
+
+    if hard_delete_days > 0:
+        cutoff = now - timedelta(days=hard_delete_days)
+
+        # Ordre important : enfants d'abord, parents ensuite (FK constraints)
+
+        # Messages
+        n = db.query(SocialMessage).filter(
+            SocialMessage.is_deleted == True,
+            SocialMessage.deleted_at != None,
+            SocialMessage.deleted_at < cutoff,
+        ).delete(synchronize_session="fetch")
+        stats["hard_deleted"]["messages"] = n
+
+        # Conversations
+        n = db.query(SocialConversation).filter(
+            SocialConversation.is_deleted == True,
+            SocialConversation.deleted_at != None,
+            SocialConversation.deleted_at < cutoff,
+        ).delete(synchronize_session="fetch")
+        stats["hard_deleted"]["conversations"] = n
+
+        # Commentaires (replies d'abord via parent_comment_id)
+        # D'abord les replies (qui ont un parent_comment_id)
+        n_replies = db.query(SocialComment).filter(
+            SocialComment.is_deleted == True,
+            SocialComment.deleted_at != None,
+            SocialComment.deleted_at < cutoff,
+            SocialComment.parent_comment_id != None,
+        ).delete(synchronize_session="fetch")
+        # Puis les commentaires racine
+        n_root = db.query(SocialComment).filter(
+            SocialComment.is_deleted == True,
+            SocialComment.deleted_at != None,
+            SocialComment.deleted_at < cutoff,
+        ).delete(synchronize_session="fetch")
+        stats["hard_deleted"]["comments"] = n_replies + n_root
+
+        # PostResults
+        n = db.query(SocialPostResult).filter(
+            SocialPostResult.is_deleted == True,
+            SocialPostResult.deleted_at != None,
+            SocialPostResult.deleted_at < cutoff,
+        ).delete(synchronize_session="fetch")
+        stats["hard_deleted"]["post_results"] = n
+
+        # Posts
+        n = db.query(SocialPost).filter(
+            SocialPost.is_deleted == True,
+            SocialPost.deleted_at != None,
+            SocialPost.deleted_at < cutoff,
+        ).delete(synchronize_session="fetch")
+        stats["hard_deleted"]["posts"] = n
+
+        # Comptes (page d'abord, puis profil)
+        n = db.query(SocialAccount).filter(
+            SocialAccount.is_deleted == True,
+            SocialAccount.deleted_at != None,
+            SocialAccount.deleted_at < cutoff,
+        ).delete(synchronize_session="fetch")
+        stats["hard_deleted"]["accounts"] = n
+
+    db.commit()
+
+    total_orphans = sum(stats["orphans_cleaned"].values())
+    total_hard = sum(stats["hard_deleted"].values())
+    logger.info(
+        f"[CLEANUP] Nettoyage terminé: {total_orphans} orphelins nettoyés, "
+        f"{total_hard} enregistrements purgés (>{hard_delete_days}j)"
+    )
+
+    return stats
