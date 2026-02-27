@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, and_
 from fastapi import HTTPException, status
 from datetime import datetime, timezone, timedelta
-from typing import Optional
+from typing import Optional, Callable
 
 from app.models.model_social import (
     SocialAccount, SocialPost, SocialPostResult,
@@ -938,6 +938,7 @@ def _sync_page_posts(
     page_token: str,
     page_id: str,
     limit: int = 100,
+    on_progress: Optional[Callable] = None,
 ) -> dict:
     """
     Synchroniser les posts et commentaires d'une seule page Facebook.
@@ -958,9 +959,10 @@ def _sync_page_posts(
     stats = {"posts_synced": 0, "posts_new": 0, "comments_synced": 0, "comments_new": 0}
 
     fb_posts = get_page_posts(page_token, page_id, limit=limit)
-    print(f"[SYNC] Page '{page_account.account_name}' ({page_id}): {len(fb_posts)} post(s)", flush=True)
+    total_posts = len(fb_posts)
+    print(f"[SYNC] Page '{page_account.account_name}' ({page_id}): {total_posts} post(s)", flush=True)
 
-    for fb_post in fb_posts:
+    for idx, fb_post in enumerate(fb_posts):
         platform_post_id = fb_post["platform_post_id"]
         if not platform_post_id:
             continue
@@ -1095,10 +1097,19 @@ def _sync_page_posts(
             stats["posts_synced"] += 1
 
         # Synchroniser les commentaires de ce post
+        # Utilise les commentaires inline du feed si disponibles (evite le N+1)
         if post_obj:
             try:
-                fb_comments = get_post_comments(page_token, platform_post_id, limit=100)
-                print(f"[SYNC] Post {platform_post_id}: {len(fb_comments)} commentaire(s) FB", flush=True)
+                inline_comments = fb_post.get("inline_comments", [])
+                if inline_comments:
+                    # Commentaires deja inclus dans la reponse du feed (0 appel API)
+                    fb_comments = inline_comments
+                    print(f"[SYNC] Post {platform_post_id}: {len(fb_comments)} commentaire(s) inline", flush=True)
+                else:
+                    # Fallback : appel API individuel (champs basiques sans inline)
+                    fb_comments = get_post_comments(page_token, platform_post_id, limit=100)
+                    print(f"[SYNC] Post {platform_post_id}: {len(fb_comments)} commentaire(s) via API", flush=True)
+
                 for fb_comment in fb_comments:
                     comment_stats = _sync_single_comment(
                         db, fb_comment, post_obj, page_account, parent_comment_id=None
@@ -1122,10 +1133,15 @@ def _sync_page_posts(
                 logger.warning(f"Erreur sync commentaires pour {platform_post_id}: {e}")
                 print(f"[SYNC] ERREUR commentaires {platform_post_id}: {type(e).__name__}: {e}", flush=True)
 
+        # Reporter la progression
+        if on_progress and total_posts > 0:
+            pct = int(((idx + 1) / total_posts) * 100)
+            on_progress(f"{idx + 1}/{total_posts} posts", pct)
+
     return stats
 
 
-def sync_facebook_account(db: Session, account_id: int, force: bool = False) -> dict:
+def sync_facebook_account(db: Session, account_id: int, force: bool = False, on_progress: Optional[Callable] = None) -> dict:
     """
     Synchroniser les posts et commentaires Facebook pour un compte.
 
@@ -1195,20 +1211,31 @@ def sync_facebook_account(db: Session, account_id: int, force: bool = False) -> 
         # Compte profil : syncer TOUTES les pages
         pages_to_sync = pages
 
-    for page in pages_to_sync:
+    for page_idx, page in enumerate(pages_to_sync):
         page_id = page["id"]
         page_token = page.get("access_token", "")
         if not page_token:
             logger.warning(f"[SYNC] Pas de token pour la page {page['name']} ({page_id})")
             continue
 
+        # Reporter progression par page
+        if on_progress:
+            on_progress(f"Page {page_idx + 1}/{len(pages_to_sync)}: {page['name']}", int((page_idx / max(len(pages_to_sync), 1)) * 100))
+
         # Creer ou mettre a jour le SocialAccount pour cette page
         page_account = _ensure_page_account(db, page, account.connected_by)
 
         # Syncer les posts de cette page
         sync_limit = 100 if force else 100  # 100 posts max (API FB limite a 100)
+
+        def _page_progress(msg: str, pct: int):
+            if on_progress:
+                base = int((page_idx / max(len(pages_to_sync), 1)) * 100)
+                page_share = int(100 / max(len(pages_to_sync), 1))
+                on_progress(f"{page['name']}: {msg}", base + int(pct * page_share / 100))
+
         try:
-            page_stats = _sync_page_posts(db, page_account, page_token, page_id, limit=sync_limit)
+            page_stats = _sync_page_posts(db, page_account, page_token, page_id, limit=sync_limit, on_progress=_page_progress)
             stats["posts_synced"] += page_stats["posts_synced"]
             stats["posts_new"] += page_stats["posts_new"]
             stats["comments_synced"] += page_stats["comments_synced"]
@@ -1289,7 +1316,7 @@ def _sync_single_comment(
     return {"synced": 1, "new": 1}
 
 
-def sync_all_facebook_accounts(db: Session, force: bool = False) -> dict:
+def sync_all_facebook_accounts(db: Session, force: bool = False, on_progress: Optional[Callable] = None) -> dict:
     """
     Synchroniser tous les comptes Facebook actifs.
 
@@ -1340,9 +1367,11 @@ def sync_all_facebook_accounts(db: Session, force: bool = False) -> dict:
         "errors": [],
     }
 
-    for account in accounts:
+    for acct_idx, account in enumerate(accounts):
         try:
-            account_stats = sync_facebook_account(db, account.id, force=force)
+            if on_progress:
+                on_progress(f"Compte {acct_idx + 1}/{len(accounts)}", int((acct_idx / max(len(accounts), 1)) * 100))
+            account_stats = sync_facebook_account(db, account.id, force=force, on_progress=on_progress)
             total_stats["accounts_synced"] += 1
             total_stats["posts_synced"] += account_stats["posts_synced"]
             total_stats["posts_new"] += account_stats["posts_new"]

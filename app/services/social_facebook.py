@@ -12,7 +12,7 @@ Toutes les fonctions sont synchrones (httpx.Client).
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Callable
 
 import httpx
 from fastapi import HTTPException, status
@@ -21,6 +21,20 @@ logger = logging.getLogger("hapson-api")
 
 GRAPH_API_BASE = "https://graph.facebook.com/v18.0"
 DEFAULT_TIMEOUT = 30.0
+
+# Client HTTP réutilisable (connection pooling)
+_shared_client: Optional[httpx.Client] = None
+
+
+def _get_client() -> httpx.Client:
+    """Client HTTP partagé avec connection pooling."""
+    global _shared_client
+    if _shared_client is None or _shared_client.is_closed:
+        _shared_client = httpx.Client(
+            timeout=DEFAULT_TIMEOUT,
+            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+        )
+    return _shared_client
 
 
 def _graph_get(url: str, params: dict, description: str = "Graph API") -> dict:
@@ -32,8 +46,8 @@ def _graph_get(url: str, params: dict, description: str = "Graph API") -> dict:
     logger.info(f"[FB API] {description} -> GET {url} (params sans token)")
 
     try:
-        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
-            response = client.get(url, params=params)
+        client = _get_client()
+        response = client.get(url, params=params)
 
         print(f"[FB API] {description} <- HTTP {response.status_code}", flush=True)
         logger.info(f"[FB API] {description} <- HTTP {response.status_code}")
@@ -87,8 +101,8 @@ def _graph_post(url: str, data: dict, access_token: str, description: str = "Gra
     Appel POST generique vers la Graph API.
     """
     try:
-        with httpx.Client(timeout=DEFAULT_TIMEOUT) as client:
-            response = client.post(
+        client = _get_client()
+        response = client.post(
                 url,
                 params={"access_token": access_token},
                 json=data,
@@ -235,8 +249,8 @@ def get_page_posts(
     """
     # Champs de base
     base_fields = "id,message,created_time,full_picture,permalink_url,shares,attachments"
-    # Champs enrichis avec summary likes/comments (peut necessiter pages_read_engagement)
-    enriched_fields = base_fields + ",likes.summary(true),comments.summary(true)"
+    # Champs enrichis avec summary likes/comments + commentaires inline (evite le N+1)
+    enriched_fields = base_fields + ",likes.summary(true),comments.limit(50).summary(true){id,message,from,created_time,like_count,comment_count}"
 
     raw_posts = []
     used_enriched = False
@@ -301,6 +315,7 @@ def get_page_posts(
         # Extraire likes/comments depuis le summary inline
         likes_count = 0
         comments_count = 0
+        inline_comments = []
         try:
             likes_summary = raw.get("likes", {})
             if isinstance(likes_summary, dict):
@@ -308,9 +323,22 @@ def get_page_posts(
         except Exception:
             pass
         try:
-            comments_summary = raw.get("comments", {})
-            if isinstance(comments_summary, dict):
-                comments_count = comments_summary.get("summary", {}).get("total_count", 0)
+            comments_data = raw.get("comments", {})
+            if isinstance(comments_data, dict):
+                comments_count = comments_data.get("summary", {}).get("total_count", 0)
+                # Extraire les commentaires inline (evite le N+1 API call)
+                for raw_c in comments_data.get("data", []):
+                    from_data = raw_c.get("from", {}) or {}
+                    inline_comments.append({
+                        "platform_comment_id": raw_c.get("id", ""),
+                        "message": raw_c.get("message", ""),
+                        "author_name": from_data.get("name", "Utilisateur Facebook"),
+                        "author_platform_id": from_data.get("id", "unknown"),
+                        "created_time": raw_c.get("created_time", ""),
+                        "like_count": raw_c.get("like_count", 0),
+                        "comment_count": raw_c.get("comment_count", 0),
+                        "replies": [],
+                    })
         except Exception:
             pass
 
@@ -323,6 +351,7 @@ def get_page_posts(
             "shares_count": raw.get("shares", {}).get("count", 0) if isinstance(raw.get("shares"), dict) else 0,
             "likes_count": likes_count,
             "comments_count": comments_count,
+            "inline_comments": inline_comments,
             "impressions": 0,
             "clicks": 0,
         })

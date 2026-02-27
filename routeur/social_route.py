@@ -19,6 +19,7 @@ from typing import Optional
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 import logging
+import threading
 
 from app.db.database import get_db
 from core.auth import oauth2
@@ -269,7 +270,7 @@ def account_status(
 
 
 # ════════════════════════════════════════════════════════════════
-# SYNCHRONISATION FACEBOOK
+# SYNCHRONISATION FACEBOOK (BACKGROUND TASK)
 # ════════════════════════════════════════════════════════════════
 
 @router.post("/accounts/{account_id}/sync")
@@ -280,18 +281,36 @@ def sync_account(
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """
-    Synchroniser les posts et commentaires Facebook pour un compte.
+    Lancer la synchronisation Facebook en arrière-plan.
 
-    Recupere les derniers posts de la page Facebook connectee,
-    importe les nouveaux posts et commentaires, et met a jour
-    les metriques d'engagement des posts existants.
-
-    Si force=true, re-synchronise avec une limite plus haute pour
-    rattraper les metriques manquantes sur les anciens posts.
+    Retourne immédiatement un task_id pour suivre la progression
+    via GET /social/sync/status/{task_id}.
     """
-    result = sync_facebook_account(db, account_id, force=force)
+    from app.services import sync_tasks
+    from app.db.database import SessionLocal
+
+    sync_tasks.cleanup()
+
+    task_id = sync_tasks.create(label=f"sync-account-{account_id}")
+
+    def _run():
+        session = SessionLocal()
+        try:
+            def progress(msg, pct):
+                sync_tasks.update(task_id, progress=msg, percent=pct)
+
+            result = sync_facebook_account(session, account_id, force=force, on_progress=progress)
+            sync_tasks.complete(task_id, result)
+        except Exception as e:
+            sync_tasks.fail(task_id, str(e))
+        finally:
+            session.close()
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+
     log_action(db, current_user.id, "sync", "social_accounts", account_id)
-    return result
+    return {"task_id": task_id, "status": "running", "message": "Synchronisation lancée en arrière-plan"}
 
 
 @router.post("/sync")
@@ -301,16 +320,54 @@ def sync_all(
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """
-    Synchroniser tous les comptes Facebook actifs.
+    Synchroniser tous les comptes Facebook en arrière-plan.
 
-    Parcourt tous les comptes Facebook connectes et declenche
-    la synchronisation des posts et commentaires pour chacun.
-
-    Si force=true, re-synchronise toutes les metriques d'engagement.
+    Retourne immédiatement un task_id pour suivre la progression.
     """
-    result = sync_all_facebook_accounts(db, force=force)
+    from app.services import sync_tasks
+    from app.db.database import SessionLocal
+
+    sync_tasks.cleanup()
+
+    task_id = sync_tasks.create(label="sync-all")
+
+    def _run():
+        session = SessionLocal()
+        try:
+            def progress(msg, pct):
+                sync_tasks.update(task_id, progress=msg, percent=pct)
+
+            result = sync_all_facebook_accounts(session, force=force, on_progress=progress)
+            sync_tasks.complete(task_id, result)
+        except Exception as e:
+            sync_tasks.fail(task_id, str(e))
+        finally:
+            session.close()
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+
     log_action(db, current_user.id, "sync_all", "social_accounts", 0)
-    return result
+    return {"task_id": task_id, "status": "running", "message": "Synchronisation lancée en arrière-plan"}
+
+
+@router.get("/sync/status/{task_id}")
+def sync_status(
+    task_id: str,
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Vérifier le statut d'une tâche de synchronisation.
+
+    Retourne le pourcentage de progression, le message courant,
+    et le résultat final quand la tâche est terminée.
+    """
+    from app.services import sync_tasks
+
+    task = sync_tasks.get(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Tâche introuvable")
+    return task
 
 
 # ════════════════════════════════════════════════════════════════
