@@ -405,63 +405,68 @@ def get_post_insights(page_access_token: str, post_id: str) -> dict:
     Necessite la permission read_insights sur la page.
     Retourne 0 gracieusement si l'API echoue (permission manquante, post trop ancien, etc.).
 
-    NOTE: Le parametre period=lifetime est obligatoire pour obtenir les totaux
-    cumules. Sans lui, l'API retourne uniquement les metriques du jour courant.
+    NOTE: Les metriques non-_unique (post_impressions, post_impressions_organic, etc.)
+    sont deprecies dans les versions recentes de la Graph API.
+    Seules les versions _unique fonctionnent : post_impressions_unique,
+    post_impressions_organic_unique, etc.
 
     Returns:
         {impressions: int, clicks: int, reach: int}
     """
     url = f"{GRAPH_API_BASE}/{post_id}/insights"
 
-    # Essai 1 : metriques standard avec period=lifetime
+    result = {"impressions": 0, "clicks": 0, "reach": 0}
+
+    # ── 1. Impressions et Reach via post_impressions_unique ──
+    # post_impressions est deprecie, seul post_impressions_unique fonctionne
+    # post_impressions_unique = nombre de personnes uniques ayant vu le post (= reach)
+    # post_impressions_organic_unique = reach organique
     params = {
         "access_token": page_access_token,
-        "metric": "post_impressions,post_impressions_unique",
+        "metric": "post_impressions_unique,post_impressions_organic_unique",
         "period": "lifetime",
     }
 
-    result = {"impressions": 0, "clicks": 0, "reach": 0}
-
     try:
-        data = _graph_get(url, params, f"GET /{post_id}/insights (impressions)")
+        data = _graph_get(url, params, f"GET /{post_id}/insights (impressions_unique)")
 
         for item in data.get("data", []):
             name = item.get("name", "")
             values = item.get("values", [])
             value = values[0].get("value", 0) if values else 0
 
-            if name == "post_impressions":
+            if name == "post_impressions_unique":
+                # Utiliser comme impressions (seule metrique dispo)
                 result["impressions"] = value
-            elif name == "post_impressions_unique":
                 result["reach"] = value
+            elif name == "post_impressions_organic_unique":
+                # Si reach pas encore defini, utiliser organic
+                if result["reach"] == 0 and value > 0:
+                    result["reach"] = value
 
     except HTTPException as e:
         logger.warning(f"Insights impressions {post_id} echoue: {e.detail}")
         print(f"[FB API] Insights impressions {post_id} echoue: {e.detail[:200]}", flush=True)
 
-    # Essai 2 : post_clicks (ou post_consumptions en fallback)
-    # post_clicks n'accepte pas period=lifetime sur certaines versions,
-    # on essaie sans period puis avec post_consumptions
-    for metric_name in ["post_clicks", "post_consumptions"]:
-        if result["clicks"] > 0:
-            break
-        try:
-            clicks_params = {
-                "access_token": page_access_token,
-                "metric": metric_name,
-                "period": "lifetime",
-            }
-            clicks_data = _graph_get(url, clicks_params, f"GET /{post_id}/insights ({metric_name})")
+    # ── 2. Clics via post_clicks ──
+    try:
+        clicks_params = {
+            "access_token": page_access_token,
+            "metric": "post_clicks",
+            "period": "lifetime",
+        }
+        clicks_data = _graph_get(url, clicks_params, f"GET /{post_id}/insights (post_clicks)")
 
-            for item in clicks_data.get("data", []):
-                values = item.get("values", [])
-                value = values[0].get("value", 0) if values else 0
-                if value > 0:
-                    result["clicks"] = value
-                    break
+        for item in clicks_data.get("data", []):
+            values = item.get("values", [])
+            value = values[0].get("value", 0) if values else 0
+            if value > 0:
+                result["clicks"] = value
+                break
 
-        except HTTPException:
-            continue
+    except HTTPException as e:
+        logger.warning(f"Insights clicks {post_id} echoue: {e.detail}")
+        print(f"[FB API] Insights clicks {post_id} echoue: {e.detail[:200]}", flush=True)
 
     logger.info(f"Insights {post_id}: impressions={result['impressions']}, clicks={result['clicks']}, reach={result['reach']}")
     print(f"[FB API] Insights {post_id}: imp={result['impressions']} clicks={result['clicks']} reach={result['reach']}", flush=True)
