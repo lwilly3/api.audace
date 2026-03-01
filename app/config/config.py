@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     FACEBOOK_APP_ID:str = ""
     FACEBOOK_APP_SECRET:str = ""
     FACEBOOK_CONFIG_ID:str = ""
+    FACEBOOK_REDIRECT_URI:str = ""
 
     # LinkedIn OAuth
     LINKEDIN_CLIENT_ID:str = ""

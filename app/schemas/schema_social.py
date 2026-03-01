@@ -266,3 +266,47 @@ class SocialAnalyticsOverviewResponse(BaseModel):
     top_platforms: list[str] = []
     period_start: str = ""
     period_end: str = ""
+
+
+# ════════════════════════════════════════════════════════════════
+# ANALYTICS — REACTIONS, FOLLOWERS, VIDEO
+# ════════════════════════════════════════════════════════════════
+
+class ReactionsBreakdownResponse(BaseModel):
+    """Repartition des reactions par type."""
+    like: int = 0
+    love: int = 0
+    wow: int = 0
+    haha: int = 0
+    sorry: int = 0
+    anger: int = 0
+    total: int = 0
+    period_start: str = ""
+    period_end: str = ""
+
+
+class FollowerTrendPointResponse(BaseModel):
+    """Point de donnees pour la tendance des abonnes."""
+    date: str
+    total_followers: int = 0
+    new_followers: int = 0
+    unfollows: int = 0
+    net_change: int = 0
+
+
+class FollowerTrendResponse(BaseModel):
+    """Tendance des abonnes avec serie temporelle."""
+    current_total: int = 0
+    net_change_period: int = 0
+    trend: list[FollowerTrendPointResponse] = []
+    period_start: str = ""
+    period_end: str = ""
+
+
+class VideoPerformanceResponse(BaseModel):
+    """Performance video de la page."""
+    total_views: int = 0
+    total_view_time_ms: int = 0
+    avg_view_time_seconds: float = 0.0
+    period_start: str = ""
+    period_end: str = ""

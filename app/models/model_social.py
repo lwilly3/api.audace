@@ -2,19 +2,20 @@
 Modèles SQLAlchemy pour le module Social.
 
 Tables :
-- social_accounts       : Comptes sociaux connectés via OAuth
-- social_posts           : Publications multi-plateformes
-- social_post_results    : Résultats de publication par compte/plateforme
-- social_comments        : Commentaires reçus (inbox)
-- social_conversations   : Conversations de messages privés
-- social_messages        : Messages privés individuels
+- social_accounts         : Comptes sociaux connectés via OAuth
+- social_posts            : Publications multi-plateformes
+- social_post_results     : Résultats de publication par compte/plateforme
+- social_comments         : Commentaires reçus (inbox)
+- social_conversations    : Conversations de messages privés
+- social_messages         : Messages privés individuels
+- social_page_insights    : Métriques page-level quotidiennes (Facebook Insights)
 
 Tous les modèles utilisent le soft delete (BaseModel).
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime, Boolean, Float,
-    ForeignKey, func, Enum as SAEnum
+    Column, Integer, String, Text, DateTime, Boolean, Float, Date,
+    ForeignKey, func, Enum as SAEnum, UniqueConstraint,
 )
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -65,6 +66,7 @@ class SocialAccount(SocialBaseModel):
     posts = relationship("SocialPostResult", back_populates="account", cascade="all, delete-orphan")
     comments = relationship("SocialComment", back_populates="account", cascade="all, delete-orphan")
     conversations = relationship("SocialConversation", back_populates="account", cascade="all, delete-orphan")
+    page_insights = relationship("SocialPageInsight", back_populates="account", cascade="all, delete-orphan")
 
 
 # ────────────────────────────────────────────────────────────────
@@ -231,3 +233,50 @@ class SocialMessage(SocialBaseModel):
 
     # Relations
     conversation = relationship("SocialConversation", back_populates="messages")
+
+
+# ────────────────────────────────────────────────────────────────
+# INSIGHTS PAGE (MÉTRIQUES QUOTIDIENNES)
+# ────────────────────────────────────────────────────────────────
+
+class SocialPageInsight(SocialBaseModel):
+    """Métriques page-level quotidiennes importées depuis Facebook Insights."""
+    __tablename__ = "social_page_insights"
+    __table_args__ = (
+        UniqueConstraint("account_id", "date", name="uq_page_insight_account_date"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    account_id = Column(Integer, ForeignKey("social_accounts.id", ondelete="CASCADE"), nullable=False, index=True)
+    date = Column(Date, nullable=False, index=True)
+
+    # Impressions page
+    page_impressions_unique = Column(Integer, default=0, nullable=False)
+    page_posts_impressions = Column(Integer, default=0, nullable=False)
+    page_posts_impressions_unique = Column(Integer, default=0, nullable=False)
+    page_posts_impressions_organic = Column(Integer, default=0, nullable=False)
+    page_posts_impressions_paid = Column(Integer, default=0, nullable=False)
+
+    # Engagement page
+    page_post_engagements = Column(Integer, default=0, nullable=False)
+    page_views_total = Column(Integer, default=0, nullable=False)
+
+    # Followers
+    page_follows = Column(Integer, default=0, nullable=False)
+    page_daily_follows = Column(Integer, default=0, nullable=False)
+    page_daily_unfollows = Column(Integer, default=0, nullable=False)
+
+    # Reactions detaillees
+    reactions_like = Column(Integer, default=0, nullable=False)
+    reactions_love = Column(Integer, default=0, nullable=False)
+    reactions_wow = Column(Integer, default=0, nullable=False)
+    reactions_haha = Column(Integer, default=0, nullable=False)
+    reactions_sorry = Column(Integer, default=0, nullable=False)
+    reactions_anger = Column(Integer, default=0, nullable=False)
+
+    # Video
+    page_video_views = Column(Integer, default=0, nullable=False)
+    page_video_view_time = Column(Integer, default=0, nullable=False)  # en millisecondes
+
+    # Relations
+    account = relationship("SocialAccount", back_populates="page_insights")

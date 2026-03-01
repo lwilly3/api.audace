@@ -56,6 +56,9 @@ from app.db.crud.crud_social import (
     get_platform_stats,
     get_best_times,
     get_engagement_time_series,
+    get_reactions_breakdown,
+    get_follower_trend,
+    get_video_performance,
     # Nettoyage
     get_database_stats,
     cleanup_database,
@@ -76,6 +79,9 @@ from app.schemas.schema_social import (
     PlatformStatsResponse,
     BestTimeSlotResponse,
     TimeSeriesPointResponse,
+    ReactionsBreakdownResponse,
+    FollowerTrendResponse,
+    VideoPerformanceResponse,
 )
 from app.services.social_oauth import (
     build_authorization_url,
@@ -979,6 +985,39 @@ def analytics_engagement(
 ):
     """Série temporelle de l'engagement."""
     return get_engagement_time_series(db, period, account_id=account_id)
+
+
+@router.get("/analytics/reactions", response_model=ReactionsBreakdownResponse)
+def analytics_reactions(
+    period: str = Query("30d", description="Période : 7d, 30d, 90d, 12m"),
+    account_id: Optional[int] = Query(None, description="ID du compte pour filtrer"),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """Repartition des reactions par type (like, love, wow, haha, sorry, anger)."""
+    return get_reactions_breakdown(db, period, account_id=account_id)
+
+
+@router.get("/analytics/followers", response_model=FollowerTrendResponse)
+def analytics_followers(
+    period: str = Query("30d", description="Période : 7d, 30d, 90d, 12m"),
+    account_id: Optional[int] = Query(None, description="ID du compte pour filtrer"),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """Tendance des abonnes avec serie temporelle."""
+    return get_follower_trend(db, period, account_id=account_id)
+
+
+@router.get("/analytics/video", response_model=VideoPerformanceResponse)
+def analytics_video(
+    period: str = Query("30d", description="Période : 7d, 30d, 90d, 12m"),
+    account_id: Optional[int] = Query(None, description="ID du compte pour filtrer"),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """Performance video de la page."""
+    return get_video_performance(db, period, account_id=account_id)
 
 
 # ════════════════════════════════════════════════════════════════

@@ -723,6 +723,125 @@ def publish_to_page(
 
 
 # ════════════════════════════════════════════════════════════════
+# INSIGHTS PAGE-LEVEL (METRIQUES QUOTIDIENNES)
+# ════════════════════════════════════════════════════════════════
+
+def get_page_level_insights(
+    page_access_token: str,
+    page_id: str,
+    since: str,
+    until: str,
+) -> list[dict]:
+    """
+    Recuperer les metriques page-level quotidiennes depuis Facebook Insights.
+
+    Appelle /{page_id}/insights avec period=day et un intervalle since/until.
+    Retourne une liste de dicts avec une entree par jour.
+
+    Args:
+        page_access_token: Token d'acces de la page
+        page_id: ID de la page Facebook
+        since: Date de debut (format YYYY-MM-DD)
+        until: Date de fin (format YYYY-MM-DD)
+
+    Returns:
+        Liste de dicts par jour : {date, page_impressions_unique, page_follows, ...}
+    """
+    # Metriques fonctionnelles (testees live)
+    metrics = [
+        "page_impressions_unique",
+        "page_posts_impressions",
+        "page_posts_impressions_unique",
+        "page_posts_impressions_organic",
+        "page_posts_impressions_paid",
+        "page_post_engagements",
+        "page_views_total",
+        "page_follows",
+        "page_daily_follows_unique",
+        "page_daily_unfollows_unique",
+        "page_actions_post_reactions_like_total",
+        "page_actions_post_reactions_love_total",
+        "page_actions_post_reactions_wow_total",
+        "page_actions_post_reactions_haha_total",
+        "page_actions_post_reactions_sorry_total",
+        "page_actions_post_reactions_anger_total",
+        "page_video_views",
+        "page_video_view_time",
+    ]
+
+    url = f"{GRAPH_API_BASE}/{page_id}/insights"
+    params = {
+        "access_token": page_access_token,
+        "metric": ",".join(metrics),
+        "period": "day",
+        "since": since,
+        "until": until,
+    }
+
+    try:
+        data = _graph_get(url, params, f"GET /{page_id}/insights (page-level)")
+    except HTTPException as e:
+        logger.warning(f"Page insights {page_id} echoue: {e.detail}")
+        print(f"[FB API] Page insights {page_id} echoue: {e.detail[:200]}", flush=True)
+        return []
+
+    raw_metrics = data.get("data", [])
+    if not raw_metrics:
+        return []
+
+    # Organiser les donnees par date
+    # Chaque metrique retourne une liste de {end_time, value} pour chaque jour
+    days_data: dict[str, dict] = {}
+
+    # Mapping des noms API vers les noms de colonnes du modele
+    metric_mapping = {
+        "page_impressions_unique": "page_impressions_unique",
+        "page_posts_impressions": "page_posts_impressions",
+        "page_posts_impressions_unique": "page_posts_impressions_unique",
+        "page_posts_impressions_organic": "page_posts_impressions_organic",
+        "page_posts_impressions_paid": "page_posts_impressions_paid",
+        "page_post_engagements": "page_post_engagements",
+        "page_views_total": "page_views_total",
+        "page_follows": "page_follows",
+        "page_daily_follows_unique": "page_daily_follows",
+        "page_daily_unfollows_unique": "page_daily_unfollows",
+        "page_actions_post_reactions_like_total": "reactions_like",
+        "page_actions_post_reactions_love_total": "reactions_love",
+        "page_actions_post_reactions_wow_total": "reactions_wow",
+        "page_actions_post_reactions_haha_total": "reactions_haha",
+        "page_actions_post_reactions_sorry_total": "reactions_sorry",
+        "page_actions_post_reactions_anger_total": "reactions_anger",
+        "page_video_views": "page_video_views",
+        "page_video_view_time": "page_video_view_time",
+    }
+
+    for item in raw_metrics:
+        metric_name = item.get("name", "")
+        column_name = metric_mapping.get(metric_name)
+        if not column_name:
+            continue
+
+        for value_entry in item.get("values", []):
+            end_time = value_entry.get("end_time", "")
+            if not end_time:
+                continue
+            # Extraire la date (YYYY-MM-DD) depuis end_time
+            day_str = end_time[:10]
+            if day_str not in days_data:
+                days_data[day_str] = {"date": day_str}
+
+            val = value_entry.get("value", 0)
+            # Certaines metriques retournent un dict au lieu d'un int
+            if isinstance(val, dict):
+                val = sum(val.values()) if val else 0
+            days_data[day_str][column_name] = val if isinstance(val, int) else 0
+
+    result = sorted(days_data.values(), key=lambda x: x["date"])
+    print(f"[FB API] Page insights {page_id}: {len(result)} jour(s) de donnees", flush=True)
+    return result
+
+
+# ════════════════════════════════════════════════════════════════
 # DIAGNOSTIC / DEBUG
 # ════════════════════════════════════════════════════════════════
 
@@ -821,7 +940,7 @@ def send_facebook_message(
 
     Docs: https://developers.facebook.com/docs/messenger-platform/send-messages
     """
-    url = f"{GRAPH_BASE}/{page_id}/messages"
+    url = f"{GRAPH_API_BASE}/{page_id}/messages"
     data = {
         "recipient": {"id": recipient_psid},
         "message": {"text": message_text},

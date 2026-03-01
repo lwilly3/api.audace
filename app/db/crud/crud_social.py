@@ -16,6 +16,7 @@ from typing import Optional, Callable
 from app.models.model_social import (
     SocialAccount, SocialPost, SocialPostResult,
     SocialComment, SocialConversation, SocialMessage,
+    SocialPageInsight,
 )
 from app.schemas.schema_social import (
     SocialPostCreate, SocialPostUpdate,
@@ -689,6 +690,35 @@ def get_analytics_overview(db: Session, period: str = "30d", account_id: Optiona
     comments_count = metrics[4] if metrics else 0
     total_engagements = clicks + likes + shares + comments_count
 
+    # Previous period engagement metrics (for trend calculation)
+    prev_metrics_q = db.query(
+        func.coalesce(func.sum(SocialPostResult.impressions), 0),
+        func.coalesce(func.sum(SocialPostResult.clicks), 0),
+        func.coalesce(func.sum(SocialPostResult.likes), 0),
+        func.coalesce(func.sum(SocialPostResult.shares), 0),
+        func.coalesce(func.sum(SocialPostResult.comments), 0),
+    ).join(SocialPost, SocialPostResult.post_id == SocialPost.id).filter(
+        SocialPost.is_deleted == False,
+        SocialPost.created_at >= prev_cutoff,
+        SocialPost.created_at < cutoff,
+    )
+    if account_id:
+        prev_metrics_q = prev_metrics_q.filter(SocialPostResult.account_id == account_id)
+    prev_metrics = prev_metrics_q.first()
+
+    prev_impressions = prev_metrics[0] if prev_metrics else 0
+    prev_clicks = prev_metrics[1] if prev_metrics else 0
+    prev_likes = prev_metrics[2] if prev_metrics else 0
+    prev_shares = prev_metrics[3] if prev_metrics else 0
+    prev_comments = prev_metrics[4] if prev_metrics else 0
+    prev_engagements = prev_clicks + prev_likes + prev_shares + prev_comments
+
+    def _pct_change(current: float, previous: float) -> float:
+        """Calcul du pourcentage de variation entre deux periodes."""
+        if previous == 0:
+            return 100.0 if current > 0 else 0.0
+        return round(((current - previous) / previous) * 100, 1)
+
     # Followers
     followers_q = db.query(func.coalesce(func.sum(SocialAccount.followers_count), 0)).filter(
         SocialAccount.is_deleted == False, SocialAccount.is_active == True
@@ -701,6 +731,10 @@ def get_analytics_overview(db: Session, period: str = "30d", account_id: Optiona
     avg_engagement = 0.0
     if impressions > 0:
         avg_engagement = round((total_engagements / impressions) * 100, 2)
+
+    prev_engagement_rate = 0.0
+    if prev_impressions > 0:
+        prev_engagement_rate = round((prev_engagements / prev_impressions) * 100, 2)
 
     # Top hashtags
     hashtags_q = db.query(SocialPost.hashtags).filter(
@@ -730,6 +764,23 @@ def get_analytics_overview(db: Session, period: str = "30d", account_id: Optiona
                 platform_count[p] = platform_count.get(p, 0) + 1
     top_platforms = sorted(platform_count, key=platform_count.get, reverse=True)
 
+    # Followers growth depuis SocialPageInsight
+    followers_growth = 0
+    try:
+        insights_q = db.query(
+            func.coalesce(func.sum(SocialPageInsight.page_daily_follows), 0),
+            func.coalesce(func.sum(SocialPageInsight.page_daily_unfollows), 0),
+        ).filter(
+            SocialPageInsight.date >= cutoff.date(),
+        )
+        if account_id:
+            insights_q = insights_q.filter(SocialPageInsight.account_id == account_id)
+        growth_data = insights_q.first()
+        if growth_data:
+            followers_growth = (growth_data[0] or 0) - (growth_data[1] or 0)
+    except Exception:
+        pass  # Table peut ne pas encore exister
+
     return {
         "total_posts": total_posts,
         "total_published": total_published,
@@ -743,11 +794,11 @@ def get_analytics_overview(db: Session, period: str = "30d", account_id: Optiona
         "total_reach": impressions,  # Simplification : reach ≈ impressions
         "avg_engagement_rate": avg_engagement,
         "followers_total": followers_total,
-        "followers_growth": 0,  # TODO: calcul historique
-        "impressions_change": 0.0,
-        "engagements_change": 0.0,
-        "reach_change": 0.0,
-        "engagement_rate_change": 0.0,
+        "followers_growth": followers_growth,
+        "impressions_change": _pct_change(impressions, prev_impressions),
+        "engagements_change": _pct_change(total_engagements, prev_engagements),
+        "reach_change": _pct_change(impressions, prev_impressions),
+        "engagement_rate_change": _pct_change(avg_engagement, prev_engagement_rate),
         "total_engagements": total_engagements,
         "top_hashtags": top_hashtags,
         "top_platforms": top_platforms,
@@ -1189,6 +1240,108 @@ def _sync_page_posts(
     return stats
 
 
+def _sync_page_insights(
+    db: Session,
+    page_account: SocialAccount,
+    page_token: str,
+    page_id: str,
+) -> dict:
+    """
+    Synchroniser les insights page-level quotidiens pour une page Facebook.
+
+    Recupere les 93 derniers jours de metriques via /{page_id}/insights
+    et fait un upsert par (account_id, date).
+
+    Returns:
+        dict avec {days_synced, days_new}
+    """
+    from app.services.social_facebook import get_page_level_insights
+
+    stats = {"days_synced": 0, "days_new": 0}
+
+    # Recuperer les 93 derniers jours (max autorise par Facebook pour period=day)
+    now = datetime.now(timezone.utc)
+    since = (now - timedelta(days=93)).strftime("%Y-%m-%d")
+    until = now.strftime("%Y-%m-%d")
+
+    try:
+        days_data = get_page_level_insights(page_token, page_id, since, until)
+    except Exception as e:
+        logger.warning(f"[SYNC] Erreur page insights {page_id}: {e}")
+        print(f"[SYNC] Erreur page insights {page_id}: {e}", flush=True)
+        return stats
+
+    if not days_data:
+        return stats
+
+    latest_follows = 0
+
+    for day in days_data:
+        day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
+
+        existing = (
+            db.query(SocialPageInsight)
+            .filter(
+                SocialPageInsight.account_id == page_account.id,
+                SocialPageInsight.date == day_date,
+            )
+            .first()
+        )
+
+        if existing:
+            # Mettre a jour les metriques existantes
+            for key, value in day.items():
+                if key == "date":
+                    continue
+                if hasattr(existing, key):
+                    setattr(existing, key, value)
+            stats["days_synced"] += 1
+        else:
+            # Creer un nouveau record
+            insight = SocialPageInsight(
+                account_id=page_account.id,
+                date=day_date,
+                page_impressions_unique=day.get("page_impressions_unique", 0),
+                page_posts_impressions=day.get("page_posts_impressions", 0),
+                page_posts_impressions_unique=day.get("page_posts_impressions_unique", 0),
+                page_posts_impressions_organic=day.get("page_posts_impressions_organic", 0),
+                page_posts_impressions_paid=day.get("page_posts_impressions_paid", 0),
+                page_post_engagements=day.get("page_post_engagements", 0),
+                page_views_total=day.get("page_views_total", 0),
+                page_follows=day.get("page_follows", 0),
+                page_daily_follows=day.get("page_daily_follows", 0),
+                page_daily_unfollows=day.get("page_daily_unfollows", 0),
+                reactions_like=day.get("reactions_like", 0),
+                reactions_love=day.get("reactions_love", 0),
+                reactions_wow=day.get("reactions_wow", 0),
+                reactions_haha=day.get("reactions_haha", 0),
+                reactions_sorry=day.get("reactions_sorry", 0),
+                reactions_anger=day.get("reactions_anger", 0),
+                page_video_views=day.get("page_video_views", 0),
+                page_video_view_time=day.get("page_video_view_time", 0),
+            )
+            db.add(insight)
+            stats["days_synced"] += 1
+            stats["days_new"] += 1
+
+        # Garder le dernier page_follows pour mettre a jour le compte
+        follows = day.get("page_follows", 0)
+        if follows > 0:
+            latest_follows = follows
+
+    # Mettre a jour followers_count du SocialAccount avec le dernier page_follows
+    if latest_follows > 0:
+        page_account.followers_count = latest_follows
+
+    db.flush()
+    print(
+        f"[SYNC] Page insights '{page_account.account_name}': "
+        f"{stats['days_synced']} jours ({stats['days_new']} nouveaux)",
+        flush=True,
+    )
+    return stats
+
+
 def sync_facebook_account(db: Session, account_id: int, force: bool = False, on_progress: Optional[Callable] = None) -> dict:
     """
     Synchroniser les posts et commentaires Facebook pour un compte.
@@ -1228,6 +1381,8 @@ def sync_facebook_account(db: Session, account_id: int, force: bool = False, on_
         "comments_synced": 0,
         "comments_new": 0,
         "pages_synced": 0,
+        "insights_days_synced": 0,
+        "insights_days_new": 0,
     }
 
     print(f"[SYNC] Compte #{account_id}: debut sync, type={account.account_type}, id={account.account_id}, force={force}", flush=True)
@@ -1289,6 +1444,16 @@ def sync_facebook_account(db: Session, account_id: int, force: bool = False, on_
             stats["comments_synced"] += page_stats["comments_synced"]
             stats["comments_new"] += page_stats["comments_new"]
             stats["pages_synced"] += 1
+
+            # Syncer les insights page-level (impressions, followers, reactions, video)
+            try:
+                insight_stats = _sync_page_insights(db, page_account, page_token, page_id)
+                stats["insights_days_synced"] += insight_stats["days_synced"]
+                stats["insights_days_new"] += insight_stats["days_new"]
+            except Exception as e:
+                logger.warning(f"[SYNC] Erreur insights page '{page['name']}': {e}")
+                print(f"[SYNC] ERREUR insights '{page['name']}': {e}", flush=True)
+
         except Exception as e:
             logger.error(f"[SYNC] Erreur sync page '{page['name']}' ({page_id}): {e}")
             print(f"[SYNC] ERREUR page '{page['name']}': {e}", flush=True)
@@ -1298,7 +1463,8 @@ def sync_facebook_account(db: Session, account_id: int, force: bool = False, on_
     print(
         f"[SYNC] Terminee: {stats['pages_synced']} pages, "
         f"{stats['posts_synced']} posts ({stats['posts_new']} nouveaux), "
-        f"{stats['comments_synced']} commentaires ({stats['comments_new']} nouveaux)",
+        f"{stats['comments_synced']} commentaires ({stats['comments_new']} nouveaux), "
+        f"{stats['insights_days_synced']} jours insights ({stats['insights_days_new']} nouveaux)",
         flush=True,
     )
     logger.info(f"[SYNC] Compte #{account_id} terminee: {stats}")
@@ -1753,3 +1919,136 @@ def cleanup_database(db: Session, hard_delete_days: int = 30) -> dict:
     )
 
     return stats
+
+
+# ════════════════════════════════════════════════════════════════
+# ANALYTICS — REACTIONS, FOLLOWERS, VIDEO (depuis SocialPageInsight)
+# ════════════════════════════════════════════════════════════════
+
+def get_reactions_breakdown(db: Session, period: str = "30d", account_id: Optional[int] = None) -> dict:
+    """Repartition des reactions par type depuis les insights page."""
+    days = {"7d": 7, "30d": 30, "90d": 90, "12m": 365}.get(period, 30)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    base_q = db.query(
+        func.coalesce(func.sum(SocialPageInsight.reactions_like), 0),
+        func.coalesce(func.sum(SocialPageInsight.reactions_love), 0),
+        func.coalesce(func.sum(SocialPageInsight.reactions_wow), 0),
+        func.coalesce(func.sum(SocialPageInsight.reactions_haha), 0),
+        func.coalesce(func.sum(SocialPageInsight.reactions_sorry), 0),
+        func.coalesce(func.sum(SocialPageInsight.reactions_anger), 0),
+    ).filter(
+        SocialPageInsight.date >= cutoff.date(),
+    )
+    if account_id:
+        base_q = base_q.filter(SocialPageInsight.account_id == account_id)
+
+    row = base_q.first()
+    like = row[0] if row else 0
+    love = row[1] if row else 0
+    wow = row[2] if row else 0
+    haha = row[3] if row else 0
+    sorry = row[4] if row else 0
+    anger = row[5] if row else 0
+
+    return {
+        "like": like,
+        "love": love,
+        "wow": wow,
+        "haha": haha,
+        "sorry": sorry,
+        "anger": anger,
+        "total": like + love + wow + haha + sorry + anger,
+        "period_start": cutoff.isoformat(),
+        "period_end": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def get_follower_trend(db: Session, period: str = "30d", account_id: Optional[int] = None) -> dict:
+    """Serie temporelle des abonnes depuis les insights page."""
+    days = {"7d": 7, "30d": 30, "90d": 90, "12m": 365}.get(period, 30)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    base_q = db.query(
+        SocialPageInsight.date,
+        func.coalesce(func.sum(SocialPageInsight.page_follows), 0),
+        func.coalesce(func.sum(SocialPageInsight.page_daily_follows), 0),
+        func.coalesce(func.sum(SocialPageInsight.page_daily_unfollows), 0),
+    ).filter(
+        SocialPageInsight.date >= cutoff.date(),
+    )
+    if account_id:
+        base_q = base_q.filter(SocialPageInsight.account_id == account_id)
+
+    rows = (
+        base_q
+        .group_by(SocialPageInsight.date)
+        .order_by(SocialPageInsight.date)
+        .all()
+    )
+
+    trend = []
+    total_new = 0
+    total_unfollows = 0
+    latest_total = 0
+    for row in rows:
+        new_f = row[2] or 0
+        unf = row[3] or 0
+        total_new += new_f
+        total_unfollows += unf
+        latest_total = row[1] or 0
+        trend.append({
+            "date": str(row[0]),
+            "total_followers": latest_total,
+            "new_followers": new_f,
+            "unfollows": unf,
+            "net_change": new_f - unf,
+        })
+
+    # Fallback : si pas d'insights, utiliser followers_count des comptes
+    if not trend:
+        followers_q = db.query(func.coalesce(func.sum(SocialAccount.followers_count), 0)).filter(
+            SocialAccount.is_deleted == False, SocialAccount.is_active == True
+        )
+        if account_id:
+            followers_q = followers_q.filter(SocialAccount.id == account_id)
+        latest_total = followers_q.scalar() or 0
+
+    return {
+        "current_total": latest_total,
+        "net_change_period": total_new - total_unfollows,
+        "trend": trend,
+        "period_start": cutoff.isoformat(),
+        "period_end": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def get_video_performance(db: Session, period: str = "30d", account_id: Optional[int] = None) -> dict:
+    """Performance video agregee depuis les insights page."""
+    days = {"7d": 7, "30d": 30, "90d": 90, "12m": 365}.get(period, 30)
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    base_q = db.query(
+        func.coalesce(func.sum(SocialPageInsight.page_video_views), 0),
+        func.coalesce(func.sum(SocialPageInsight.page_video_view_time), 0),
+    ).filter(
+        SocialPageInsight.date >= cutoff.date(),
+    )
+    if account_id:
+        base_q = base_q.filter(SocialPageInsight.account_id == account_id)
+
+    row = base_q.first()
+    total_views = row[0] if row else 0
+    total_view_time_ms = row[1] if row else 0
+
+    avg_view_time_seconds = 0.0
+    if total_views > 0:
+        avg_view_time_seconds = round((total_view_time_ms / 1000) / total_views, 1)
+
+    return {
+        "total_views": total_views,
+        "total_view_time_ms": total_view_time_ms,
+        "avg_view_time_seconds": avg_view_time_seconds,
+        "period_start": cutoff.isoformat(),
+        "period_end": datetime.now(timezone.utc).isoformat(),
+    }
