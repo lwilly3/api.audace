@@ -37,6 +37,15 @@ DEFAULT_SETTINGS = {
     "auto_optimize_enabled": False,
     "auto_optimize_interval_hours": 24, # toutes les 24h par défaut
     "auto_optimize_purge_days": 30,     # purger les éléments > 30 jours
+
+    # Limites de synchronisation
+    "sync_posts_limit": 100,            # posts par page (max 100 — limite API FB)
+    "sync_insights_days": 93,           # jours d'historique insights (max 93 — limite API FB)
+    "sync_comments_per_post": 100,      # commentaires par post (max 100 — limite API FB)
+
+    # Limites d'analyse
+    "analytics_best_times_limit": 20,   # créneaux horaires dans best-times
+    "analytics_top_hashtags_limit": 10, # top hashtags dans overview
 }
 
 

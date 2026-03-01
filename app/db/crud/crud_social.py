@@ -25,6 +25,21 @@ from app.schemas.schema_social import (
 logger = logging.getLogger("hapson-api")
 
 
+def _get_sync_settings() -> dict:
+    """Recuperer les limites configurables depuis le scheduler."""
+    try:
+        from app.services.social_scheduler import scheduler
+        return scheduler.get_settings()
+    except Exception:
+        return {
+            "sync_posts_limit": 100,
+            "sync_insights_days": 93,
+            "sync_comments_per_post": 100,
+            "analytics_best_times_limit": 20,
+            "analytics_top_hashtags_limit": 10,
+        }
+
+
 # ════════════════════════════════════════════════════════════════
 # COMPTES SOCIAUX
 # ════════════════════════════════════════════════════════════════
@@ -748,7 +763,8 @@ def get_analytics_overview(db: Session, period: str = "30d", account_id: Optiona
         if tags:
             for tag in tags:
                 hashtag_count[tag] = hashtag_count.get(tag, 0) + 1
-    top_hashtags = sorted(hashtag_count, key=hashtag_count.get, reverse=True)[:10]
+    _settings = _get_sync_settings()
+    top_hashtags = sorted(hashtag_count, key=hashtag_count.get, reverse=True)[:_settings.get("analytics_top_hashtags_limit", 10)]
 
     # Top platforms
     platforms_q = db.query(SocialPost.platforms).filter(
@@ -886,7 +902,7 @@ def get_best_times(db: Session, account_id: Optional[int] = None) -> list[dict]:
         base_q
         .group_by(SocialPostResult.platform, "dow", "hour")
         .order_by(desc("avg_eng"))
-        .limit(20)
+        .limit(_get_sync_settings().get("analytics_best_times_limit", 20))
         .all()
     )
 
@@ -1052,6 +1068,8 @@ def _sync_page_posts(
     )
 
     stats = {"posts_synced": 0, "posts_new": 0, "comments_synced": 0, "comments_new": 0}
+    _cfg = _get_sync_settings()
+    comments_limit = min(_cfg.get("sync_comments_per_post", 100), 100)
 
     fb_posts = get_page_posts(page_token, page_id, limit=limit)
     total_posts = len(fb_posts)
@@ -1206,7 +1224,7 @@ def _sync_page_posts(
                     print(f"[SYNC] Post {platform_post_id}: {len(fb_comments)} commentaire(s) inline", flush=True)
                 else:
                     # Fallback : appel API individuel (champs basiques sans inline)
-                    fb_comments = get_post_comments(page_token, platform_post_id, limit=100)
+                    fb_comments = get_post_comments(page_token, platform_post_id, limit=comments_limit)
                     print(f"[SYNC] Post {platform_post_id}: {len(fb_comments)} commentaire(s) via API", flush=True)
 
                 for fb_comment in fb_comments:
@@ -1259,9 +1277,11 @@ def _sync_page_insights(
 
     stats = {"days_synced": 0, "days_new": 0}
 
-    # Recuperer les 93 derniers jours (max autorise par Facebook pour period=day)
+    # Recuperer les N derniers jours (max 93 autorise par Facebook pour period=day)
+    _cfg = _get_sync_settings()
+    insights_days = min(_cfg.get("sync_insights_days", 93), 93)
     now = datetime.now(timezone.utc)
-    since = (now - timedelta(days=93)).strftime("%Y-%m-%d")
+    since = (now - timedelta(days=insights_days)).strftime("%Y-%m-%d")
     until = now.strftime("%Y-%m-%d")
 
     try:
@@ -1429,7 +1449,8 @@ def sync_facebook_account(db: Session, account_id: int, force: bool = False, on_
         page_account = _ensure_page_account(db, page, account.connected_by)
 
         # Syncer les posts de cette page
-        sync_limit = 100 if force else 100  # 100 posts max (API FB limite a 100)
+        _cfg = _get_sync_settings()
+        sync_limit = min(_cfg.get("sync_posts_limit", 100), 100)  # plafond API FB = 100
 
         def _page_progress(msg: str, pct: int):
             if on_progress:
