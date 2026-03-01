@@ -1389,3 +1389,149 @@ def debug_test_page_api(
     results["recommendations"] = recommendations
 
     return results
+
+
+@router.get("/debug/test-insights-metrics")
+def debug_test_insights_metrics(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Teste tous les noms de metriques Insights possibles pour trouver
+    lesquels sont valides sur la version actuelle de la Graph API.
+    """
+    import httpx
+
+    GRAPH_API_BASE = "https://graph.facebook.com/v21.0"
+
+    # Trouver une page avec un post
+    all_accounts = (
+        db.query(SocialAccount)
+        .filter(SocialAccount.platform == "facebook", SocialAccount.is_active == True)
+        .all()
+    )
+    profile = next((a for a in all_accounts if a.account_type == "profile"), None)
+    page_accounts = [a for a in all_accounts if a.account_type == "page"]
+
+    if not profile:
+        return {"error": "Aucun profil Facebook"}
+
+    # Obtenir un token frais via /me/accounts
+    fresh_pages = {}
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            resp = client.get(f"{GRAPH_API_BASE}/me/accounts", params={
+                "access_token": profile.access_token,
+                "fields": "id,name,access_token",
+                "limit": 50,
+            })
+        if resp.status_code == 200:
+            for p in resp.json().get("data", []):
+                fresh_pages[p["id"]] = p
+    except Exception as e:
+        return {"error": f"Impossible d'obtenir les pages: {e}"}
+
+    # Trouver un post sur la premiere page disponible
+    results = {"pages_found": len(fresh_pages), "tests": {}}
+
+    for page_acc in page_accounts:
+        pid = page_acc.account_id
+        fresh = fresh_pages.get(pid)
+        if not fresh:
+            continue
+
+        token = fresh["access_token"]
+
+        # Trouver un post
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.get(f"{GRAPH_API_BASE}/{pid}/feed", params={
+                    "access_token": token, "fields": "id", "limit": 1,
+                })
+            if resp.status_code != 200:
+                continue
+            posts = resp.json().get("data", [])
+            if not posts:
+                continue
+            post_id = posts[0]["id"]
+        except Exception:
+            continue
+
+        results["page"] = fresh["name"]
+        results["post_id"] = post_id
+
+        # Tester chaque metrique individuellement
+        ALL_METRICS = [
+            "post_impressions",
+            "post_impressions_unique",
+            "post_impressions_organic",
+            "post_impressions_organic_unique",
+            "post_impressions_paid",
+            "post_impressions_paid_unique",
+            "post_impressions_fan",
+            "post_impressions_fan_unique",
+            "post_impressions_viral",
+            "post_impressions_viral_unique",
+            "post_clicks",
+            "post_clicks_unique",
+            "post_clicks_by_type",
+            "post_clicks_by_type_unique",
+            "post_consumptions",
+            "post_consumptions_unique",
+            "post_consumptions_by_type",
+            "post_engaged_users",
+            "post_engaged_fan",
+            "post_negative_feedback",
+            "post_negative_feedback_unique",
+            "post_negative_feedback_by_type",
+            "post_activity_by_action_type",
+            "post_reactions_by_type_total",
+            "post_video_views",
+            "post_video_views_organic",
+            "post_video_views_paid",
+        ]
+
+        with httpx.Client(timeout=10.0) as client:
+            for metric in ALL_METRICS:
+                try:
+                    resp = client.get(f"{GRAPH_API_BASE}/{post_id}/insights", params={
+                        "access_token": token,
+                        "metric": metric,
+                        "period": "lifetime",
+                    })
+                    if resp.status_code == 200:
+                        data = resp.json().get("data", [])
+                        if data:
+                            vals = data[0].get("values", [])
+                            value = vals[0].get("value", "?") if vals else "?"
+                            results["tests"][metric] = {"status": "OK", "value": value}
+                        else:
+                            results["tests"][metric] = {"status": "OK_EMPTY", "value": None}
+                    else:
+                        err = resp.json().get("error", {}).get("message", resp.text[:100])
+                        results["tests"][metric] = {"status": f"HTTP_{resp.status_code}", "error": err[:150]}
+                except Exception as e:
+                    results["tests"][metric] = {"status": "ERROR", "error": str(e)[:100]}
+
+        # Aussi tester SANS le parametre metric (tous les metrics)
+        try:
+            with httpx.Client(timeout=15.0) as client:
+                resp = client.get(f"{GRAPH_API_BASE}/{post_id}/insights", params={
+                    "access_token": token,
+                    "period": "lifetime",
+                })
+            if resp.status_code == 200:
+                data = resp.json().get("data", [])
+                results["all_metrics_no_filter"] = {
+                    "status": "OK",
+                    "count": len(data),
+                    "names": [d["name"] for d in data],
+                }
+            else:
+                results["all_metrics_no_filter"] = {"status": f"HTTP_{resp.status_code}"}
+        except Exception as e:
+            results["all_metrics_no_filter"] = {"status": "ERROR", "error": str(e)[:100]}
+
+        break  # On teste une seule page
+
+    return results
