@@ -405,40 +405,67 @@ def get_post_insights(page_access_token: str, post_id: str) -> dict:
     Necessite la permission read_insights sur la page.
     Retourne 0 gracieusement si l'API echoue (permission manquante, post trop ancien, etc.).
 
+    NOTE: Le parametre period=lifetime est obligatoire pour obtenir les totaux
+    cumules. Sans lui, l'API retourne uniquement les metriques du jour courant.
+
     Returns:
         {impressions: int, clicks: int, reach: int}
     """
     url = f"{GRAPH_API_BASE}/{post_id}/insights"
+
+    # Essai 1 : metriques standard avec period=lifetime
     params = {
         "access_token": page_access_token,
-        "metric": "post_impressions,post_clicks,post_impressions_unique",
+        "metric": "post_impressions,post_impressions_unique",
+        "period": "lifetime",
     }
 
+    result = {"impressions": 0, "clicks": 0, "reach": 0}
+
     try:
-        data = _graph_get(url, params, f"GET /{post_id}/insights")
-        result = {"impressions": 0, "clicks": 0, "reach": 0}
+        data = _graph_get(url, params, f"GET /{post_id}/insights (impressions)")
 
         for item in data.get("data", []):
             name = item.get("name", "")
-            # Chaque metric a values[0].value pour la valeur lifetime
             values = item.get("values", [])
             value = values[0].get("value", 0) if values else 0
 
             if name == "post_impressions":
                 result["impressions"] = value
-            elif name == "post_clicks":
-                result["clicks"] = value
             elif name == "post_impressions_unique":
                 result["reach"] = value
 
-        logger.info(f"Insights {post_id}: impressions={result['impressions']}, clicks={result['clicks']}, reach={result['reach']}")
-        print(f"[FB API] Insights {post_id}: imp={result['impressions']} clicks={result['clicks']} reach={result['reach']}", flush=True)
-        return result
-
     except HTTPException as e:
-        logger.warning(f"Insights {post_id} echoue: {e.detail}")
-        print(f"[FB API] Insights {post_id} echoue (permission read_insights manquante?): {e.detail[:200]}", flush=True)
-        return {"impressions": 0, "clicks": 0, "reach": 0}
+        logger.warning(f"Insights impressions {post_id} echoue: {e.detail}")
+        print(f"[FB API] Insights impressions {post_id} echoue: {e.detail[:200]}", flush=True)
+
+    # Essai 2 : post_clicks (ou post_consumptions en fallback)
+    # post_clicks n'accepte pas period=lifetime sur certaines versions,
+    # on essaie sans period puis avec post_consumptions
+    for metric_name in ["post_clicks", "post_consumptions"]:
+        if result["clicks"] > 0:
+            break
+        try:
+            clicks_params = {
+                "access_token": page_access_token,
+                "metric": metric_name,
+                "period": "lifetime",
+            }
+            clicks_data = _graph_get(url, clicks_params, f"GET /{post_id}/insights ({metric_name})")
+
+            for item in clicks_data.get("data", []):
+                values = item.get("values", [])
+                value = values[0].get("value", 0) if values else 0
+                if value > 0:
+                    result["clicks"] = value
+                    break
+
+        except HTTPException:
+            continue
+
+    logger.info(f"Insights {post_id}: impressions={result['impressions']}, clicks={result['clicks']}, reach={result['reach']}")
+    print(f"[FB API] Insights {post_id}: imp={result['impressions']} clicks={result['clicks']} reach={result['reach']}", flush=True)
+    return result
 
 
 # ════════════════════════════════════════════════════════════════
