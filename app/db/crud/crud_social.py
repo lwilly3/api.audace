@@ -996,6 +996,7 @@ def _sync_page_posts(
         get_page_posts,
         get_post_comments,
         get_post_reactions_count,
+        get_post_insights,
         parse_facebook_datetime,
     )
 
@@ -1062,9 +1063,10 @@ def _sync_page_posts(
             if new_shares > 0 or existing_result.shares == 0:
                 existing_result.shares = new_shares
 
-            # Impressions/clicks : seulement si > 0
-            new_impressions = fb_post.get("impressions", 0)
-            new_clicks = fb_post.get("clicks", 0)
+            # Impressions/clicks : récupérer via Insights API
+            insights = get_post_insights(page_token, platform_post_id)
+            new_impressions = insights.get("impressions", 0)
+            new_clicks = insights.get("clicks", 0)
             if new_impressions > 0:
                 existing_result.impressions = new_impressions
             if new_clicks > 0:
@@ -1116,6 +1118,9 @@ def _sync_page_posts(
                     likes_count = 0
                     comments_count = 0
 
+            # Récupérer les insights (impressions, clics) via Insights API
+            new_insights = get_post_insights(page_token, platform_post_id)
+
             result_obj = SocialPostResult(
                 post_id=post_obj.id,
                 account_id=page_account.id,
@@ -1125,8 +1130,8 @@ def _sync_page_posts(
                 platform_post_url=fb_post.get("permalink_url", ""),
                 platform_url=fb_post.get("permalink_url", ""),
                 published_at=published_at,
-                impressions=fb_post.get("impressions", 0),
-                clicks=fb_post.get("clicks", 0),
+                impressions=new_insights.get("impressions", 0),
+                clicks=new_insights.get("clicks", 0),
                 likes=likes_count,
                 shares=fb_post.get("shares_count", 0),
                 comments=comments_count,

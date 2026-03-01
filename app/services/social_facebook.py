@@ -398,6 +398,49 @@ def get_post_reactions_count(page_access_token: str, post_id: str) -> dict:
         return {"likes": 0, "comments": 0}
 
 
+def get_post_insights(page_access_token: str, post_id: str) -> dict:
+    """
+    Recuperer les metriques Insights d'un post Facebook (impressions, clics, portee).
+
+    Necessite la permission read_insights sur la page.
+    Retourne 0 gracieusement si l'API echoue (permission manquante, post trop ancien, etc.).
+
+    Returns:
+        {impressions: int, clicks: int, reach: int}
+    """
+    url = f"{GRAPH_API_BASE}/{post_id}/insights"
+    params = {
+        "access_token": page_access_token,
+        "metric": "post_impressions,post_clicks,post_impressions_unique",
+    }
+
+    try:
+        data = _graph_get(url, params, f"GET /{post_id}/insights")
+        result = {"impressions": 0, "clicks": 0, "reach": 0}
+
+        for item in data.get("data", []):
+            name = item.get("name", "")
+            # Chaque metric a values[0].value pour la valeur lifetime
+            values = item.get("values", [])
+            value = values[0].get("value", 0) if values else 0
+
+            if name == "post_impressions":
+                result["impressions"] = value
+            elif name == "post_clicks":
+                result["clicks"] = value
+            elif name == "post_impressions_unique":
+                result["reach"] = value
+
+        logger.info(f"Insights {post_id}: impressions={result['impressions']}, clicks={result['clicks']}, reach={result['reach']}")
+        print(f"[FB API] Insights {post_id}: imp={result['impressions']} clicks={result['clicks']} reach={result['reach']}", flush=True)
+        return result
+
+    except HTTPException as e:
+        logger.warning(f"Insights {post_id} echoue: {e.detail}")
+        print(f"[FB API] Insights {post_id} echoue (permission read_insights manquante?): {e.detail[:200]}", flush=True)
+        return {"impressions": 0, "clicks": 0, "reach": 0}
+
+
 # ════════════════════════════════════════════════════════════════
 # COMMENTAIRES D'UN POST
 # ════════════════════════════════════════════════════════════════
