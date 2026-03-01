@@ -1,7 +1,7 @@
 """
 Service Facebook Graph API pour la synchronisation des donnees.
 
-Gere les appels vers la Graph API v18.0 pour :
+Gere les appels vers la Graph API v21.0 pour :
 - Recuperer la liste des pages Facebook gerees par l'utilisateur
 - Importer les posts d'une page
 - Importer les commentaires d'un post
@@ -19,7 +19,7 @@ from fastapi import HTTPException, status
 
 logger = logging.getLogger("hapson-api")
 
-GRAPH_API_BASE = "https://graph.facebook.com/v18.0"
+GRAPH_API_BASE = "https://graph.facebook.com/v21.0"
 DEFAULT_TIMEOUT = 30.0
 
 # Client HTTP réutilisable (connection pooling)

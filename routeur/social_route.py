@@ -997,7 +997,7 @@ def check_facebook_permissions(
     """
     import httpx
 
-    GRAPH_API_BASE = "https://graph.facebook.com/v18.0"
+    GRAPH_API_BASE = "https://graph.facebook.com/v21.0"
 
     profile = (
         db.query(SocialAccount)
@@ -1102,7 +1102,7 @@ def debug_test_page_api(
     """
     import httpx
 
-    GRAPH_API_BASE = "https://graph.facebook.com/v18.0"
+    GRAPH_API_BASE = "https://graph.facebook.com/v21.0"
     results = {}
 
     def safe_get(url, params, label=""):
@@ -1255,7 +1255,27 @@ def debug_test_page_api(
                 {"access_token": test_token, "limit": 0, "summary": "total_count"},
             )
 
-            # 4g. Meme tests avec USER token (profil)
+            # 4g. INSIGHTS (impressions, clicks, reach) avec period=lifetime
+            page_results["post_insights_impressions"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}/insights",
+                {"access_token": test_token,
+                 "metric": "post_impressions,post_impressions_unique",
+                 "period": "lifetime"},
+            )
+            page_results["post_insights_clicks"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}/insights",
+                {"access_token": test_token,
+                 "metric": "post_clicks",
+                 "period": "lifetime"},
+            )
+            page_results["post_insights_consumptions"] = safe_get(
+                f"{GRAPH_API_BASE}/{post_id}/insights",
+                {"access_token": test_token,
+                 "metric": "post_consumptions",
+                 "period": "lifetime"},
+            )
+
+            # 4h. Meme tests avec USER token (profil)
             page_results["user_token_feed"] = safe_get(
                 f"{GRAPH_API_BASE}/{pid}/feed",
                 {"access_token": user_token, "fields": "id,message,shares", "limit": 2},
@@ -1346,6 +1366,11 @@ def debug_test_page_api(
         if "pages_read_user_content" not in sample:
             recommendations.append(
                 "IMPORTANT: Permission 'pages_read_user_content' manquante — necessaire pour lire les commentaires."
+            )
+        if "read_insights" not in sample:
+            recommendations.append(
+                "CRITIQUE: Permission 'read_insights' manquante — necessaire pour les impressions, clics et portee. "
+                "Reconnectez le compte Facebook pour obtenir cette permission."
             )
     else:
         recommendations.append(f"Impossible de verifier les permissions du user token: {user_perms_res}")
