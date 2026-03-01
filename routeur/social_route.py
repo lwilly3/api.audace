@@ -941,40 +941,44 @@ def trigger_scheduler_optimize(
 @router.get("/analytics/overview", response_model=SocialAnalyticsOverviewResponse)
 def analytics_overview(
     period: str = Query("30d", description="Période : 7d, 30d, 90d, 12m"),
+    account_id: Optional[int] = Query(None, description="ID du compte pour filtrer les stats"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """Vue d'ensemble des statistiques d'engagement."""
-    return get_analytics_overview(db, period)
+    return get_analytics_overview(db, period, account_id=account_id)
 
 
 @router.get("/analytics/platforms", response_model=list[PlatformStatsResponse])
 def analytics_platforms(
     period: str = Query("30d"),
+    account_id: Optional[int] = Query(None, description="ID du compte pour filtrer les stats"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """Statistiques ventilées par plateforme."""
-    return get_platform_stats(db, period)
+    return get_platform_stats(db, period, account_id=account_id)
 
 
 @router.get("/analytics/best-times", response_model=list[BestTimeSlotResponse])
 def analytics_best_times(
+    account_id: Optional[int] = Query(None, description="ID du compte pour filtrer les stats"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """Meilleurs horaires de publication."""
-    return get_best_times(db)
+    return get_best_times(db, account_id=account_id)
 
 
 @router.get("/analytics/engagement", response_model=list[TimeSeriesPointResponse])
 def analytics_engagement(
     period: str = Query("30d"),
+    account_id: Optional[int] = Query(None, description="ID du compte pour filtrer les stats"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """Série temporelle de l'engagement."""
-    return get_engagement_time_series(db, period)
+    return get_engagement_time_series(db, period, account_id=account_id)
 
 
 # ════════════════════════════════════════════════════════════════

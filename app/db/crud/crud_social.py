@@ -625,31 +625,51 @@ def get_conversation_by_id(db: Session, conversation_id: int) -> SocialConversat
 # STATISTIQUES
 # ════════════════════════════════════════════════════════════════
 
-def get_analytics_overview(db: Session, period: str = "30d") -> dict:
-    """Calculer les statistiques d'ensemble pour la période donnée."""
+def get_analytics_overview(db: Session, period: str = "30d", account_id: Optional[int] = None) -> dict:
+    """Calculer les statistiques d'ensemble pour la période donnée.
+    Si account_id est fourni, filtre les stats pour ce compte uniquement.
+    """
     days = {"7d": 7, "30d": 30, "90d": 90, "12m": 365}.get(period, 30)
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     prev_cutoff = cutoff - timedelta(days=days)
 
+    # Filtre de base pour les posts liés au compte (via SocialPostResult)
+    if account_id:
+        post_ids_for_account = db.query(SocialPostResult.post_id).filter(
+            SocialPostResult.account_id == account_id
+        ).distinct().subquery()
+
     # Posts stats
-    total_posts = db.query(func.count(SocialPost.id)).filter(
+    post_base = db.query(func.count(SocialPost.id)).filter(
         SocialPost.is_deleted == False, SocialPost.created_at >= cutoff
-    ).scalar() or 0
+    )
+    if account_id:
+        post_base = post_base.filter(SocialPost.id.in_(post_ids_for_account))
+    total_posts = post_base.scalar() or 0
 
-    total_published = db.query(func.count(SocialPost.id)).filter(
+    pub_base = db.query(func.count(SocialPost.id)).filter(
         SocialPost.is_deleted == False, SocialPost.status == "published", SocialPost.created_at >= cutoff
-    ).scalar() or 0
+    )
+    if account_id:
+        pub_base = pub_base.filter(SocialPost.id.in_(post_ids_for_account))
+    total_published = pub_base.scalar() or 0
 
-    total_scheduled = db.query(func.count(SocialPost.id)).filter(
+    sched_base = db.query(func.count(SocialPost.id)).filter(
         SocialPost.is_deleted == False, SocialPost.status == "scheduled"
-    ).scalar() or 0
+    )
+    if account_id:
+        sched_base = sched_base.filter(SocialPost.id.in_(post_ids_for_account))
+    total_scheduled = sched_base.scalar() or 0
 
-    total_drafts = db.query(func.count(SocialPost.id)).filter(
+    draft_base = db.query(func.count(SocialPost.id)).filter(
         SocialPost.is_deleted == False, SocialPost.status == "draft"
-    ).scalar() or 0
+    )
+    if account_id:
+        draft_base = draft_base.filter(SocialPost.id.in_(post_ids_for_account))
+    total_drafts = draft_base.scalar() or 0
 
     # Engagement metrics (from results)
-    metrics = db.query(
+    metrics_q = db.query(
         func.coalesce(func.sum(SocialPostResult.impressions), 0),
         func.coalesce(func.sum(SocialPostResult.clicks), 0),
         func.coalesce(func.sum(SocialPostResult.likes), 0),
@@ -657,7 +677,10 @@ def get_analytics_overview(db: Session, period: str = "30d") -> dict:
         func.coalesce(func.sum(SocialPostResult.comments), 0),
     ).join(SocialPost, SocialPostResult.post_id == SocialPost.id).filter(
         SocialPost.is_deleted == False, SocialPost.created_at >= cutoff
-    ).first()
+    )
+    if account_id:
+        metrics_q = metrics_q.filter(SocialPostResult.account_id == account_id)
+    metrics = metrics_q.first()
 
     impressions = metrics[0] if metrics else 0
     clicks = metrics[1] if metrics else 0
@@ -667,9 +690,12 @@ def get_analytics_overview(db: Session, period: str = "30d") -> dict:
     total_engagements = clicks + likes + shares + comments_count
 
     # Followers
-    followers_total = db.query(func.coalesce(func.sum(SocialAccount.followers_count), 0)).filter(
+    followers_q = db.query(func.coalesce(func.sum(SocialAccount.followers_count), 0)).filter(
         SocialAccount.is_deleted == False, SocialAccount.is_active == True
-    ).scalar() or 0
+    )
+    if account_id:
+        followers_q = followers_q.filter(SocialAccount.id == account_id)
+    followers_total = followers_q.scalar() or 0
 
     # Avg engagement rate
     avg_engagement = 0.0
@@ -677,9 +703,12 @@ def get_analytics_overview(db: Session, period: str = "30d") -> dict:
         avg_engagement = round((total_engagements / impressions) * 100, 2)
 
     # Top hashtags
-    all_hashtags = db.query(SocialPost.hashtags).filter(
+    hashtags_q = db.query(SocialPost.hashtags).filter(
         SocialPost.is_deleted == False, SocialPost.created_at >= cutoff
-    ).all()
+    )
+    if account_id:
+        hashtags_q = hashtags_q.filter(SocialPost.id.in_(post_ids_for_account))
+    all_hashtags = hashtags_q.all()
     hashtag_count: dict[str, int] = {}
     for (tags,) in all_hashtags:
         if tags:
@@ -688,9 +717,12 @@ def get_analytics_overview(db: Session, period: str = "30d") -> dict:
     top_hashtags = sorted(hashtag_count, key=hashtag_count.get, reverse=True)[:10]
 
     # Top platforms
-    all_platforms = db.query(SocialPost.platforms).filter(
+    platforms_q = db.query(SocialPost.platforms).filter(
         SocialPost.is_deleted == False, SocialPost.created_at >= cutoff
-    ).all()
+    )
+    if account_id:
+        platforms_q = platforms_q.filter(SocialPost.id.in_(post_ids_for_account))
+    all_platforms = platforms_q.all()
     platform_count: dict[str, int] = {}
     for (plats,) in all_platforms:
         if plats:
@@ -724,12 +756,14 @@ def get_analytics_overview(db: Session, period: str = "30d") -> dict:
     }
 
 
-def get_platform_stats(db: Session, period: str = "30d") -> list[dict]:
-    """Statistiques ventilées par plateforme."""
+def get_platform_stats(db: Session, period: str = "30d", account_id: Optional[int] = None) -> list[dict]:
+    """Statistiques ventilées par plateforme.
+    Si account_id est fourni, filtre les stats pour ce compte uniquement.
+    """
     days = {"7d": 7, "30d": 30, "90d": 90, "12m": 365}.get(period, 30)
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
-    results = (
+    base_q = (
         db.query(
             SocialPostResult.platform,
             func.count(SocialPostResult.id).label("posts_count"),
@@ -741,9 +775,10 @@ def get_platform_stats(db: Session, period: str = "30d") -> list[dict]:
         )
         .join(SocialPost, SocialPostResult.post_id == SocialPost.id)
         .filter(SocialPost.is_deleted == False, SocialPost.created_at >= cutoff)
-        .group_by(SocialPostResult.platform)
-        .all()
     )
+    if account_id:
+        base_q = base_q.filter(SocialPostResult.account_id == account_id)
+    results = base_q.group_by(SocialPostResult.platform).all()
 
     stats = []
     for r in results:
@@ -751,11 +786,14 @@ def get_platform_stats(db: Session, period: str = "30d") -> list[dict]:
         engagement_rate = round((engagements / r.impressions) * 100, 2) if r.impressions > 0 else 0.0
 
         # Followers pour cette plateforme
-        followers = db.query(func.coalesce(func.sum(SocialAccount.followers_count), 0)).filter(
+        followers_q = db.query(func.coalesce(func.sum(SocialAccount.followers_count), 0)).filter(
             SocialAccount.platform == r.platform,
             SocialAccount.is_deleted == False,
             SocialAccount.is_active == True,
-        ).scalar() or 0
+        )
+        if account_id:
+            followers_q = followers_q.filter(SocialAccount.id == account_id)
+        followers = followers_q.scalar() or 0
 
         stats.append({
             "platform": r.platform,
@@ -774,10 +812,10 @@ def get_platform_stats(db: Session, period: str = "30d") -> list[dict]:
     return stats
 
 
-def get_best_times(db: Session) -> list[dict]:
+def get_best_times(db: Session, account_id: Optional[int] = None) -> list[dict]:
     """Calculer les meilleurs horaires de publication basés sur l'engagement."""
     # Requête sur les posts publiés avec leurs résultats
-    results = (
+    base_q = (
         db.query(
             SocialPostResult.platform,
             func.extract("dow", SocialPost.published_at).label("dow"),
@@ -790,6 +828,11 @@ def get_best_times(db: Session) -> list[dict]:
             SocialPost.is_deleted == False,
             SocialPost.published_at != None,
         )
+    )
+    if account_id:
+        base_q = base_q.filter(SocialPostResult.account_id == account_id)
+    results = (
+        base_q
         .group_by(SocialPostResult.platform, "dow", "hour")
         .order_by(desc("avg_eng"))
         .limit(20)
@@ -816,12 +859,12 @@ def get_best_times(db: Session) -> list[dict]:
     return slots
 
 
-def get_engagement_time_series(db: Session, period: str = "30d") -> list[dict]:
+def get_engagement_time_series(db: Session, period: str = "30d", account_id: Optional[int] = None) -> list[dict]:
     """Série temporelle de l'engagement par jour."""
     days = {"7d": 7, "30d": 30, "90d": 90, "12m": 365}.get(period, 30)
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
-    results = (
+    base_q = (
         db.query(
             func.date(SocialPost.published_at).label("date"),
             func.coalesce(func.sum(SocialPostResult.impressions), 0).label("impressions"),
@@ -836,6 +879,11 @@ def get_engagement_time_series(db: Session, period: str = "30d") -> list[dict]:
             SocialPost.published_at != None,
             SocialPost.published_at >= cutoff,
         )
+    )
+    if account_id:
+        base_q = base_q.filter(SocialPostResult.account_id == account_id)
+    results = (
+        base_q
         .group_by(func.date(SocialPost.published_at))
         .order_by("date")
         .all()
