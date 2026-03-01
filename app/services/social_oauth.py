@@ -46,7 +46,7 @@ def _get_platform_config(platform: str) -> dict:
             "token_url": "https://graph.facebook.com/v18.0/oauth/access_token",
             "user_info_url": "https://graph.facebook.com/v18.0/me",
             "user_info_params": {"fields": "id,name,picture"},
-            "scopes": "pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_show_list,pages_manage_engagement",
+            "scopes": "pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_show_list,pages_manage_engagement,read_insights",
             "config_id": settings.FACEBOOK_CONFIG_ID,
             "redirect_uri": callback_url,
         },

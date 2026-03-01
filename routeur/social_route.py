@@ -1027,6 +1027,7 @@ def check_facebook_permissions(
         "pages_read_user_content": "Lire les commentaires des visiteurs sur les pages",
         "pages_show_list": "Lister les pages gerees par l'utilisateur",
         "pages_manage_posts": "Publier et gerer les publications sur les pages",
+        "read_insights": "Lire les statistiques des pages (impressions, clics, portee)",
     }
 
     # Verifier les permissions
