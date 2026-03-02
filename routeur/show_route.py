@@ -106,6 +106,18 @@ async def update_show_status_route(
 
     result = update_show_status(db, show_id, show_data.status)
     log_action(db, 0, "update_status", "shows", show_id)
+
+    # P5: Cross-posting WordPress quand l'emission passe en direct
+    if show_data.status == "en-cours":
+        try:
+            from app.services.wordpress_sync import sync_show_to_wordpress
+            sync_show_to_wordpress(show_id, db)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(
+                "WordPress sync failed for show %s: %s", show_id, str(e)
+            )
+
     return result
 
 # créer un conducteur avec ses segments

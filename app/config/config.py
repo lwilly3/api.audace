@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     TWITTER_CLIENT_ID:str = ""
     TWITTER_CLIENT_SECRET:str = ""
 
+    # WordPress integration (cross-posting P5)
+    WORDPRESS_SITE_URL:str = ""
+    WORDPRESS_SYNC_SECRET:str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
    
     # class Config:

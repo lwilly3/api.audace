@@ -40,6 +40,8 @@ from .model_social import (
     SocialAccount, SocialPost, SocialPostResult,
     SocialComment, SocialConversation, SocialMessage,
 )
+from .model_public_alert import PublicAlert
+from .model_listen_event import ListenEvent
 
 # from .model_show_segment import ShowSegment
 # from .model_show_presenter import ShowPresenter

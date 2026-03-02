@@ -35,6 +35,7 @@ from routeur import (
      ovh_route,  # Routes pour la consultation des services OVH
      scaleway_route,  # Routes pour la consultation des services Scaleway
      social_route,  # Routes pour le module Social (réseaux sociaux)
+     public_route,  # Routes publiques pour l'integration WordPress
 
 
 
@@ -163,6 +164,8 @@ origins = [
     "https://api.cloud.audace.ovh",
     "https://app.radio.audace.ovh",
     "https://api.radio.audace.ovh",
+    "https://www.radioaudace.com",
+    "https://radioaudace.com",
     "http://localhost:5180",
     "http://localhost:5173",
     "http://127.0.0.1:5180",
@@ -180,6 +183,7 @@ app.add_middleware(
 # ⚠️ IMPORTANT: setup_route doit être inclus EN PREMIER (pas d'auth requise)
 app.include_router(setup_route.router)  # Routes de configuration initiale (SANS authentification)
 app.include_router(version_route.router)  # Routes d'information sur la version
+app.include_router(public_route.router)  # Routes publiques integration WordPress (SANS authentification)
 
 # app.include_router(posts.router)  # Routes liées aux posts
 app.include_router(users_route.router)  # Routes liées aux utilisateurs
