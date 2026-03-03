@@ -137,7 +137,10 @@ services:
       # Twitter/X OAuth 2.0
       TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID:-}
       TWITTER_CLIENT_SECRET: ${TWITTER_CLIENT_SECRET:-}
-      
+
+      # RadioDJ integration (Now Playing)
+      RADIODJ_API_KEY: ${RADIODJ_API_KEY:-}
+
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0
       PORT: 8000
