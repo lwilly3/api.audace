@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -12,7 +12,6 @@ from app.models.model_user import User
 from app.schemas.schema_public import (
     PublicAlertCreate, PublicAlertUpdate, PublicAlertResponse,
     ListenEventCreate, ListenStatsResponse,
-    NowPlayingTrackCreate,
 )
 from app.db.crud.crud_public import (
     get_now_playing,
@@ -283,28 +282,47 @@ def listen_stats_route(
 
 
 # =============================================
-# P7 : RadioDJ Now Playing Track (PUBLIC - auth par API key)
+# P7 : RadioDJ Now Playing Track (PUBLIC - auth par password)
 # =============================================
 
 @router.post("/radiodj/track", status_code=status.HTTP_201_CREATED)
 def radiodj_track_route(
-    track_data: NowPlayingTrackCreate,
-    key: str = Query(..., description="Cle API RadioDJ"),
+    title: str = Form(..., description="Titre du morceau"),
+    password: str = Form(..., description="Cle API RadioDJ"),
+    artist: str = Form(None, description="Artiste"),
+    album: str = Form(None, description="Album"),
+    duration: str = Form(None, description="Duree en secondes"),
+    songtype: str = Form(None, description="Type: Music, Jingle, etc."),
     db: Session = Depends(get_db)
 ):
     """
     Recoit les infos de la piste en cours depuis RadioDJ.
-    Protege par cle API via query parameter.
-    RadioDJ appelle cette URL a chaque changement de piste.
+    Protege par le champ password du plugin Now Playing.
+    RadioDJ envoie en POST form-urlencoded a chaque changement de piste.
     """
-    if not settings.RADIODJ_API_KEY or key != settings.RADIODJ_API_KEY:
+    if not settings.RADIODJ_API_KEY or password != settings.RADIODJ_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Cle API invalide"
         )
 
     try:
-        result = store_now_playing_track(db, track_data.model_dump())
+        # Convertir duration en float si present
+        dur = None
+        if duration:
+            try:
+                dur = float(duration)
+            except (ValueError, TypeError):
+                dur = None
+
+        track_data = {
+            "title": title.strip() if title else title,
+            "artist": artist.strip() if artist else None,
+            "album": album.strip() if album else None,
+            "duration": dur,
+            "track_type": songtype.strip() if songtype else None,
+        }
+        result = store_now_playing_track(db, track_data)
         return {"status": "ok", "track": result}
     except Exception as e:
         logger.exception("radiodj-track error")
