@@ -9,6 +9,7 @@ from app.models.model_segment import Segment
 from app.models.model_presenter import Presenter
 from app.models.model_public_alert import PublicAlert
 from app.models.model_listen_event import ListenEvent
+from app.models.model_now_playing_track import NowPlayingTrack
 
 
 # =============================================
@@ -402,4 +403,65 @@ def get_listen_stats(db: Session) -> Dict[str, Any]:
         "peak_hour": peak_hour,
         "total_listens_week": total_listens_week,
         "daily_breakdown": daily_breakdown
+    }
+
+
+# =============================================
+# P7 : RadioDJ Now Playing Track
+# =============================================
+
+TRACK_STALENESS_SECONDS = 600  # 10 minutes
+
+
+def store_now_playing_track(db: Session, track_data: dict) -> Dict[str, Any]:
+    """
+    Enregistre un nouveau morceau en cours de diffusion.
+    Chaque appel cree une nouvelle ligne (historique).
+    """
+    track = NowPlayingTrack(
+        artist=track_data.get("artist"),
+        title=track_data["title"],
+        album=track_data.get("album"),
+        duration=track_data.get("duration"),
+        track_type=track_data.get("track_type"),
+    )
+    db.add(track)
+    db.commit()
+    db.refresh(track)
+    return {
+        "id": track.id,
+        "artist": track.artist,
+        "title": track.title,
+        "album": track.album,
+        "duration": track.duration,
+        "track_type": track.track_type,
+        "started_at": track.started_at.isoformat() if track.started_at else None,
+    }
+
+
+def get_current_track(db: Session) -> Optional[Dict[str, Any]]:
+    """
+    Recupere le morceau le plus recent de type Music (ou NULL).
+    Retourne None si le dernier morceau est trop ancien (staleness).
+    """
+    track = db.query(NowPlayingTrack).filter(
+        (NowPlayingTrack.track_type == None) |
+        (NowPlayingTrack.track_type.ilike('music'))
+    ).order_by(NowPlayingTrack.started_at.desc()).first()
+
+    if not track:
+        return None
+
+    # Staleness check
+    elapsed = (datetime.now() - track.started_at).total_seconds()
+    if elapsed > TRACK_STALENESS_SECONDS:
+        return None
+
+    return {
+        "artist": track.artist,
+        "title": track.title,
+        "album": track.album,
+        "duration": track.duration,
+        "track_type": track.track_type,
+        "started_at": track.started_at.isoformat() if track.started_at else None,
     }

@@ -1,16 +1,18 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from starlette import status
 
 from app.db.database import get_db
+from app.config.config import settings
 from core.auth import oauth2
 from app.models.model_user import User
 from app.schemas.schema_public import (
     PublicAlertCreate, PublicAlertUpdate, PublicAlertResponse,
-    ListenEventCreate, ListenStatsResponse
+    ListenEventCreate, ListenStatsResponse,
+    NowPlayingTrackCreate,
 )
 from app.db.crud.crud_public import (
     get_now_playing,
@@ -23,6 +25,8 @@ from app.db.crud.crud_public import (
     get_public_presenters,
     create_listen_event,
     get_listen_stats,
+    store_now_playing_track,
+    get_current_track,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,6 +51,8 @@ def now_playing_route(db: Session = Depends(get_db)):
     """
     try:
         data = get_now_playing(db)
+        # Enrichir avec la piste RadioDJ en cours
+        data["current_track"] = get_current_track(db)
         return data
     except Exception as e:
         logger.exception("now-playing error")
@@ -273,4 +279,36 @@ def listen_stats_route(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur interne : {str(e)}"
+        )
+
+
+# =============================================
+# P7 : RadioDJ Now Playing Track (PUBLIC - auth par API key)
+# =============================================
+
+@router.post("/radiodj/track", status_code=status.HTTP_201_CREATED)
+def radiodj_track_route(
+    track_data: NowPlayingTrackCreate,
+    key: str = Query(..., description="Cle API RadioDJ"),
+    db: Session = Depends(get_db)
+):
+    """
+    Recoit les infos de la piste en cours depuis RadioDJ.
+    Protege par cle API via query parameter.
+    RadioDJ appelle cette URL a chaque changement de piste.
+    """
+    if not settings.RADIODJ_API_KEY or key != settings.RADIODJ_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Cle API invalide"
+        )
+
+    try:
+        result = store_now_playing_track(db, track_data.model_dump())
+        return {"status": "ok", "track": result}
+    except Exception as e:
+        logger.exception("radiodj-track error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur interne du serveur"
         )

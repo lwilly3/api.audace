@@ -97,6 +97,7 @@ class NowPlayingResponse(BaseModel):
     """Reponse de l'endpoint now-playing."""
     current_show: Optional[NowPlayingShow] = None
     next_show: Optional[NowPlayingShow] = None
+    current_track: Optional['NowPlayingTrackResponse'] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -172,5 +173,32 @@ class ListenStatsResponse(BaseModel):
     peak_hour: Optional[int] = None
     total_listens_week: int = 0
     daily_breakdown: List[DailyListenBreakdown] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# =============================================
+# Schemas pour RadioDJ Now Playing Track (P7)
+# =============================================
+
+class NowPlayingTrackCreate(BaseModel):
+    """Schema pour recevoir les donnees de piste depuis RadioDJ."""
+    artist: Optional[str] = Field(None, max_length=255, description="Artiste du morceau")
+    title: str = Field(..., max_length=255, description="Titre du morceau")
+    album: Optional[str] = Field(None, max_length=255, description="Album")
+    duration: Optional[float] = Field(None, ge=0, description="Duree en secondes")
+    track_type: Optional[str] = Field(None, max_length=50, description="Type: Music, Jingle, etc.")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NowPlayingTrackResponse(BaseModel):
+    """Schema de reponse pour une piste en cours."""
+    artist: Optional[str] = None
+    title: str
+    album: Optional[str] = None
+    duration: Optional[float] = None
+    track_type: Optional[str] = None
+    started_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

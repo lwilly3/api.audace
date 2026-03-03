@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     WORDPRESS_SITE_URL:str = ""
     WORDPRESS_SYNC_SECRET:str = ""
 
+    # RadioDJ integration (Now Playing track info)
+    RADIODJ_API_KEY:str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
    
     # class Config:
