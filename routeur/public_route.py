@@ -323,14 +323,22 @@ async def radiodj_track_route(
                 detail="Champ title requis"
             )
 
-        # Convertir duration en float si present
+        # Convertir duration en secondes (accepte float ou HH:MM:SS)
         dur = None
         duration_raw = fields.get("duration")
         if duration_raw:
             try:
                 dur = float(duration_raw)
             except (ValueError, TypeError):
-                dur = None
+                # Tenter le format HH:MM:SS ou MM:SS
+                try:
+                    parts = str(duration_raw).split(":")
+                    if len(parts) == 3:
+                        dur = int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])
+                    elif len(parts) == 2:
+                        dur = int(parts[0]) * 60 + float(parts[1])
+                except (ValueError, TypeError, IndexError):
+                    dur = None
 
         track_data = {
             "title": title.strip(),

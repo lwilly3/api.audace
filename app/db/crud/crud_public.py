@@ -439,15 +439,17 @@ def store_now_playing_track(db: Session, track_data: dict) -> Dict[str, Any]:
     }
 
 
+EXCLUDED_TRACK_TYPES = {'jingle', 'sweeper', 'spot', 'voicetrack', 'id'}
+
+
 def get_current_track(db: Session) -> Optional[Dict[str, Any]]:
     """
-    Recupere le morceau le plus recent de type Music (ou NULL).
+    Recupere le morceau le plus recent, sauf jingles/sweepers.
     Retourne None si le dernier morceau est trop ancien (staleness).
     """
-    track = db.query(NowPlayingTrack).filter(
-        (NowPlayingTrack.track_type == None) |
-        (NowPlayingTrack.track_type.ilike('music'))
-    ).order_by(NowPlayingTrack.started_at.desc()).first()
+    track = db.query(NowPlayingTrack).order_by(
+        NowPlayingTrack.started_at.desc()
+    ).first()
 
     if not track:
         return None
@@ -455,6 +457,10 @@ def get_current_track(db: Session) -> Optional[Dict[str, Any]]:
     # Staleness check
     elapsed = (datetime.now() - track.started_at).total_seconds()
     if elapsed > TRACK_STALENESS_SECONDS:
+        return None
+
+    # Exclure les jingles/sweepers connus
+    if track.track_type and track.track_type.lower() in EXCLUDED_TRACK_TYPES:
         return None
 
     return {
