@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from starlette import status
 
@@ -286,20 +286,28 @@ def listen_stats_route(
 # =============================================
 
 @router.post("/radiodj/track", status_code=status.HTTP_201_CREATED)
-def radiodj_track_route(
-    title: str = Form(..., description="Titre du morceau"),
-    password: str = Form(..., description="Cle API RadioDJ"),
-    artist: str = Form(None, description="Artiste"),
-    album: str = Form(None, description="Album"),
-    duration: str = Form(None, description="Duree en secondes"),
-    songtype: str = Form(None, description="Type: Music, Jingle, etc."),
+async def radiodj_track_route(
+    request: Request,
     db: Session = Depends(get_db)
 ):
     """
     Recoit les infos de la piste en cours depuis RadioDJ.
     Protege par le champ password du plugin Now Playing.
     RadioDJ envoie en POST form-urlencoded a chaque changement de piste.
+    Accepte tous les noms de champs possibles pour compatibilite.
     """
+    try:
+        form_data = await request.form()
+        fields = {k: v for k, v in form_data.items()}
+        logger.info(f"RadioDJ track received — fields: {fields}")
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Impossible de lire les donnees du formulaire"
+        )
+
+    # Authentification — champ password
+    password = fields.get("password", "")
     if not settings.RADIODJ_API_KEY or password != settings.RADIODJ_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -307,23 +315,34 @@ def radiodj_track_route(
         )
 
     try:
+        # Extraire le titre (champs possibles: title, song, name)
+        title = fields.get("title") or fields.get("song") or fields.get("name") or ""
+        if not title.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Champ title requis"
+            )
+
         # Convertir duration en float si present
         dur = None
-        if duration:
+        duration_raw = fields.get("duration")
+        if duration_raw:
             try:
-                dur = float(duration)
+                dur = float(duration_raw)
             except (ValueError, TypeError):
                 dur = None
 
         track_data = {
-            "title": title.strip() if title else title,
-            "artist": artist.strip() if artist else None,
-            "album": album.strip() if album else None,
+            "title": title.strip(),
+            "artist": (fields.get("artist") or "").strip() or None,
+            "album": (fields.get("album") or "").strip() or None,
             "duration": dur,
-            "track_type": songtype.strip() if songtype else None,
+            "track_type": (fields.get("songtype") or fields.get("song_type") or fields.get("type") or "").strip() or None,
         }
         result = store_now_playing_track(db, track_data)
         return {"status": "ok", "track": result}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("radiodj-track error")
         raise HTTPException(
