@@ -98,10 +98,6 @@ def generate_post_from_article(article_text: str, url: str) -> str:
             detail="Service IA non configure (cle API Mistral manquante)"
         )
 
-    from mistralai import Mistral
-
-    client = Mistral(api_key=settings.MISTRAL_API_KEY)
-
     system_prompt = (
         "Tu es le community manager d'une radio communautaire francophone. "
         "Ton role est de creer des publications Facebook engageantes a partir d'articles web. "
@@ -122,16 +118,33 @@ def generate_post_from_article(article_text: str, url: str) -> str:
         f"Genere une publication Facebook courte et engageante pour notre page de radio communautaire."
     )
 
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
     try:
-        response = client.chat.complete(
-            model="mistral-small-latest",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=300,
-            temperature=0.7,
-        )
+        # SDK v1.x : from mistralai import Mistral
+        # SDK v0.x : from mistralai.client import MistralClient
+        try:
+            from mistralai import Mistral
+            client = Mistral(api_key=settings.MISTRAL_API_KEY)
+            response = client.chat.complete(
+                model="mistral-small-latest",
+                messages=messages,
+                max_tokens=300,
+                temperature=0.7,
+            )
+        except ImportError:
+            from mistralai.client import MistralClient
+            from mistralai.models.chat_completion import ChatMessage
+            client = MistralClient(api_key=settings.MISTRAL_API_KEY)
+            response = client.chat(
+                model="mistral-small-latest",
+                messages=[ChatMessage(role=m["role"], content=m["content"]) for m in messages],
+                max_tokens=300,
+                temperature=0.7,
+            )
 
         generated = response.choices[0].message.content.strip()
 
