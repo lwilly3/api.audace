@@ -84,13 +84,13 @@ def fetch_article_text(url: str) -> str:
         )
 
 
-def generate_post_from_article(article_text: str, url: str) -> str:
+def generate_post_from_article(article_text: str, url: str, mode: str = "post_engageant", custom_instructions: str | None = None) -> str:
     """
-    Genere un post Facebook a partir du texte d'un article.
+    Genere un post a partir du texte d'un article.
 
-    Utilise Mistral Small 3.2 via le SDK Python officiel.
-    Le prompt est specifiquement calibre pour une radio communautaire
-    et genere du contenu en francais.
+    Utilise Mistral Small via le SDK Python officiel.
+    Le prompt est adapte selon le mode choisi et enrichi
+    par les instructions supplementaires de l'utilisateur.
     """
     if not settings.MISTRAL_API_KEY:
         raise HTTPException(
@@ -98,18 +98,56 @@ def generate_post_from_article(article_text: str, url: str) -> str:
             detail="Service IA non configure (cle API Mistral manquante)"
         )
 
+    # Instructions specifiques selon le mode
+    mode_instructions = {
+        "post_engageant": (
+            "Genere une publication engageante pour les reseaux sociaux.\n"
+            "- 2 a 4 phrases maximum, percutantes\n"
+            "- Commence par une accroche forte\n"
+            "- Termine par un appel a l'action (question, invitation a commenter)\n"
+        ),
+        "resume": (
+            "Resume l'article de maniere claire et concise.\n"
+            "- 3 a 5 phrases qui couvrent les points essentiels\n"
+            "- Ton informatif et neutre\n"
+            "- Structure : contexte, faits cles, conclusion\n"
+        ),
+        "informatif": (
+            "Cree un post informatif et factuel.\n"
+            "- Presente les informations cles de l'article\n"
+            "- Ton professionnel et serieux\n"
+            "- Inclus les chiffres ou donnees importantes si disponibles\n"
+            "- Termine par une invitation a lire l'article complet\n"
+        ),
+        "annonce": (
+            "Cree une annonce percutante pour partager cette nouvelle.\n"
+            "- Commence par une phrase d'accroche forte\n"
+            "- Ton enthousiaste et dynamique\n"
+            "- 2 a 3 phrases courtes et impactantes\n"
+            "- Termine par un appel a l'action clair\n"
+        ),
+    }
+
+    mode_text = mode_instructions.get(mode, mode_instructions["post_engageant"])
+
     system_prompt = (
         "Tu es le community manager d'une radio communautaire francophone. "
-        "Ton role est de creer des publications Facebook engageantes a partir d'articles web. "
-        "Regles :\n"
+        "Ton role est de creer des publications pour les reseaux sociaux a partir d'articles web. "
+        "Regles generales :\n"
         "- Ecris en francais, ton amical et accessible\n"
-        "- 2 a 4 phrases maximum, percutantes\n"
-        "- Commence par une accroche forte\n"
-        "- Termine par un appel a l'action (question, invitation a commenter)\n"
         "- N'inclus PAS de hashtags (ils seront ajoutes separement)\n"
         "- N'inclus PAS l'URL (elle sera ajoutee automatiquement)\n"
         "- Adapte le ton selon le sujet (info locale, culture, musique, evenement...)\n"
+        "\n"
+        "Mode de generation :\n"
+        f"{mode_text}"
     )
+
+    if custom_instructions and custom_instructions.strip():
+        system_prompt += (
+            "\nInstructions supplementaires de l'utilisateur :\n"
+            f"{custom_instructions.strip()}\n"
+        )
 
     user_prompt = (
         f"Voici le contenu d'un article web :\n\n"

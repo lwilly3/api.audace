@@ -512,7 +512,7 @@ def generate_from_url(
     from app.services.ai_service import fetch_article_text, generate_post_from_article
 
     article_text = fetch_article_text(body.url)
-    generated_content = generate_post_from_article(article_text, body.url)
+    generated_content = generate_post_from_article(article_text, body.url, body.mode, body.custom_instructions)
 
     log_action(db, current_user.id, "ai_generate", "social_posts", 0)
 

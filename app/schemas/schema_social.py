@@ -319,6 +319,8 @@ class VideoPerformanceResponse(BaseModel):
 class GenerateFromUrlRequest(BaseModel):
     """Requete pour generer un post a partir d'une URL."""
     url: str = Field(..., min_length=10, max_length=2000, description="URL de l'article source")
+    mode: str = Field("post_engageant", description="Mode de generation: post_engageant, resume, informatif, annonce")
+    custom_instructions: Optional[str] = Field(None, max_length=500, description="Instructions supplementaires de l'utilisateur")
 
 
 class GenerateFromUrlResponse(BaseModel):
