@@ -63,3 +63,4 @@ pytest>=7.0.0
 httpx
 gunicorn==21.2.0
 ovh>=1.1.0
+mistralai

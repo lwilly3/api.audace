@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     # RadioDJ integration (Now Playing track info)
     RADIODJ_API_KEY:str = ""
 
+    # Mistral AI (generation de posts depuis URL)
+    MISTRAL_API_KEY:str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
    
     # class Config:

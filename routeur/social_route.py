@@ -82,6 +82,7 @@ from app.schemas.schema_social import (
     ReactionsBreakdownResponse,
     FollowerTrendResponse,
     VideoPerformanceResponse,
+    GenerateFromUrlRequest,
 )
 from app.services.social_oauth import (
     build_authorization_url,
@@ -485,6 +486,40 @@ def schedule_post(
     post = schedule_social_post(db, post_id, body.scheduled_at)
     log_action(db, current_user.id, "schedule", "social_posts", post_id)
     return post
+
+
+# ════════════════════════════════════════════════════════════════
+# GENERATION IA DEPUIS URL
+# ════════════════════════════════════════════════════════════════
+
+@router.post("/generate-from-url")
+def generate_from_url(
+    body: GenerateFromUrlRequest,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Generer un post Facebook a partir d'une URL d'article.
+
+    1. Telecharge le contenu HTML de l'URL
+    2. Extrait le texte brut
+    3. Envoie a Mistral Small pour generation
+    4. Retourne le texte genere
+
+    Le contenu genere est une suggestion — l'utilisateur peut le modifier
+    avant de publier.
+    """
+    from app.services.ai_service import fetch_article_text, generate_post_from_article
+
+    article_text = fetch_article_text(body.url)
+    generated_content = generate_post_from_article(article_text, body.url)
+
+    log_action(db, current_user.id, "ai_generate", "social_posts", 0)
+
+    return {
+        "generated_content": generated_content,
+        "source_url": body.url,
+    }
 
 
 # ════════════════════════════════════════════════════════════════

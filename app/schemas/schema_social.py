@@ -310,3 +310,18 @@ class VideoPerformanceResponse(BaseModel):
     avg_view_time_seconds: float = 0.0
     period_start: str = ""
     period_end: str = ""
+
+
+# ════════════════════════════════════════════════════════════════
+# GENERATION IA DEPUIS URL
+# ════════════════════════════════════════════════════════════════
+
+class GenerateFromUrlRequest(BaseModel):
+    """Requete pour generer un post a partir d'une URL."""
+    url: str = Field(..., min_length=10, max_length=2000, description="URL de l'article source")
+
+
+class GenerateFromUrlResponse(BaseModel):
+    """Reponse avec le contenu genere par l'IA."""
+    generated_content: str = Field(..., description="Contenu genere pour le post")
+    source_url: str = Field(..., description="URL source utilisee")
