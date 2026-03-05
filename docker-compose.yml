@@ -141,6 +141,9 @@ services:
       # RadioDJ integration (Now Playing)
       RADIODJ_API_KEY: ${RADIODJ_API_KEY:-}
 
+      # Mistral AI (generation de posts depuis URL)
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0
       PORT: 8000
