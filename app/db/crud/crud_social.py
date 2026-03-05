@@ -8,6 +8,7 @@ Inclut les fonctions de synchronisation avec Facebook Graph API.
 
 import logging
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy import func, desc, and_
 from fastapi import HTTPException, status
 from datetime import datetime, timezone, timedelta
@@ -1294,54 +1295,46 @@ def _sync_page_insights(
     if not days_data:
         return stats
 
+    # Pre-fetch existing dates pour tracker nouveaux vs mis a jour
+    existing_dates = set(
+        row[0] for row in db.query(SocialPageInsight.date).filter(
+            SocialPageInsight.account_id == page_account.id,
+        ).all()
+    )
+
     latest_follows = 0
+
+    # Colonnes de metriques a upsert
+    metric_columns = [
+        "page_impressions_unique", "page_posts_impressions",
+        "page_posts_impressions_unique", "page_posts_impressions_organic",
+        "page_posts_impressions_paid", "page_post_engagements",
+        "page_views_total", "page_follows", "page_daily_follows",
+        "page_daily_unfollows", "reactions_like", "reactions_love",
+        "reactions_wow", "reactions_haha", "reactions_sorry",
+        "reactions_anger", "page_video_views", "page_video_view_time",
+    ]
 
     for day in days_data:
         day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
 
-        existing = (
-            db.query(SocialPageInsight)
-            .filter(
-                SocialPageInsight.account_id == page_account.id,
-                SocialPageInsight.date == day_date,
-            )
-            .first()
-        )
+        values = {
+            "account_id": page_account.id,
+            "date": day_date,
+        }
+        for col in metric_columns:
+            values[col] = day.get(col, 0)
 
-        if existing:
-            # Mettre a jour les metriques existantes
-            for key, value in day.items():
-                if key == "date":
-                    continue
-                if hasattr(existing, key):
-                    setattr(existing, key, value)
-            stats["days_synced"] += 1
-        else:
-            # Creer un nouveau record
-            insight = SocialPageInsight(
-                account_id=page_account.id,
-                date=day_date,
-                page_impressions_unique=day.get("page_impressions_unique", 0),
-                page_posts_impressions=day.get("page_posts_impressions", 0),
-                page_posts_impressions_unique=day.get("page_posts_impressions_unique", 0),
-                page_posts_impressions_organic=day.get("page_posts_impressions_organic", 0),
-                page_posts_impressions_paid=day.get("page_posts_impressions_paid", 0),
-                page_post_engagements=day.get("page_post_engagements", 0),
-                page_views_total=day.get("page_views_total", 0),
-                page_follows=day.get("page_follows", 0),
-                page_daily_follows=day.get("page_daily_follows", 0),
-                page_daily_unfollows=day.get("page_daily_unfollows", 0),
-                reactions_like=day.get("reactions_like", 0),
-                reactions_love=day.get("reactions_love", 0),
-                reactions_wow=day.get("reactions_wow", 0),
-                reactions_haha=day.get("reactions_haha", 0),
-                reactions_sorry=day.get("reactions_sorry", 0),
-                reactions_anger=day.get("reactions_anger", 0),
-                page_video_views=day.get("page_video_views", 0),
-                page_video_view_time=day.get("page_video_view_time", 0),
-            )
-            db.add(insight)
-            stats["days_synced"] += 1
+        # Upsert atomique : INSERT ... ON CONFLICT DO UPDATE
+        stmt = pg_insert(SocialPageInsight).values(**values)
+        stmt = stmt.on_conflict_do_update(
+            constraint="uq_page_insight_account_date",
+            set_={col: stmt.excluded[col] for col in metric_columns},
+        )
+        db.execute(stmt)
+
+        stats["days_synced"] += 1
+        if day_date not in existing_dates:
             stats["days_new"] += 1
 
         # Garder le dernier page_follows pour mettre a jour le compte
