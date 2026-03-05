@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
@@ -297,8 +298,17 @@ async def radiodj_track_route(
     Accepte tous les noms de champs possibles pour compatibilite.
     """
     try:
-        form_data = await request.form()
-        fields = {k: v for k, v in form_data.items()}
+        # RadioDJ (Windows) peut envoyer en UTF-8 ou Latin-1.
+        # request.form() utilise Latin-1 par defaut (HTTP spec), ce qui cause du
+        # mojibake si les donnees sont en UTF-8. On parse manuellement le body
+        # pour garder le controle de l'encodage.
+        body_bytes = await request.body()
+        body_ascii = body_bytes.decode("latin-1")
+        try:
+            parsed = parse_qs(body_ascii, keep_blank_values=True, encoding="utf-8", errors="strict")
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            parsed = parse_qs(body_ascii, keep_blank_values=True, encoding="latin-1")
+        fields = {k: v[0] if v else "" for k, v in parsed.items()}
         logger.info(f"RadioDJ track received — fields: {fields}")
     except Exception:
         raise HTTPException(
