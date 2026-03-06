@@ -875,6 +875,60 @@ def optimize_database(
     return result
 
 
+@router.post("/storage/cleanup-orphans")
+def cleanup_storage_orphans(
+    dry_run: bool = Query(True, description="Apercu sans suppression (True par defaut)"),
+    prefix: str = Query("social/", description="Prefix Firebase Storage a scanner"),
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Detecter et supprimer les fichiers orphelins dans Firebase Storage.
+
+    Compare les fichiers presents dans le bucket (sous le prefix donne)
+    avec les media_urls references par les posts actifs en base.
+    Les fichiers non references sont consideres comme orphelins.
+
+    - dry_run=True (defaut) : retourne la liste des orphelins sans suppression
+    - dry_run=False : supprime les fichiers orphelins
+
+    Requiert la permission social_manage_accounts.
+    """
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+
+    # Collecter toutes les media_urls des posts actifs (non soft-deleted)
+    from app.models.model_social import SocialPost
+
+    posts_with_media = db.query(SocialPost.media_urls).filter(
+        SocialPost.is_deleted == False,
+        SocialPost.media_urls != None,
+    ).all()
+
+    all_media_urls: list[str] = []
+    for (media_urls,) in posts_with_media:
+        if media_urls:
+            all_media_urls.extend(media_urls)
+
+    from app.services.firebase_cleanup import cleanup_orphan_files
+    result = cleanup_orphan_files(
+        db_media_urls=all_media_urls,
+        prefix=prefix,
+        dry_run=dry_run,
+    )
+
+    action = "storage_cleanup_preview" if dry_run else "storage_cleanup_execute"
+    log_action(db, current_user.id, action, "firebase_storage", 0)
+
+    return result
+
+
 # ════════════════════════════════════════════════════════════════
 # SCHEDULER (TÂCHES PÉRIODIQUES)
 # ════════════════════════════════════════════════════════════════

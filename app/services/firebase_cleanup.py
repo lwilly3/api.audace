@@ -54,7 +54,10 @@ def _get_credentials():
 
     try:
         from google.oauth2 import service_account
-        scopes = ["https://www.googleapis.com/auth/firebase.storage"]
+        scopes = [
+            "https://www.googleapis.com/auth/firebase.storage",
+            "https://www.googleapis.com/auth/devstorage.read_only",
+        ]
 
         # Detecter si c'est du JSON direct ou un chemin de fichier
         stripped = sa_value.strip()
@@ -178,3 +181,151 @@ def cleanup_firebase_urls(urls: list[str]) -> int:
                 count += 1
 
     return count
+
+
+def list_firebase_files(prefix: str = "social/") -> list[dict]:
+    """
+    Lister tous les fichiers dans Firebase Storage sous un prefix.
+
+    Utilise l'API REST Firebase Storage avec pagination automatique.
+
+    Args:
+        prefix: Prefix du chemin a scanner (ex: "social/", "social/media/")
+
+    Returns:
+        Liste de dicts avec 'name' (chemin) et 'size' (octets).
+        Liste vide si pas configure ou en cas d'erreur.
+    """
+    token = _get_auth_token()
+    if not token:
+        logger.warning("list_firebase_files: pas de token, impossible de lister")
+        return []
+
+    import httpx
+
+    all_files = []
+    page_token = None
+
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            while True:
+                params: dict = {
+                    "prefix": prefix,
+                    "maxResults": 1000,
+                }
+                if page_token:
+                    params["pageToken"] = page_token
+
+                url = f"{FIREBASE_STORAGE_API}/{FIREBASE_BUCKET}/o"
+                response = client.get(
+                    url,
+                    params=params,
+                    headers={"Authorization": f"Bearer {token}"},
+                )
+
+                if response.status_code != 200:
+                    logger.error(
+                        f"list_firebase_files: HTTP {response.status_code} — {response.text[:200]}"
+                    )
+                    break
+
+                data = response.json()
+                for item in data.get("items", []):
+                    all_files.append({
+                        "name": item["name"],
+                        "size": int(item.get("size", 0)),
+                    })
+
+                page_token = data.get("nextPageToken")
+                if not page_token:
+                    break
+
+        logger.info(f"list_firebase_files: {len(all_files)} fichier(s) sous '{prefix}'")
+        return all_files
+
+    except Exception as e:
+        logger.error(f"list_firebase_files: erreur: {e}")
+        return []
+
+
+def cleanup_orphan_files(
+    db_media_urls: list[str],
+    prefix: str = "social/",
+    dry_run: bool = True,
+) -> dict:
+    """
+    Comparer les fichiers Firebase Storage avec les URLs referencees en DB.
+    Identifier et optionnellement supprimer les fichiers orphelins.
+
+    Args:
+        db_media_urls: Toutes les URLs Firebase Storage referencees en DB
+        prefix: Prefix du chemin a scanner dans le bucket
+        dry_run: Si True, ne supprime rien (apercu uniquement)
+
+    Returns:
+        Dict avec les statistiques du nettoyage
+    """
+    # Extraire les paths depuis les URLs DB
+    db_paths: set[str] = set()
+    for url in db_media_urls:
+        path = _extract_storage_path(url)
+        if path:
+            db_paths.add(path)
+
+    logger.info(f"cleanup_orphan_files: {len(db_paths)} chemin(s) reference(s) en DB")
+
+    # Lister les fichiers dans le bucket
+    storage_files = list_firebase_files(prefix)
+
+    if not storage_files:
+        return {
+            "total_storage_files": 0,
+            "total_storage_size": 0,
+            "referenced_count": 0,
+            "orphan_count": 0,
+            "orphan_size": 0,
+            "deleted_count": 0,
+            "delete_errors": 0,
+            "dry_run": dry_run,
+            "orphan_files": [],
+        }
+
+    # Identifier les orphelins
+    storage_paths = {f["name"] for f in storage_files}
+    referenced = storage_paths & db_paths
+    orphan_files: list[str] = []
+    orphan_size = 0
+
+    for f in storage_files:
+        if f["name"] not in db_paths:
+            orphan_files.append(f["name"])
+            orphan_size += f["size"]
+
+    total_size = sum(f["size"] for f in storage_files)
+
+    logger.info(
+        f"cleanup_orphan_files: {len(orphan_files)} orphelin(s) sur "
+        f"{len(storage_files)} fichier(s) (dry_run={dry_run})"
+    )
+
+    # Supprimer si pas en dry_run
+    deleted_count = 0
+    delete_errors = 0
+    if not dry_run:
+        for file_path in orphan_files:
+            if delete_firebase_file(file_path):
+                deleted_count += 1
+            else:
+                delete_errors += 1
+
+    return {
+        "total_storage_files": len(storage_files),
+        "total_storage_size": total_size,
+        "referenced_count": len(referenced),
+        "orphan_count": len(orphan_files),
+        "orphan_size": orphan_size,
+        "deleted_count": deleted_count,
+        "delete_errors": delete_errors,
+        "dry_run": dry_run,
+        "orphan_files": orphan_files,
+    }
