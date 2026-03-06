@@ -57,6 +57,12 @@ app/
     crud/                            # Fonctions CRUD par entite
   middleware/                        # LoggerMiddleware, APIVersionMiddleware
   services/                          # Logique metier (ex: ovh_client.py)
+    social_facebook.py               # Facebook Graph API v21.0 (pages, posts, commentaires, publication)
+    social_scheduler.py              # Scheduler periodique (auto-sync, auto-optimize, auto-publish)
+    ai_service.py                    # Generation IA de posts depuis URL (Mistral Small)
+    firebase_cleanup.py              # Nettoyage fichiers Firebase Storage temporaires
+    ovh_client.py                    # Client API OVH
+    scaleway_client.py               # Client API Scaleway Dedibox
   utils/utils.py                     # hash(), verify() pour mots de passe
 core/auth/oauth2.py                  # JWT : create_acces_token, get_current_user
 routeur/                             # Routes FastAPI (APIRouter)
@@ -130,6 +136,9 @@ OVH_ENDPOINT, OVH_APPLICATION_KEY, OVH_APPLICATION_SECRET, OVH_CONSUMER_KEY
 SCW_SECRET_KEY
 MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, MAIL_PORT, MAIL_SERVER
 FRONTEND_URL, BACKEND_URL, ENVIRONMENT, DEBUG, WORKERS
+FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, FACEBOOK_CONFIG_ID
+MISTRAL_API_KEY
+FIREBASE_SERVICE_ACCOUNT
 ```
 
 ## Stack technique
@@ -158,4 +167,21 @@ Permissions : `ovh_access_section`, `ovh_view_services`, `ovh_view_dashboard`, `
 Consultation des services Scaleway Dedibox (Online.net) via API REST httpx. 10 endpoints GET sous `/scaleway/*`.
 Fichiers : `app/services/scaleway_client.py`, `app/schemas/schema_scaleway.py`, `routeur/scaleway_route.py`.
 Permissions : `scw_access_section`, `scw_view_instances`, `scw_view_dashboard`, `scw_view_billing`, `scw_view_domains`, `scw_view_account`, `scw_manage`.
+
+### Module Social
+
+Gestion des reseaux sociaux : publications, commentaires, messages, analytics, synchronisation Facebook Graph API v21.0.
+43 endpoints REST sous `/social/*` (comptes, posts, inbox, analytics, scheduler, database, stockage).
+
+Fichiers principaux :
+- `app/services/social_facebook.py` — Client Facebook Graph API (pages, posts, commentaires, publication, insights)
+- `app/services/social_scheduler.py` — Scheduler periodique (auto-sync, auto-optimize, auto-publish toutes les 30s)
+- `app/services/ai_service.py` — Generation IA de posts depuis URL (Mistral Small)
+- `app/services/firebase_cleanup.py` — Nettoyage fichiers Firebase Storage temporaires
+- `app/models/model_social.py` — Modeles SQLAlchemy (SocialAccount, SocialPost, SocialPostResult, SocialComment, SocialConversation, SocialMessage, SocialPageInsight)
+- `app/schemas/schema_social.py` — Schemas Pydantic
+- `app/db/crud/crud_social.py` — CRUD + sync + publish + purge
+- `routeur/social_route.py` — Routes FastAPI (43 endpoints)
+
+Permissions (14) : `social_access_section`, `social_view_posts`, `social_create_posts`, `social_edit_posts`, `social_delete_posts`, `social_publish_posts`, `social_view_inbox`, `social_reply_comments`, `social_delete_comments`, `social_reply_messages`, `social_view_stats`, `social_export_stats`, `social_manage_accounts`, `social_manage_settings`.
 

@@ -90,6 +90,33 @@ python scripts/show_migrations_history.py --changelog
   - Guide complet dans `docs/API_VERSIONING.md`
   - Intégration avec le système de changelog
 
+### Ajouté — Module Social
+- Module Social complet : comptes OAuth Facebook, publications, commentaires, messages, analytics
+- Service `social_facebook.py` : Graph API v21.0 (pages, posts, commentaires, réactions, insights, publication)
+- Service `social_scheduler.py` : scheduler tâches périodiques (auto-sync, auto-optimize, auto-publish)
+- Service `ai_service.py` : génération IA de posts depuis URL via Mistral Small
+- Service `firebase_cleanup.py` : nettoyage fichiers Firebase Storage après publication
+- 43 endpoints REST sous `/social/*` (comptes, posts, inbox, analytics, scheduler, database, stockage)
+- Endpoint `POST /social/generate-from-url` : génération IA de posts depuis URL
+- Pagination et filtrage par date sur `GET /social/comments` (limit, offset, date_from, date_to)
+- Header `X-Total-Count` sur les réponses paginées commentaires
+- Auto-publication des posts planifiés via `_run_auto_publish()` dans le scheduler (toutes les 30s)
+- Fonction `get_due_scheduled_posts()` pour récupérer les posts planifiés arrivés à échéance
+- Nettoyage Firebase Storage : `list_firebase_files()`, `cleanup_orphan_files()` dans `firebase_cleanup.py`
+- Endpoint `POST /social/storage/cleanup-orphans` (dry_run + suppression)
+- Purge des données publiées : `purge_published_data()` dans `crud_social.py`
+- Endpoint `POST /social/database/purge-and-resync` avec resync auto en background
+- Fonction `get_post_media_urls()` dans `social_facebook.py` pour récupérer les URLs CDN Facebook
+- Insights page-level quotidiens : `get_page_level_insights()` et `_sync_page_insights()`
+- Analytics avancées : répartition réactions, tendance abonnés, performance vidéo
+- Modèles SQLAlchemy : SocialAccount, SocialPost, SocialPostResult, SocialComment, SocialConversation, SocialMessage, SocialPageInsight
+- 14 permissions `social_*` pour contrôle d'accès granulaire
+
+### Corrigé — Module Social
+- Doublon de publication planifiée en multi-worker Gunicorn : transition atomique SQL `UPDATE ... WHERE status IN ('draft','scheduled')` + HTTP 409
+- Images cassées après publication : remplacement URLs Firebase par URLs Facebook CDN dans `post.media_urls` avant cleanup
+- Timezone planification : les dates sont maintenant stockées en UTC
+
 ### Modifié
 - Modèle `UserPermissions` : ajout de 8 colonnes booléennes pour les permissions Citations
 - Fonction `update_all_permissions_to_true()` dans `app/db/init_admin.py` : inclut maintenant les permissions Citations
