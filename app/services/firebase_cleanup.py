@@ -11,6 +11,7 @@ Prerequis :
 Si le service account n'est pas configure, le cleanup est silencieusement ignore.
 """
 
+import base64
 import json
 import logging
 import urllib.parse
@@ -32,9 +33,10 @@ def _get_credentials():
     """
     Charger les credentials du service account (lazy, une seule fois).
 
-    Supporte deux formats pour FIREBASE_SERVICE_ACCOUNT :
+    Supporte trois formats pour FIREBASE_SERVICE_ACCOUNT :
     - Contenu JSON direct (commence par '{') — ideal pour les variables d'environnement serveur
     - Chemin vers un fichier JSON — pour le developpement local
+    - JSON encode en base64 — si le JSON direct pose probleme avec Docker/Dokploy
     """
     global _credentials, _credentials_loaded
 
@@ -66,8 +68,15 @@ def _get_credentials():
             _credentials = service_account.Credentials.from_service_account_file(stripped, scopes=scopes)
             logger.info(f"Firebase cleanup: service account charge depuis fichier {stripped}")
         else:
-            logger.warning(f"Firebase cleanup: valeur non reconnue (ni JSON ni fichier existant)")
-            return None
+            # Tenter le decodage base64
+            try:
+                decoded = base64.b64decode(stripped).decode("utf-8")
+                sa_info = json.loads(decoded)
+                _credentials = service_account.Credentials.from_service_account_info(sa_info, scopes=scopes)
+                logger.info("Firebase cleanup: service account charge depuis base64")
+            except Exception:
+                logger.warning("Firebase cleanup: valeur non reconnue (ni JSON, ni fichier, ni base64)")
+                return None
 
         return _credentials
     except json.JSONDecodeError as e:
