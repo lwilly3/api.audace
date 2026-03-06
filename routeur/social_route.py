@@ -62,6 +62,7 @@ from app.db.crud.crud_social import (
     # Nettoyage
     get_database_stats,
     cleanup_database,
+    purge_published_data,
 )
 from app.schemas.schema_social import (
     SocialAccountResponse,
@@ -929,6 +930,50 @@ def cleanup_storage_orphans(
     log_action(db, current_user.id, action, "firebase_storage", 0)
 
     return result
+
+
+@router.post("/database/purge-and-resync")
+def purge_and_resync(
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Purger toutes les donnees publiees et relancer une synchronisation Facebook.
+
+    Operation destructive et irreversible :
+    1. Supprime definitivement messages, conversations, commentaires, insights,
+       resultats et posts publies/erreur
+    2. Preserve les comptes OAuth, brouillons et posts planifies
+    3. Declenche une resynchronisation complete depuis Facebook
+
+    Requiert la permission social_manage_accounts.
+    """
+    perms = db.query(UserPermissions).filter(
+        UserPermissions.user_id == current_user.id
+    ).first()
+    if not perms or not perms.social_manage_accounts:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission 'social_manage_accounts' requise"
+        )
+
+    # 1. Purger les donnees publiees
+    purge_stats = purge_published_data(db)
+    log_action(db, current_user.id, "purge_published_data", "social_database", 0)
+
+    # 2. Declencher la resynchronisation en arriere-plan
+    def _run_resync():
+        from app.services.social_scheduler import scheduler
+        scheduler._run_sync(force=True)
+
+    thread = threading.Thread(target=_run_resync, daemon=True)
+    thread.start()
+
+    return {
+        "purge_stats": purge_stats,
+        "resync_started": True,
+        "message": "Donnees purgees. Resynchronisation en cours...",
+    }
 
 
 # ════════════════════════════════════════════════════════════════

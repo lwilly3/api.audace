@@ -1975,6 +1975,64 @@ def cleanup_database(db: Session, hard_delete_days: int = 30) -> dict:
     return stats
 
 
+def purge_published_data(db: Session) -> dict:
+    """
+    Purger toutes les donnees publiees du module social (hard-delete).
+
+    Supprime definitivement les messages, conversations, commentaires,
+    insights, resultats de publication et posts publies/erreur.
+    Preserve les comptes OAuth, les brouillons et les posts planifies.
+
+    Ordre de suppression (respect des FK) :
+    1. SocialMessage (tous)
+    2. SocialConversation (tous)
+    3. SocialComment (replies d'abord, puis racines)
+    4. SocialPageInsight (tous)
+    5. SocialPostResult (tous)
+    6. SocialPost ou status NOT IN ('draft', 'scheduled')
+
+    Returns:
+        dict avec le nombre d'enregistrements supprimes par table
+    """
+    stats = {
+        "messages": 0,
+        "conversations": 0,
+        "comments": 0,
+        "insights": 0,
+        "post_results": 0,
+        "posts": 0,
+    }
+
+    # 1. Messages (tous)
+    stats["messages"] = db.query(SocialMessage).delete(synchronize_session="fetch")
+
+    # 2. Conversations (tous)
+    stats["conversations"] = db.query(SocialConversation).delete(synchronize_session="fetch")
+
+    # 3. Commentaires (replies d'abord via parent_comment_id, puis racines)
+    stats["comments"] = db.query(SocialComment).filter(
+        SocialComment.parent_comment_id != None,
+    ).delete(synchronize_session="fetch")
+    stats["comments"] += db.query(SocialComment).delete(synchronize_session="fetch")
+
+    # 4. Page Insights (tous)
+    stats["insights"] = db.query(SocialPageInsight).delete(synchronize_session="fetch")
+
+    # 5. PostResults (tous)
+    stats["post_results"] = db.query(SocialPostResult).delete(synchronize_session="fetch")
+
+    # 6. Posts publies/erreur (pas draft/scheduled)
+    stats["posts"] = db.query(SocialPost).filter(
+        SocialPost.status.notin_(["draft", "scheduled"]),
+    ).delete(synchronize_session="fetch")
+
+    db.commit()
+
+    total = sum(stats.values())
+    logger.info(f"[PURGE] Donnees publiees purgees: {total} enregistrements ({stats})")
+    return stats
+
+
 # ════════════════════════════════════════════════════════════════
 # ANALYTICS — REACTIONS, FOLLOWERS, VIDEO (depuis SocialPageInsight)
 # ════════════════════════════════════════════════════════════════
