@@ -1242,6 +1242,7 @@ def _sync_page_posts(
                 published_at=published_at,
                 created_at=published_at,
                 created_by=page_account.connected_by,
+                is_synced=True,
             )
             db.add(post_obj)
             db.flush()

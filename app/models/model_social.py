@@ -15,7 +15,7 @@ Tous les modèles utilisent le soft delete (BaseModel).
 
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, Boolean, Float, Date,
-    ForeignKey, func, Enum as SAEnum, UniqueConstraint,
+    ForeignKey, func, Enum as SAEnum, UniqueConstraint, text,
 )
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -96,6 +96,7 @@ class SocialPost(SocialBaseModel):
 
     # Auteur
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_synced = Column(Boolean, default=False, server_default=text('false'), nullable=False)
 
     # Relations
     results = relationship("SocialPostResult", back_populates="post", cascade="all, delete-orphan")

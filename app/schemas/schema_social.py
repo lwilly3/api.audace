@@ -111,6 +111,7 @@ class SocialPostResponse(BaseModel):
     published_at: Optional[datetime] = None
     created_by: int
     created_by_name: Optional[str] = None
+    is_synced: bool = False
     created_at: datetime
     updated_at: datetime
     results: list[SocialPostResultResponse] = []
