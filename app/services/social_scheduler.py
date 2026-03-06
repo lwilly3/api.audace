@@ -64,6 +64,8 @@ class SocialScheduler:
         self._last_optimize: Optional[str] = None
         self._last_sync_result: Optional[dict] = None
         self._last_optimize_result: Optional[dict] = None
+        self._last_auto_publish: Optional[str] = None
+        self._last_auto_publish_result: Optional[dict] = None
 
     # ── Settings ────────────────────────
 
@@ -77,6 +79,8 @@ class SocialScheduler:
                 "last_optimize_at": self._last_optimize,
                 "last_sync_result": self._last_sync_result,
                 "last_optimize_result": self._last_optimize_result,
+                "last_auto_publish_at": self._last_auto_publish,
+                "last_auto_publish_result": self._last_auto_publish_result,
             }
 
     def update_settings(self, new_settings: dict) -> dict:
@@ -146,6 +150,9 @@ class SocialScheduler:
                 self._run_optimize(opt_purge_days)
                 last_optimize_time = now
 
+            # Auto-publish (toujours actif — les posts planifiés doivent être publiés)
+            self._run_auto_publish()
+
             # Dormir 30 secondes entre chaque vérification
             self._stop_event.wait(timeout=30)
 
@@ -190,6 +197,43 @@ class SocialScheduler:
             with self._lock:
                 self._last_optimize = datetime.now(timezone.utc).isoformat()
                 self._last_optimize_result = {"error": str(e)}
+        finally:
+            session.close()
+
+    def _run_auto_publish(self):
+        """Publier automatiquement les posts planifies dont l'heure est passee."""
+        from app.db.database import SessionLocal
+        from app.db.crud.crud_social import get_due_scheduled_posts, publish_social_post
+
+        session = SessionLocal()
+        try:
+            due_posts = get_due_scheduled_posts(session)
+            if not due_posts:
+                return
+
+            logger.info(f"⏰ Auto-publish: {len(due_posts)} post(s) a publier")
+            published = 0
+            errors = 0
+
+            for post in due_posts:
+                try:
+                    publish_social_post(session, post.id)
+                    published += 1
+                    logger.info(f"✅ Auto-publish: post #{post.id} publie")
+                except Exception as e:
+                    errors += 1
+                    logger.error(f"❌ Auto-publish: post #{post.id} echoue: {e}")
+
+            result = {"due": len(due_posts), "published": published, "errors": errors}
+            with self._lock:
+                self._last_auto_publish = datetime.now(timezone.utc).isoformat()
+                self._last_auto_publish_result = result
+            logger.info(f"✅ Auto-publish termine: {result}")
+        except Exception as e:
+            logger.error(f"❌ Auto-publish echoue: {e}")
+            with self._lock:
+                self._last_auto_publish = datetime.now(timezone.utc).isoformat()
+                self._last_auto_publish_result = {"error": str(e)}
         finally:
             session.close()
 

@@ -521,6 +521,22 @@ def schedule_social_post(db: Session, post_id: int, scheduled_at: datetime) -> S
     return post
 
 
+def get_due_scheduled_posts(db: Session) -> list[SocialPost]:
+    """Recuperer les posts planifies dont la date de publication est passee."""
+    now = datetime.now(timezone.utc)
+    return (
+        db.query(SocialPost)
+        .filter(
+            SocialPost.status == "scheduled",
+            SocialPost.scheduled_at != None,
+            SocialPost.scheduled_at <= now,
+            SocialPost.is_deleted == False,
+        )
+        .order_by(SocialPost.scheduled_at)
+        .all()
+    )
+
+
 # ════════════════════════════════════════════════════════════════
 # COMMENTAIRES
 # ════════════════════════════════════════════════════════════════
