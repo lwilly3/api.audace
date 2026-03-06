@@ -177,6 +177,7 @@ app.add_middleware(
     allow_credentials=True,  # Autorise l'envoi de cookies
     allow_methods=["*"],  # Autorise toutes les méthodes HTTP (GET, POST, etc.)
     allow_headers=["*"],  # Autorise tous les en-têtes
+    expose_headers=["X-Total-Count"],  # Expose le header de pagination au frontend
 )
 
 # Inclusion des routeurs pour structurer les endpoints de l'application

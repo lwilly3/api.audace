@@ -530,8 +530,12 @@ def get_social_comments(
     post_id: Optional[int] = None,
     platform: Optional[str] = None,
     is_read: Optional[bool] = None,
-) -> list[SocialComment]:
-    """Récupérer les commentaires avec filtres."""
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> tuple[list[SocialComment], int]:
+    """Récupérer les commentaires avec filtres et pagination."""
     query = (
         db.query(SocialComment)
         .filter(SocialComment.is_deleted == False, SocialComment.parent_comment_id == None)
@@ -543,8 +547,14 @@ def get_social_comments(
         query = query.filter(SocialComment.platform == platform)
     if is_read is not None:
         query = query.filter(SocialComment.is_read == is_read)
+    if date_from:
+        query = query.filter(SocialComment.created_at >= date_from)
+    if date_to:
+        query = query.filter(SocialComment.created_at <= date_to)
 
-    return query.order_by(desc(SocialComment.created_at)).all()
+    total = query.count()
+    comments = query.order_by(desc(SocialComment.created_at)).offset(offset).limit(limit).all()
+    return comments, total
 
 
 def get_comment_by_id(db: Session, comment_id: int) -> SocialComment:

@@ -67,6 +67,7 @@ services:
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Authorization,Content-Type,Accept,Origin,X-Requested-With"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowCredentials=true"
+      - "traefik.http.middlewares.api-cors.headers.accessControlExposeHeaders=X-Total-Count"
       - "traefik.http.middlewares.api-cors.headers.accessControlMaxAge=3600"
       - "traefik.http.middlewares.api-cors.headers.addVaryHeader=true"
       

@@ -12,7 +12,7 @@ Endpoints :
 - /social/analytics         — Statistiques d'engagement
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -528,14 +528,24 @@ def generate_from_url(
 
 @router.get("/comments", response_model=list[SocialCommentResponse])
 def list_comments(
+    response: Response,
     post_id: Optional[int] = Query(None),
     platform: Optional[str] = Query(None),
     is_read: Optional[bool] = Query(None),
+    date_from: Optional[str] = Query(None, description="Date debut ISO 8601 (ex: 2025-01-01)"),
+    date_to: Optional[str] = Query(None, description="Date fin ISO 8601"),
+    limit: int = Query(50, ge=1, le=200, description="Nombre max de commentaires"),
+    offset: int = Query(0, ge=0, description="Decalage pour pagination"),
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
-    """Lister les commentaires (inbox)."""
-    comments = get_social_comments(db, post_id, platform, is_read)
+    """Lister les commentaires (inbox) avec pagination et filtrage par date."""
+    parsed_from = datetime.fromisoformat(date_from) if date_from else None
+    parsed_to = datetime.fromisoformat(date_to) if date_to else None
+
+    comments, total = get_social_comments(
+        db, post_id, platform, is_read, parsed_from, parsed_to, limit, offset
+    )
     # Enrichir avec le nom du compte
     for comment in comments:
         try:
@@ -543,6 +553,7 @@ def list_comments(
             comment.account_name = acc.account_name
         except Exception:
             comment.account_name = None
+    response.headers["X-Total-Count"] = str(total)
     return comments
 
 
