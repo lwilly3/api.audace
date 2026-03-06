@@ -821,6 +821,49 @@ def publish_to_page(
     return {"id": post_id, "permalink_url": permalink}
 
 
+def get_post_media_urls(page_access_token: str, post_id: str) -> list[str]:
+    """
+    Recuperer les URLs d'images d'un post publie sur Facebook.
+
+    Appelle GET /{post_id}?fields=full_picture,attachments pour obtenir
+    les URLs CDN Facebook des images, apres que Facebook les a copiees.
+
+    Args:
+        page_access_token: Token d'acces de la page
+        post_id: ID du post Facebook (ex: "123456_789012")
+
+    Returns:
+        Liste d'URLs d'images Facebook (CDN). Liste vide si pas d'images.
+    """
+    params = {
+        "access_token": page_access_token,
+        "fields": "full_picture,attachments{subattachments{media{image{src}}}}",
+    }
+    try:
+        data = _graph_get(
+            f"{GRAPH_API_BASE}/{post_id}", params, f"GET /{post_id} media"
+        )
+    except Exception as e:
+        logger.warning(f"get_post_media_urls: erreur pour {post_id}: {e}")
+        return []
+
+    urls: list[str] = []
+
+    # full_picture : image principale du post
+    full = data.get("full_picture")
+    if full:
+        urls.append(full)
+
+    # attachments > subattachments : images supplementaires (multi-photo)
+    for att in data.get("attachments", {}).get("data", []):
+        for sub in att.get("subattachments", {}).get("data", []):
+            src = sub.get("media", {}).get("image", {}).get("src")
+            if src and src not in urls:
+                urls.append(src)
+
+    return urls
+
+
 # ════════════════════════════════════════════════════════════════
 # INSIGHTS PAGE-LEVEL (METRIQUES QUOTIDIENNES)
 # ════════════════════════════════════════════════════════════════

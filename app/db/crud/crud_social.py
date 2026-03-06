@@ -400,7 +400,7 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
     Utilise un UPDATE atomique pour eviter les doublons quand
     plusieurs workers Gunicorn traitent le meme post planifie.
     """
-    from app.services.social_facebook import publish_to_page
+    from app.services.social_facebook import publish_to_page, get_post_media_urls
 
     # Transition atomique : seul le premier worker a reussir cet UPDATE continue.
     # Les autres workers verront updated == 0 et abandonneront.
@@ -435,6 +435,9 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
     post = get_social_post_by_id(db, post_id)
     has_error = False
     now = datetime.now(timezone.utc)
+
+    # Sauvegarder les URLs originales (Firebase) avant remplacement
+    original_media_urls = list(post.media_urls or [])
 
     # Recuperer les comptes cibles
     target_account_ids = post.target_accounts or []
@@ -494,6 +497,16 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
                     result.platform_post_url = fb_result["permalink_url"]
                     result.platform_url = fb_result["permalink_url"]
                     result.published_at = now
+
+                    # Recuperer les URLs Facebook des images publiees
+                    # pour remplacer les URLs Firebase temporaires
+                    try:
+                        fb_media = get_post_media_urls(account.access_token, fb_result["id"])
+                        if fb_media:
+                            post.media_urls = fb_media
+                    except Exception as e:
+                        logger.warning(f"Impossible de recuperer les URLs media Facebook: {e}")
+
             except Exception as e:
                 logger.error(f"Erreur publication Facebook: {e}")
                 result.status = "error"
@@ -516,10 +529,10 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
     db.refresh(post)
 
     # Nettoyer les fichiers Firebase Storage temporaires apres publication reussie
-    if post.status == "published" and post.media_urls:
+    if post.status == "published" and original_media_urls:
         try:
             from app.services.firebase_cleanup import cleanup_firebase_urls
-            cleaned = cleanup_firebase_urls(post.media_urls)
+            cleaned = cleanup_firebase_urls(original_media_urls)
             logger.info(f"Firebase cleanup: {cleaned} fichier(s) supprime(s) pour post #{post.id}")
         except Exception as e:
             # Le cleanup est best-effort, ne pas bloquer la publication
