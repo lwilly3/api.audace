@@ -903,12 +903,14 @@ def cleanup_storage_orphans(
             detail="Permission 'social_manage_accounts' requise"
         )
 
-    # Collecter toutes les media_urls des posts actifs (non soft-deleted)
+    # Collecter les media_urls des posts qui ont encore besoin de leurs fichiers
+    # (brouillons et planifies uniquement — les posts publies ont deja ete copies sur Facebook)
     from app.models.model_social import SocialPost
 
     posts_with_media = db.query(SocialPost.media_urls).filter(
         SocialPost.is_deleted == False,
         SocialPost.media_urls != None,
+        SocialPost.status.in_(["draft", "scheduled", "publishing"]),
     ).all()
 
     all_media_urls: list[str] = []
