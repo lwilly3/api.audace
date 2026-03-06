@@ -396,21 +396,43 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
     3. Cree un SocialPostResult avec le platform_post_id
 
     Pour les plateformes non-Facebook, simule le succes (TODO).
+
+    Utilise un UPDATE atomique pour eviter les doublons quand
+    plusieurs workers Gunicorn traitent le meme post planifie.
     """
     from app.services.social_facebook import publish_to_page
 
-    post = get_social_post_by_id(db, post_id)
+    # Transition atomique : seul le premier worker a reussir cet UPDATE continue.
+    # Les autres workers verront updated == 0 et abandonneront.
+    updated = db.query(SocialPost).filter(
+        SocialPost.id == post_id,
+        SocialPost.is_deleted == False,
+        SocialPost.status.in_(["draft", "scheduled"]),
+    ).update({"status": "publishing"}, synchronize_session="fetch")
+    db.commit()
 
-    if post.status == "published":
+    if updated == 0:
+        # Verifier si le post existe et son statut actuel
+        post = db.query(SocialPost).filter(
+            SocialPost.id == post_id, SocialPost.is_deleted == False
+        ).first()
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Publication #{post_id} introuvable"
+            )
+        if post.status == "published":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ce post est déjà publié"
+            )
+        # Status est "publishing" ou "error" — un autre worker l'a deja pris
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ce post est déjà publié"
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Publication déjà en cours par un autre processus"
         )
 
-    post.status = "publishing"
-    db.commit()
-    db.refresh(post)
-
+    post = get_social_post_by_id(db, post_id)
     has_error = False
     now = datetime.now(timezone.utc)
 

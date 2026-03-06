@@ -204,6 +204,7 @@ class SocialScheduler:
         """Publier automatiquement les posts planifies dont l'heure est passee."""
         from app.db.database import SessionLocal
         from app.db.crud.crud_social import get_due_scheduled_posts, publish_social_post
+        from fastapi import HTTPException
 
         session = SessionLocal()
         try:
@@ -220,6 +221,13 @@ class SocialScheduler:
                     publish_social_post(session, post.id)
                     published += 1
                     logger.info(f"✅ Auto-publish: post #{post.id} publie")
+                except HTTPException as he:
+                    if he.status_code == 409:
+                        # Un autre worker a deja pris ce post — normal en multi-worker
+                        logger.debug(f"Post #{post.id} deja pris par un autre worker")
+                    else:
+                        errors += 1
+                        logger.error(f"❌ Auto-publish: post #{post.id} echoue: {he.detail}")
                 except Exception as e:
                     errors += 1
                     logger.error(f"❌ Auto-publish: post #{post.id} echoue: {e}")
