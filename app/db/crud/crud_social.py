@@ -505,6 +505,9 @@ def schedule_social_post(db: Session, post_id: int, scheduled_at: datetime) -> S
             detail="Ce post est déjà publié"
         )
 
+    if scheduled_at.tzinfo is None:
+        scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+
     if scheduled_at <= datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
