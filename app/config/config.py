@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     # Mistral AI (generation de posts depuis URL)
     MISTRAL_API_KEY:str = ""
 
+    # Firebase Storage (nettoyage fichiers temporaires apres publication)
+    # Accepte soit le contenu JSON direct, soit un chemin vers le fichier JSON
+    FIREBASE_SERVICE_ACCOUNT:str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
    
     # class Config:

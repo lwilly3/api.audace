@@ -96,13 +96,24 @@ def _graph_get(url: str, params: dict, description: str = "Graph API") -> dict:
         )
 
 
-def _graph_post(url: str, data: dict, access_token: str, description: str = "Graph API POST") -> dict:
+def _graph_post(url: str, data: dict, access_token: str, description: str = "Graph API POST", as_form: bool = False) -> dict:
     """
     Appel POST generique vers la Graph API.
+
+    Args:
+        as_form: Si True, envoie les donnees en form-encoded (requis pour /{page_id}/photos).
+                 Si False, envoie en JSON (comportement par defaut).
     """
     try:
         client = _get_client()
-        response = client.post(
+        if as_form:
+            response = client.post(
+                url,
+                params={"access_token": access_token},
+                data=data,
+            )
+        else:
+            response = client.post(
                 url,
                 params={"access_token": access_token},
                 json=data,
@@ -687,39 +698,127 @@ def delete_facebook_comment(
 # PUBLICATION SUR FACEBOOK
 # ════════════════════════════════════════════════════════════════
 
+def _is_image_url(url: str) -> bool:
+    """Verifier si une URL pointe vers une image (par extension ou Firebase Storage)."""
+    import urllib.parse
+
+    image_exts = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp")
+    lower = url.lower().split("?")[0]
+    if any(lower.endswith(ext) for ext in image_exts):
+        return True
+    # Firebase Storage URLs : le path encode contient l'extension
+    if "firebasestorage.googleapis.com" in url and "/o/" in url:
+        path = urllib.parse.unquote(url.split("/o/")[1].split("?")[0])
+        return any(path.lower().endswith(ext) for ext in image_exts)
+    return False
+
+
+def _upload_photo_from_url(
+    page_access_token: str,
+    page_id: str,
+    image_url: str,
+    published: bool = True,
+    caption: Optional[str] = None,
+) -> dict:
+    """
+    Uploader une photo sur une page Facebook depuis une URL.
+    Facebook telecharge l'image depuis l'URL fournie.
+
+    Args:
+        page_access_token: Token d'acces de la page
+        page_id: ID de la page Facebook
+        image_url: URL publique de l'image (ex: Firebase Storage URL)
+        published: False pour upload unpublished (multi-photo), True pour publication directe
+        caption: Legende de la photo (= message du post)
+
+    Returns:
+        {"id": "photo_id"} — pour unpublished, l'id sert dans attached_media
+    """
+    url = f"{GRAPH_API_BASE}/{page_id}/photos"
+    data = {"url": image_url, "published": str(published).lower()}
+    if caption:
+        data["caption"] = caption
+
+    return _graph_post(url, data, page_access_token, f"POST /{page_id}/photos (published={published})", as_form=True)
+
+
 def publish_to_page(
     page_access_token: str,
     page_id: str,
     message: str,
     link: Optional[str] = None,
+    media_urls: Optional[list[str]] = None,
 ) -> dict:
     """
     Publier un post sur une page Facebook.
+
+    Supporte 3 modes :
+    - 1 image : publication directe via /{page_id}/photos
+    - N images : upload unpublished + /{page_id}/feed avec attached_media
+    - Pas d'image : post texte classique via /{page_id}/feed
 
     Args:
         page_access_token: Token d'acces de la page
         page_id: ID de la page Facebook
         message: Contenu du post
         link: URL a partager (optionnel)
+        media_urls: Liste d'URLs de medias a joindre (optionnel)
 
     Returns:
         {id: "post_id", permalink_url: "..."}
     """
+    # Filtrer les images dans media_urls
+    image_urls = [u for u in (media_urls or []) if _is_image_url(u)]
+
+    # ── CAS 1 : Une seule image → /{page_id}/photos (publication directe)
+    if len(image_urls) == 1:
+        result = _upload_photo_from_url(
+            page_access_token, page_id, image_urls[0],
+            published=True, caption=message,
+        )
+        photo_id = result.get("id", "")
+        post_id = result.get("post_id", photo_id)
+        permalink = f"https://www.facebook.com/{post_id}" if post_id else ""
+        logger.info(f"Facebook: photo publiee sur page {page_id} -> {photo_id}")
+        return {"id": post_id, "permalink_url": permalink}
+
+    # ── CAS 2 : Plusieurs images → unpublished uploads + feed avec attached_media
+    if len(image_urls) > 1:
+        photo_ids = []
+        for img_url in image_urls:
+            r = _upload_photo_from_url(
+                page_access_token, page_id, img_url, published=False,
+            )
+            fbid = r.get("id")
+            if fbid:
+                photo_ids.append(fbid)
+                logger.info(f"Facebook: photo unpublished uploadee -> {fbid}")
+
+        # Creer le post avec les photos attachees
+        url = f"{GRAPH_API_BASE}/{page_id}/feed"
+        data = {"message": message}
+        if link:
+            data["link"] = link
+        for i, fbid in enumerate(photo_ids):
+            data[f"attached_media[{i}]"] = f'{{"media_fbid":"{fbid}"}}'
+
+        result = _graph_post(url, data, page_access_token, f"POST /{page_id}/feed (multi-photo)", as_form=True)
+        post_id = result.get("id", "")
+        permalink = f"https://www.facebook.com/{post_id}" if post_id else ""
+        logger.info(f"Facebook: multi-photo post publie -> {post_id}")
+        return {"id": post_id, "permalink_url": permalink}
+
+    # ── CAS 3 : Pas d'image → texte seul (comportement original)
     url = f"{GRAPH_API_BASE}/{page_id}/feed"
     data = {"message": message}
     if link:
         data["link"] = link
 
     result = _graph_post(url, data, page_access_token, f"POST /{page_id}/feed")
-
     post_id = result.get("id", "")
     permalink = f"https://www.facebook.com/{post_id}" if post_id else ""
-
     logger.info(f"Facebook: post publie sur la page {page_id} -> {post_id}")
-    return {
-        "id": post_id,
-        "permalink_url": permalink,
-    }
+    return {"id": post_id, "permalink_url": permalink}
 
 
 # ════════════════════════════════════════════════════════════════

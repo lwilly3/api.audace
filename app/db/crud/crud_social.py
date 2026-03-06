@@ -465,6 +465,7 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
                         page_id=account.account_id,
                         message=post.content,
                         link=post.link_url,
+                        media_urls=post.media_urls or [],
                     )
                     result.status = "published"
                     result.platform_post_id = fb_result["id"]
@@ -491,6 +492,16 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
     post.published_at = now
     db.commit()
     db.refresh(post)
+
+    # Nettoyer les fichiers Firebase Storage temporaires apres publication reussie
+    if post.status == "published" and post.media_urls:
+        try:
+            from app.services.firebase_cleanup import cleanup_firebase_urls
+            cleaned = cleanup_firebase_urls(post.media_urls)
+            logger.info(f"Firebase cleanup: {cleaned} fichier(s) supprime(s) pour post #{post.id}")
+        except Exception as e:
+            # Le cleanup est best-effort, ne pas bloquer la publication
+            logger.warning(f"Firebase cleanup echoue pour post #{post.id}: {e}")
 
     return post
 
