@@ -176,6 +176,10 @@ class UserPermissions(Base):
     social_export_stats = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Exporter les statistiques
     social_manage_accounts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gérer les comptes sociaux
     social_manage_settings = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gérer les paramètres Social
+    social_view_articles = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les articles WordPress
+    social_create_articles = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Créer des articles WordPress
+    social_edit_articles = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Modifier des articles WordPress
+    social_delete_articles = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Supprimer des articles WordPress
 
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")

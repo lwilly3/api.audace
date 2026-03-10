@@ -198,6 +198,10 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "social_export_stats": permissions.social_export_stats,
     "social_manage_accounts": permissions.social_manage_accounts,
     "social_manage_settings": permissions.social_manage_settings,
+    "social_view_articles": permissions.social_view_articles,
+    "social_create_articles": permissions.social_create_articles,
+    "social_edit_articles": permissions.social_edit_articles,
+    "social_delete_articles": permissions.social_delete_articles,
 
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
@@ -355,7 +359,11 @@ def initialize_user_permissions(db: Session, user_id: int):
     social_view_stats=False,
     social_export_stats=False,
     social_manage_accounts=False,
-    social_manage_settings=False
+    social_manage_settings=False,
+    social_view_articles=False,
+    social_create_articles=False,
+    social_edit_articles=False,
+    social_delete_articles=False
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -648,7 +656,11 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'social_view_stats',
     'social_export_stats',
     'social_manage_accounts',
-    'social_manage_settings'
+    'social_manage_settings',
+    'social_view_articles',
+    'social_create_articles',
+    'social_edit_articles',
+    'social_delete_articles'
 }
 
         # Vérifier les permissions fournies
