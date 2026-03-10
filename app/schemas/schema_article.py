@@ -132,3 +132,29 @@ class ArticleStatsResponse(BaseModel):
     top_articles: list[TopArticle]
     by_site: list[ArticleSiteStat]
     by_category: list[ArticleCategoryStat]
+
+
+# ════════════════════════════════════════════════════════════════
+# GENERATION IA
+# ════════════════════════════════════════════════════════════════
+
+class GenerateArticleRequest(BaseModel):
+    """Requete pour generer un article depuis des URLs source."""
+    urls: list[str] = Field(..., min_length=1, max_length=3, description="URLs des articles source (1 a 3)")
+    site: str = Field(..., description="Site cible: audacemagazine ou radioaudace")
+    mode: str = Field("article_magazine", description="Mode: article_magazine, article_radio, article_libre")
+    custom_instructions: Optional[str] = Field(None, max_length=500, description="Instructions supplementaires")
+
+
+class GenerateArticleResponse(BaseModel):
+    """Reponse avec l'article genere par l'IA."""
+    title: str
+    content: str
+    excerpt: str
+    source_urls: list[str]
+
+
+class GenerateExcerptRequest(BaseModel):
+    """Requete pour generer un extrait optimise OG."""
+    content: str = Field(..., min_length=20, description="Contenu HTML de l'article")
+    site: str = Field("audacemagazine", description="Site cible")
