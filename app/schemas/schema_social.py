@@ -77,7 +77,7 @@ class SocialPostCreate(BaseModel):
     media_urls: list[str] = Field(default=[], description="URLs des médias")
     link_url: Optional[str] = Field(None, description="URL du lien partagé")
     hashtags: list[str] = Field(default=[], description="Hashtags")
-    platforms: list[str] = Field(..., min_length=1, description="Plateformes cibles")
+    platforms: list[str] = Field(default=[], description="Plateformes cibles")
     target_accounts: list[str] = Field(default=[], description="IDs des comptes cibles")
     scheduled_at: Optional[datetime] = Field(None, description="Date de publication planifiée")
 

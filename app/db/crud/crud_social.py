@@ -433,6 +433,14 @@ def publish_social_post(db: Session, post_id: int) -> SocialPost:
         )
 
     post = get_social_post_by_id(db, post_id)
+
+    # Valider qu'au moins une plateforme est selectionnee avant de publier
+    if not post.platforms:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Sélectionnez au moins une plateforme avant de publier"
+        )
+
     has_error = False
     now = datetime.now(timezone.utc)
 
