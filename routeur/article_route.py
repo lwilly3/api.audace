@@ -7,6 +7,8 @@ via l'API REST WP (wp-json/wp/v2).
 Endpoints :
   GET    /social/articles              — Liste des articles (multi-sites)
   GET    /social/articles/stats        — Statistiques agregees
+  POST   /social/articles/generate     — Generer un article via IA
+  POST   /social/articles/generate-excerpt — Generer un extrait via IA
   GET    /social/articles/{site}/categories — Categories d'un site
   GET    /social/articles/{site}/{id}  — Detail d'un article
   POST   /social/articles/{site}       — Creer un article
@@ -96,6 +98,43 @@ def get_categories(
 
 
 # ════════════════════════════════════════════════════════════════
+# GENERATION IA (avant les routes {site} pour eviter le conflit)
+# ════════════════════════════════════════════════════════════════
+
+@router.post("/generate", response_model=GenerateArticleResponse)
+def generate_article(
+    body: GenerateArticleRequest,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """Generer un article complet a partir d'URLs source via l'IA."""
+    from app.services.ai_service import generate_article_from_urls
+
+    result = generate_article_from_urls(
+        urls=body.urls,
+        site_key=body.site,
+        mode=body.mode,
+        custom_instructions=body.custom_instructions,
+    )
+    log_action(db, current_user.id, "ai_generate", "wp_articles", 0)
+    return result
+
+
+@router.post("/generate-excerpt")
+def generate_excerpt(
+    body: GenerateExcerptRequest,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """Generer un extrait optimise OG a partir du contenu d'un article."""
+    from app.services.ai_service import generate_article_excerpt
+
+    excerpt = generate_article_excerpt(body.content, body.site)
+    log_action(db, current_user.id, "ai_generate", "wp_articles", 0)
+    return {"excerpt": excerpt}
+
+
+# ════════════════════════════════════════════════════════════════
 # CRUD ARTICLES
 # ════════════════════════════════════════════════════════════════
 
@@ -170,40 +209,3 @@ async def upload_media(
         filename=file.filename or "upload.jpg",
         content_type=file.content_type or "image/jpeg",
     )
-
-
-# ════════════════════════════════════════════════════════════════
-# GENERATION IA
-# ════════════════════════════════════════════════════════════════
-
-@router.post("/generate", response_model=GenerateArticleResponse)
-def generate_article(
-    body: GenerateArticleRequest,
-    db: Session = Depends(get_db),
-    current_user: int = Depends(oauth2.get_current_user),
-):
-    """Generer un article complet a partir d'URLs source via l'IA."""
-    from app.services.ai_service import generate_article_from_urls
-
-    result = generate_article_from_urls(
-        urls=body.urls,
-        site_key=body.site,
-        mode=body.mode,
-        custom_instructions=body.custom_instructions,
-    )
-    log_action(db, current_user.id, "ai_generate", "wp_articles", 0)
-    return result
-
-
-@router.post("/generate-excerpt")
-def generate_excerpt(
-    body: GenerateExcerptRequest,
-    db: Session = Depends(get_db),
-    current_user: int = Depends(oauth2.get_current_user),
-):
-    """Generer un extrait optimise OG a partir du contenu d'un article."""
-    from app.services.ai_service import generate_article_excerpt
-
-    excerpt = generate_article_excerpt(body.content, body.site)
-    log_action(db, current_user.id, "ai_generate", "wp_articles", 0)
-    return {"excerpt": excerpt}
