@@ -36,6 +36,7 @@ from routeur import (
      scaleway_route,  # Routes pour la consultation des services Scaleway
      social_route,  # Routes pour le module Social (réseaux sociaux)
      public_route,  # Routes publiques pour l'integration WordPress
+     article_route,  # Routes pour les articles WordPress (proxy wp-json)
 
 
 
@@ -214,6 +215,7 @@ app.include_router(audit_log_route.router) # Routes pour les journaux d'audit
 app.include_router(ovh_route.router) # Routes pour la consultation des services OVH
 app.include_router(scaleway_route.router) # Routes pour la consultation des services Scaleway
 app.include_router(social_route.router) # Routes pour le module Social (réseaux sociaux)
+app.include_router(article_route.router) # Routes pour les articles WordPress
 
 
 

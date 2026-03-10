@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     WORDPRESS_SITE_URL:str = ""
     WORDPRESS_SYNC_SECRET:str = ""
 
+    # WordPress Articles (proxy vers wp-json)
+    WP_AUDACEMAGAZINE_URL:str = "https://www.audacemagazine.com"
+    WP_AUDACEMAGAZINE_USER:str = ""
+    WP_AUDACEMAGAZINE_APP_PASSWORD:str = ""
+    WP_RADIOAUDACE_URL:str = "https://www.radioaudace.com"
+    WP_RADIOAUDACE_USER:str = ""
+    WP_RADIOAUDACE_APP_PASSWORD:str = ""
+
     # RadioDJ integration (Now Playing track info)
     RADIODJ_API_KEY:str = ""
 
