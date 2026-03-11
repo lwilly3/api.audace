@@ -149,6 +149,14 @@ services:
       # Accepte : JSON direct, chemin fichier, ou JSON encode en base64
       FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
 
+      # WordPress Articles (proxy vers wp-json/wp/v2)
+      WP_AUDACEMAGAZINE_URL: ${WP_AUDACEMAGAZINE_URL:-https://www.audacemagazine.com}
+      WP_AUDACEMAGAZINE_USER: ${WP_AUDACEMAGAZINE_USER:-}
+      WP_AUDACEMAGAZINE_APP_PASSWORD: ${WP_AUDACEMAGAZINE_APP_PASSWORD:-}
+      WP_RADIOAUDACE_URL: ${WP_RADIOAUDACE_URL:-https://www.radioaudace.com}
+      WP_RADIOAUDACE_USER: ${WP_RADIOAUDACE_USER:-}
+      WP_RADIOAUDACE_APP_PASSWORD: ${WP_RADIOAUDACE_APP_PASSWORD:-}
+
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0
       PORT: 8000
