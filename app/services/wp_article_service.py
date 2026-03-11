@@ -18,6 +18,7 @@ from app.config.config import settings
 logger = logging.getLogger("hapson-api")
 
 WP_TIMEOUT = 15.0
+WP_USER_AGENT = "RadioManager/1.0 (https://api.radio.audace.ovh)"
 
 # ════════════════════════════════════════════════════════════════
 # CONFIGURATION DES SITES
@@ -202,7 +203,7 @@ def list_articles(
             params["categories"] = category
 
         try:
-            with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True) as client:
+            with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
                 auth = _wp_auth(config)
                 # Si on veut les brouillons, il faut l'auth
                 if status_filter and status_filter != "publish":
@@ -254,7 +255,7 @@ def get_article(site_key: str, article_id: int) -> dict:
     config = _get_site_config(site_key)
     auth = _wp_auth(config)
 
-    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True) as client:
+    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.get(
             _wp_api_url(config, f"posts/{article_id}"),
             params={"_embed": "1"},
@@ -289,7 +290,7 @@ def create_article(site_key: str, data: dict) -> dict:
     if data.get("featured_media_id"):
         payload["featured_media"] = data["featured_media_id"]
 
-    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True) as client:
+    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.post(
             _wp_api_url(config, "posts"),
             json=payload,
@@ -328,7 +329,7 @@ def update_article(site_key: str, article_id: int, data: dict) -> dict:
     if "featured_media_id" in data:
         payload["featured_media"] = data["featured_media_id"] or 0
 
-    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True) as client:
+    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.post(
             _wp_api_url(config, f"posts/{article_id}"),
             json=payload,
@@ -348,7 +349,7 @@ def delete_article(site_key: str, article_id: int) -> dict:
             detail=f"Credentials WordPress manquants pour {site_key}"
         )
 
-    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True) as client:
+    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.delete(
             _wp_api_url(config, f"posts/{article_id}"),
             auth=auth,
@@ -365,7 +366,7 @@ def list_categories(site_key: str) -> list[dict]:
     """Liste les categories d'un site WordPress."""
     config = _get_site_config(site_key)
 
-    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True) as client:
+    with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.get(
             _wp_api_url(config, "categories"),
             params={"per_page": 100, "orderby": "count", "order": "desc"},
@@ -396,7 +397,7 @@ def upload_media(site_key: str, file_content: bytes, filename: str, content_type
             detail=f"Credentials WordPress manquants pour {site_key}"
         )
 
-    with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+    with httpx.Client(timeout=30.0, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.post(
             _wp_api_url(config, "media"),
             content=file_content,
@@ -441,7 +442,7 @@ def get_article_stats() -> dict:
 
         try:
             auth = _wp_auth(config)
-            with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True) as client:
+            with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
                 # Total d'articles publies
                 response = client.get(
                     _wp_api_url(config, "posts"),
