@@ -398,13 +398,11 @@ def upload_media(site_key: str, file_content: bytes, filename: str, content_type
         )
 
     with httpx.Client(timeout=30.0, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
+        # Utiliser multipart/form-data au lieu de raw binary
+        # pour eviter le blocage par le pare-feu OVH (ModSecurity)
         response = client.post(
             _wp_api_url(config, "media"),
-            content=file_content,
-            headers={
-                "Content-Disposition": f'attachment; filename="{filename}"',
-                "Content-Type": content_type,
-            },
+            files={"file": (filename, file_content, content_type)},
             auth=auth,
         )
         _handle_wp_error(response, f"upload_media({site_key})")
