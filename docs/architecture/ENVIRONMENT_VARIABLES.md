@@ -325,6 +325,56 @@ WORKERS=4
 
 ---
 
+## 🎬 YouTube / Cloudflare Worker
+
+### Variables pour l'extraction de sous-titres YouTube
+
+L'extraction de sous-titres YouTube est deléguée à un Cloudflare Worker externe
+qui contourne le blocage des IPs de datacenters par YouTube.
+
+| Variable | Type | Description | Valeur par défaut |
+|----------|------|-------------|-------------------|
+| `YOUTUBE_WORKER_URL` | string | URL du Cloudflare Worker | `""` (désactivé) |
+| `YOUTUBE_WORKER_SECRET` | string | Clé secrète partagée avec le Worker | `""` |
+
+### Configuration
+
+```env
+YOUTUBE_WORKER_URL=https://youtube-transcript-worker.radio-manager-saas.workers.dev
+YOUTUBE_WORKER_SECRET=votre-secret-partage
+```
+
+### Docker Compose
+
+```yaml
+api:
+  environment:
+    YOUTUBE_WORKER_URL: ${YOUTUBE_WORKER_URL:-}
+    YOUTUBE_WORKER_SECRET: ${YOUTUBE_WORKER_SECRET:-}
+```
+
+### Fonctionnement
+
+1. Le backend détecte une URL YouTube dans `ai_service.py` via `is_youtube_url()`
+2. `fetch_youtube_transcript()` appelle le Cloudflare Worker avec le `video_id`
+3. Le Worker extrait les sous-titres via l'API innertube YouTube
+4. Le texte est renvoyé au backend pour génération IA via Mistral
+
+### Statut actuel
+
+**En attente de résolution** : YouTube bloque les IPs de datacenters (OVH, Cloudflare).
+Un proxy résidentiel est nécessaire pour que le Worker (ou la librairie `youtube-transcript-api`)
+puisse accéder aux sous-titres YouTube.
+
+### Worker Cloudflare
+
+- **Dépôt** : `/Users/happi/App/youtube-transcript-worker/`
+- **URL déployée** : `https://youtube-transcript-worker.radio-manager-saas.workers.dev`
+- **Secret** : configuré via `npx wrangler secret put WORKER_SECRET`
+- **Voir** : `youtube-transcript-worker/README.md` pour la documentation complète
+
+---
+
 ## 📁 Fichiers de Configuration
 
 ### .env (local)
