@@ -180,6 +180,10 @@ class UserPermissions(Base):
     social_create_articles = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Créer des articles WordPress
     social_edit_articles = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Modifier des articles WordPress
     social_delete_articles = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Supprimer des articles WordPress
+    social_view_pinned = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les contenus epingles
+    social_create_pinned = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Creer des contenus epingles
+    social_edit_pinned = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Modifier des contenus epingles
+    social_delete_pinned = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Desepingler des contenus
 
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")

@@ -163,6 +163,7 @@ def _parse_wp_post(post: dict, site_key: str, categories_map: dict = None, tags_
         "created_at": post.get("date_gmt", post.get("date", "")),
         "updated_at": post.get("modified_gmt", post.get("modified", "")),
         "views": 0,
+        "sticky": post.get("sticky", False),
     }
 
 
@@ -175,6 +176,7 @@ def list_articles(
     search: Optional[str] = None,
     status_filter: Optional[str] = None,
     category: Optional[int] = None,
+    sticky: Optional[bool] = None,
     page: int = 1,
     per_page: int = 12,
 ) -> dict:
@@ -201,6 +203,8 @@ def list_articles(
             params["status"] = status_filter
         if category:
             params["categories"] = category
+        if sticky is not None:
+            params["sticky"] = sticky
 
         try:
             with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
@@ -289,6 +293,8 @@ def create_article(site_key: str, data: dict) -> dict:
         payload["tags"] = data["tags"]
     if data.get("featured_media_id"):
         payload["featured_media"] = data["featured_media_id"]
+    if "sticky" in data and data["sticky"] is not None:
+        payload["sticky"] = data["sticky"]
 
     with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.post(
@@ -328,6 +334,8 @@ def update_article(site_key: str, article_id: int, data: dict) -> dict:
         payload["tags"] = data["tags"]
     if "featured_media_id" in data:
         payload["featured_media"] = data["featured_media_id"] or 0
+    if "sticky" in data and data["sticky"] is not None:
+        payload["sticky"] = data["sticky"]
 
     with httpx.Client(timeout=WP_TIMEOUT, follow_redirects=True, headers={"User-Agent": WP_USER_AGENT}) as client:
         response = client.post(

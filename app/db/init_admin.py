@@ -83,6 +83,8 @@ ALL_PERMISSIONS_TRUE = {
     "social_manage_accounts": True, "social_manage_settings": True,
     "social_view_articles": True, "social_create_articles": True,
     "social_edit_articles": True, "social_delete_articles": True,
+    "social_view_pinned": True, "social_create_pinned": True,
+    "social_edit_pinned": True, "social_delete_pinned": True,
 }
 
 # Admin = tout sauf destruction archives (reservee au super_admin)
@@ -415,6 +417,10 @@ def update_all_permissions_to_true(db: Session, user_id: int) -> None:
         permissions.social_create_articles = True
         permissions.social_edit_articles = True
         permissions.social_delete_articles = True
+        permissions.social_view_pinned = True
+        permissions.social_create_pinned = True
+        permissions.social_edit_pinned = True
+        permissions.social_delete_pinned = True
 
         logger.info(f"✅ Toutes les permissions admin activées pour l'utilisateur {user_id}")
         

@@ -190,6 +190,29 @@ class UserPermissionsSchema(BaseModel):
     scw_view_account: Optional[bool] = False  # Voir les infos du compte Scaleway
     scw_manage: Optional[bool] = False  # Gestion complète du module Scaleway
 
+    # Permissions pour le module Social
+    social_access_section: Optional[bool] = False
+    social_view_posts: Optional[bool] = False
+    social_create_posts: Optional[bool] = False
+    social_edit_posts: Optional[bool] = False
+    social_delete_posts: Optional[bool] = False
+    social_view_inbox: Optional[bool] = False
+    social_reply_comments: Optional[bool] = False
+    social_delete_comments: Optional[bool] = False
+    social_reply_messages: Optional[bool] = False
+    social_view_stats: Optional[bool] = False
+    social_export_stats: Optional[bool] = False
+    social_manage_accounts: Optional[bool] = False
+    social_manage_settings: Optional[bool] = False
+    social_view_articles: Optional[bool] = False
+    social_create_articles: Optional[bool] = False
+    social_edit_articles: Optional[bool] = False
+    social_delete_articles: Optional[bool] = False
+    social_view_pinned: Optional[bool] = False
+    social_create_pinned: Optional[bool] = False
+    social_edit_pinned: Optional[bool] = False
+    social_delete_pinned: Optional[bool] = False
+
     model_config = ConfigDict(from_attributes=True)
 
 # Schéma pour créer un modèle de rôle

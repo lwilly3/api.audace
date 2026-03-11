@@ -64,6 +64,7 @@ class ArticleResponse(BaseModel):
     created_at: str
     updated_at: str
     views: int = 0
+    sticky: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -88,6 +89,7 @@ class ArticleCreate(BaseModel):
     categories: list[int] = Field(default=[], description="IDs des categories")
     tags: list[int] = Field(default=[], description="IDs des tags")
     featured_media_id: Optional[int] = Field(None, description="ID de l'image mise en avant")
+    sticky: bool = Field(False, description="Epingler l'article en page d'accueil")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -101,6 +103,7 @@ class ArticleUpdate(BaseModel):
     categories: Optional[list[int]] = None
     tags: Optional[list[int]] = None
     featured_media_id: Optional[int] = None
+    sticky: Optional[bool] = None
 
     model_config = ConfigDict(from_attributes=True)
 

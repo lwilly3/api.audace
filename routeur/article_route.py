@@ -58,6 +58,7 @@ def list_articles(
     status: Optional[str] = Query(None, description="Filtre par statut: publish, draft, pending, private"),
     category: Optional[int] = Query(None, description="Filtre par ID de categorie"),
     search: Optional[str] = Query(None, description="Recherche texte"),
+    sticky: Optional[bool] = Query(None, description="Filtre par epingle: true ou false"),
     page: int = Query(1, ge=1),
     per_page: int = Query(12, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -69,6 +70,7 @@ def list_articles(
         search=search,
         status_filter=status,
         category=category,
+        sticky=sticky,
         page=page,
         per_page=per_page,
     )
