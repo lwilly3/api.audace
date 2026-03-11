@@ -142,10 +142,10 @@ class ArticleStatsResponse(BaseModel):
 # ════════════════════════════════════════════════════════════════
 
 class GenerateArticleRequest(BaseModel):
-    """Requete pour generer un article depuis des URLs source."""
-    urls: list[str] = Field(..., min_length=1, max_length=3, description="URLs des articles source (1 a 3)")
+    """Requete pour generer un article depuis des URLs source (articles web ou videos YouTube)."""
+    urls: list[str] = Field(..., min_length=1, max_length=3, description="URLs des articles ou videos source (1 a 3)")
     site: str = Field(..., description="Site cible: audacemagazine ou radioaudace")
-    mode: str = Field("article_magazine", description="Mode: article_magazine, article_radio, article_libre")
+    mode: str = Field("article_magazine", description="Mode: article_magazine, article_radio, article_libre, article_video")
     custom_instructions: Optional[str] = Field(None, max_length=500, description="Instructions supplementaires")
 
 
@@ -155,6 +155,7 @@ class GenerateArticleResponse(BaseModel):
     content: str
     excerpt: str
     source_urls: list[str]
+    has_youtube_sources: bool = Field(False, description="True si au moins une source est une video YouTube")
 
 
 class GenerateExcerptRequest(BaseModel):

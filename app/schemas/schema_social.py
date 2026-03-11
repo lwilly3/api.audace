@@ -318,9 +318,9 @@ class VideoPerformanceResponse(BaseModel):
 # ════════════════════════════════════════════════════════════════
 
 class GenerateFromUrlRequest(BaseModel):
-    """Requete pour generer un post a partir d'une URL."""
-    url: str = Field(..., min_length=10, max_length=2000, description="URL de l'article source")
-    mode: str = Field("post_engageant", description="Mode de generation: post_engageant, resume, informatif, annonce")
+    """Requete pour generer un post a partir d'une URL (article web ou video YouTube)."""
+    url: str = Field(..., min_length=10, max_length=2000, description="URL de l'article ou de la video YouTube")
+    mode: str = Field("post_engageant", description="Mode de generation: post_engageant, resume, informatif, annonce, resume_video, points_cles")
     custom_instructions: Optional[str] = Field(None, max_length=500, description="Instructions supplementaires de l'utilisateur")
 
 
@@ -328,3 +328,5 @@ class GenerateFromUrlResponse(BaseModel):
     """Reponse avec le contenu genere par l'IA."""
     generated_content: str = Field(..., description="Contenu genere pour le post")
     source_url: str = Field(..., description="URL source utilisee")
+    source_type: str = Field("article", description="Type de source: article ou youtube")
+    youtube_metadata: Optional[dict] = Field(None, description="Metadonnees YouTube (video_id, title, author, language, thumbnail_url)")

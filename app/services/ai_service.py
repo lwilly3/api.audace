@@ -2,7 +2,8 @@
 Service IA pour la generation de contenu social a partir d'URL.
 
 Utilise Mistral Small 3.2 pour analyser le contenu d'un article web
-et generer une publication Facebook adaptee a une radio communautaire.
+ou la transcription d'une video YouTube, et generer une publication
+adaptee a une radio communautaire.
 """
 
 import re
@@ -21,6 +22,173 @@ logger = logging.getLogger("hapson-api")
 FETCH_TIMEOUT = 15.0
 # Limite de caracteres envoyes a Mistral (economiser les tokens)
 MAX_ARTICLE_CHARS = 4000
+# Limite de caracteres pour les transcriptions YouTube (plus genereux car contenu dense)
+MAX_YOUTUBE_TRANSCRIPT_CHARS = 8000
+
+# Pattern pour detecter les URLs YouTube
+YOUTUBE_URL_PATTERN = re.compile(
+    r'(?:https?://)?(?:www\.|m\.)?(?:youtube\.com/(?:watch\?v=|embed/|v/)|youtu\.be/)([\w-]{11})',
+    re.IGNORECASE,
+)
+
+
+def is_youtube_url(url: str) -> bool:
+    """Detecte si une URL est une URL YouTube."""
+    return bool(YOUTUBE_URL_PATTERN.search(url))
+
+
+def extract_youtube_video_id(url: str) -> str | None:
+    """Extrait l'ID video (11 caracteres) d'une URL YouTube."""
+    match = YOUTUBE_URL_PATTERN.search(url)
+    return match.group(1) if match else None
+
+
+def fetch_youtube_transcript(url: str) -> dict:
+    """
+    Extrait les sous-titres d'une video YouTube.
+
+    Utilise youtube-transcript-api pour recuperer la transcription,
+    et l'endpoint oEmbed pour le titre et l'auteur (sans cle API).
+    Retourne un dict avec video_id, title, author, language, transcript_text, thumbnail_url.
+    """
+    from youtube_transcript_api import YouTubeTranscriptApi
+    from youtube_transcript_api._errors import (
+        TranscriptsDisabled,
+        NoTranscriptFound,
+        VideoUnavailable,
+    )
+
+    video_id = extract_youtube_video_id(url)
+    if not video_id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="URL YouTube invalide ou ID video introuvable"
+        )
+
+    # Recuperer le titre et l'auteur via oEmbed (pas de cle API necessaire)
+    title = ""
+    author = ""
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            oembed_url = f"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={video_id}&format=json"
+            resp = client.get(oembed_url)
+            if resp.status_code == 200:
+                data = resp.json()
+                title = data.get("title", "")
+                author = data.get("author_name", "")
+    except Exception as e:
+        logger.warning(f"Impossible de recuperer les metadonnees oEmbed pour {video_id}: {e}")
+
+    # Extraire les sous-titres
+    language = "fr"
+    try:
+        # Priorite : sous-titres francais, puis anglais
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+
+        transcript = None
+        # Chercher des sous-titres manuels d'abord, puis auto-generes
+        for lang_codes in [['fr'], ['en']]:
+            try:
+                transcript = transcript_list.find_manually_created_transcript(lang_codes)
+                language = lang_codes[0]
+                break
+            except NoTranscriptFound:
+                try:
+                    transcript = transcript_list.find_generated_transcript(lang_codes)
+                    language = lang_codes[0]
+                    break
+                except NoTranscriptFound:
+                    continue
+
+        # Fallback : prendre le premier sous-titre disponible
+        if transcript is None:
+            for t in transcript_list:
+                transcript = t
+                language = t.language_code
+                break
+
+        if transcript is None:
+            raise NoTranscriptFound(video_id, [], [])
+
+        segments = transcript.fetch()
+        transcript_text = " ".join(seg["text"] for seg in segments)
+
+    except TranscriptsDisabled:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Les sous-titres sont desactives pour cette video YouTube"
+        )
+    except NoTranscriptFound:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Aucun sous-titre disponible pour cette video (privee ou sous-titres absents)"
+        )
+    except VideoUnavailable:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Video YouTube introuvable ou privee"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur extraction sous-titres YouTube {video_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Erreur lors de l'extraction des sous-titres YouTube"
+        )
+
+    # Nettoyer et tronquer
+    transcript_text = re.sub(r'\s+', ' ', transcript_text).strip()
+    if len(transcript_text) > MAX_YOUTUBE_TRANSCRIPT_CHARS:
+        transcript_text = transcript_text[:MAX_YOUTUBE_TRANSCRIPT_CHARS] + "..."
+
+    if len(transcript_text) < 50:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La transcription de la video est trop courte"
+        )
+
+    logger.info(f"Transcription YouTube extraite ({len(transcript_text)} chars) pour video {video_id}")
+
+    return {
+        "video_id": video_id,
+        "title": title,
+        "author": author,
+        "language": language,
+        "transcript_text": transcript_text,
+        "thumbnail_url": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
+    }
+
+
+def fetch_content_from_url(url: str) -> dict:
+    """
+    Dispatcher : detecte le type d'URL et extrait le contenu.
+
+    Retourne un dict uniforme :
+      - source_type: 'article' | 'youtube'
+      - text: le texte extrait
+      - metadata: dict de metadonnees (vide pour les articles, riche pour YouTube)
+    """
+    if is_youtube_url(url):
+        yt_data = fetch_youtube_transcript(url)
+        return {
+            "source_type": "youtube",
+            "text": yt_data["transcript_text"],
+            "metadata": {
+                "video_id": yt_data["video_id"],
+                "title": yt_data["title"],
+                "author": yt_data["author"],
+                "language": yt_data["language"],
+                "thumbnail_url": yt_data["thumbnail_url"],
+            },
+        }
+    else:
+        text = fetch_article_text(url)
+        return {
+            "source_type": "article",
+            "text": text,
+            "metadata": {},
+        }
 
 
 def fetch_article_text(url: str) -> str:
@@ -84,9 +252,9 @@ def fetch_article_text(url: str) -> str:
         )
 
 
-def generate_post_from_article(article_text: str, url: str, mode: str = "post_engageant", custom_instructions: str | None = None) -> str:
+def generate_post_from_article(article_text: str, url: str, mode: str = "post_engageant", custom_instructions: str | None = None, source_type: str = "article") -> str:
     """
-    Genere un post a partir du texte d'un article.
+    Genere un post a partir du texte d'un article ou d'une transcription YouTube.
 
     Utilise Mistral Small via le SDK Python officiel.
     Le prompt est adapte selon le mode choisi et enrichi
@@ -126,13 +294,27 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
             "- 2 a 3 phrases courtes et impactantes\n"
             "- Termine par un appel a l'action clair\n"
         ),
+        "resume_video": (
+            "Resume les points cles de cette video YouTube.\n"
+            "- 3 a 5 phrases couvrant les moments importants\n"
+            "- Mentionne qu'il s'agit d'une video\n"
+            "- Ton enthousiaste, invite a regarder la video\n"
+        ),
+        "points_cles": (
+            "Extrais les points cles de cette video YouTube.\n"
+            "- Sous forme de liste a puces (3 a 6 points)\n"
+            "- Chaque point en 1 phrase concise\n"
+            "- Commence par une phrase d'introduction\n"
+            "- Termine par un appel a regarder la video complete\n"
+        ),
     }
 
     mode_text = mode_instructions.get(mode, mode_instructions["post_engageant"])
 
     system_prompt = (
         "Tu es le community manager d'une radio communautaire francophone. "
-        "Ton role est de creer des publications pour les reseaux sociaux a partir d'articles web. "
+        "Ton role est de creer des publications pour les reseaux sociaux "
+        f"a partir {'de videos YouTube' if source_type == 'youtube' else 'd\\'articles web'}. "
         "Regles generales :\n"
         "- Ecris en francais, ton amical et accessible\n"
         "- N'inclus PAS de hashtags (ils seront ajoutes separement)\n"
@@ -149,12 +331,20 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
             f"{custom_instructions.strip()}\n"
         )
 
-    user_prompt = (
-        f"Voici le contenu d'un article web :\n\n"
-        f"{article_text}\n\n"
-        f"URL source : {url}\n\n"
-        f"Genere une publication Facebook courte et engageante pour notre page de radio communautaire."
-    )
+    if source_type == "youtube":
+        user_prompt = (
+            f"Voici la transcription d'une video YouTube :\n\n"
+            f"{article_text}\n\n"
+            f"URL de la video : {url}\n\n"
+            f"Genere une publication courte et engageante pour notre page de radio communautaire."
+        )
+    else:
+        user_prompt = (
+            f"Voici le contenu d'un article web :\n\n"
+            f"{article_text}\n\n"
+            f"URL source : {url}\n\n"
+            f"Genere une publication Facebook courte et engageante pour notre page de radio communautaire."
+        )
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -280,13 +470,21 @@ def generate_article_from_urls(
     """
     # Extraire le texte de chaque URL (max 3)
     sources = []
+    has_youtube = False
     for url in urls[:3]:
         try:
-            text = fetch_article_text(url)
+            content_data = fetch_content_from_url(url)
+            text = content_data["text"]
             # Augmenter la limite pour les articles
             if len(text) > MAX_ARTICLE_SOURCE_CHARS:
                 text = text[:MAX_ARTICLE_SOURCE_CHARS] + "..."
-            sources.append({"url": url, "text": text})
+            source_entry = {"url": url, "text": text, "source_type": content_data["source_type"]}
+            if content_data["source_type"] == "youtube":
+                has_youtube = True
+                meta = content_data["metadata"]
+                if meta.get("title"):
+                    source_entry["yt_title"] = meta["title"]
+            sources.append(source_entry)
         except Exception as e:
             logger.warning(f"Impossible d'extraire {url}: {e}")
             continue
@@ -300,7 +498,13 @@ def generate_article_from_urls(
     # Construire le contexte des sources
     sources_text = ""
     for i, src in enumerate(sources, 1):
-        sources_text += f"\n--- Source {i} ({src['url']}) ---\n{src['text']}\n"
+        if src.get("source_type") == "youtube":
+            label = f"Video YouTube"
+            if src.get("yt_title"):
+                label += f" : {src['yt_title']}"
+            sources_text += f"\n--- Source {i} — {label} ({src['url']}) ---\n{src['text']}\n"
+        else:
+            sources_text += f"\n--- Source {i} — Article ({src['url']}) ---\n{src['text']}\n"
 
     # Prompts selon le mode
     mode_instructions = {
@@ -326,6 +530,14 @@ def generate_article_from_urls(
             "- Utilise du HTML : <h2> pour les sous-titres, <p> pour les paragraphes\n"
             "- Structure libre adaptee au sujet\n"
             "- L'utilisateur guidera le style via ses instructions\n"
+        ),
+        "article_video": (
+            "Redige un article base sur le contenu d'une ou plusieurs videos YouTube.\n"
+            "- Transforme la transcription en article structure et lisible\n"
+            "- Utilise du HTML : <h2> pour les sous-titres, <p> pour les paragraphes, <strong> pour les points importants, <blockquote> pour les citations marquantes\n"
+            "- Ajoute du contexte et reformule les propos oraux en style ecrit\n"
+            "- Minimum 4-6 paragraphes riches\n"
+            "- Mentionne que le contenu est tire d'une video\n"
         ),
     }
 
@@ -384,6 +596,7 @@ def generate_article_from_urls(
         "content": content,
         "excerpt": excerpt,
         "source_urls": [s["url"] for s in sources],
+        "has_youtube_sources": has_youtube,
     }
 
 

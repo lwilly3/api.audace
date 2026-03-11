@@ -500,26 +500,34 @@ def generate_from_url(
     current_user: int = Depends(oauth2.get_current_user),
 ):
     """
-    Generer un post Facebook a partir d'une URL d'article.
+    Generer un post a partir d'une URL d'article web ou de video YouTube.
 
-    1. Telecharge le contenu HTML de l'URL
-    2. Extrait le texte brut
+    1. Detecte le type d'URL (article web ou video YouTube)
+    2. Extrait le contenu (HTML pour articles, sous-titres pour YouTube)
     3. Envoie a Mistral Small pour generation
-    4. Retourne le texte genere
+    4. Retourne le texte genere avec les metadonnees
 
     Le contenu genere est une suggestion — l'utilisateur peut le modifier
     avant de publier.
     """
-    from app.services.ai_service import fetch_article_text, generate_post_from_article
+    from app.services.ai_service import fetch_content_from_url, generate_post_from_article
 
-    article_text = fetch_article_text(body.url)
-    generated_content = generate_post_from_article(article_text, body.url, body.mode, body.custom_instructions)
+    content_data = fetch_content_from_url(body.url)
+    generated_content = generate_post_from_article(
+        content_data["text"],
+        body.url,
+        body.mode,
+        body.custom_instructions,
+        source_type=content_data["source_type"],
+    )
 
     log_action(db, current_user.id, "ai_generate", "social_posts", 0)
 
     return {
         "generated_content": generated_content,
         "source_url": body.url,
+        "source_type": content_data["source_type"],
+        "youtube_metadata": content_data["metadata"] if content_data["source_type"] == "youtube" else None,
     }
 
 
