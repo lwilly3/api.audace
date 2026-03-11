@@ -23,9 +23,37 @@ pytest tests/ -v
 
 Configuration dans `pytest.ini` : `asyncio_mode = auto`.
 
-## Migrations Alembic
+## Migrations Alembic — REGLE CRITIQUE
 
-**Toujours utiliser `--autogenerate`** :
+> **INTERDICTION ABSOLUE** : Ne JAMAIS creer, ecrire ou modifier un fichier de migration Alembic manuellement.
+> Toute migration DOIT etre autogeneree par `alembic revision --autogenerate`.
+> Une migration ecrite a la main peut corrompre la chaine de revisions et provoquer un crash en boucle du conteneur Docker en production (erreur `Can't locate revision`).
+
+**Processus obligatoire :**
+1. Modifier le modele SQLAlchemy d'abord (`app/models/`)
+2. Committer et pousser le code
+3. Generer la migration **sur le serveur via Docker** (l'environnement local n'a pas les dependances) :
+   ```bash
+   sudo docker exec -it audace_api alembic revision --autogenerate -m "description"
+   ```
+4. Appliquer : `sudo docker exec -it audace_api alembic upgrade head`
+5. Copier le fichier genere vers le repo local :
+   ```bash
+   sudo docker cp audace_api:/app/alembic/versions/<fichier>.py /tmp/
+   ```
+6. Ajouter au repo Git et pousser
+
+**INTERDIT :**
+- Utiliser `Write` ou `Edit` pour creer un fichier `alembic/versions/*.py`
+- Inventer un `revision ID` ou `down_revision`
+- Copier/adapter manuellement une migration existante
+- Modifier le contenu d'un fichier de migration genere
+
+**En cas d'erreur en production :**
+- `Can't locate revision 'xxx'` → corriger via PostgreSQL : `UPDATE alembic_version SET version_num = '<derniere_revision_valide>';`
+- Puis autogenerer une nouvelle migration
+
+**Commandes de reference :**
 ```bash
 alembic revision --autogenerate -m "description du changement"
 alembic upgrade head
