@@ -82,8 +82,9 @@ def fetch_youtube_transcript(url: str) -> dict:
     # Extraire les sous-titres
     language = "fr"
     try:
-        # Priorite : sous-titres francais, puis anglais
-        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+        # Instancier l'API (v1.x)
+        ytt_api = YouTubeTranscriptApi()
+        transcript_list = ytt_api.list(video_id)
 
         transcript = None
         # Chercher des sous-titres manuels d'abord, puis auto-generes
@@ -110,8 +111,8 @@ def fetch_youtube_transcript(url: str) -> dict:
         if transcript is None:
             raise NoTranscriptFound(video_id, [], [])
 
-        segments = transcript.fetch()
-        transcript_text = " ".join(seg["text"] for seg in segments)
+        fetched = transcript.fetch()
+        transcript_text = " ".join(snippet.text for snippet in fetched)
 
     except TranscriptsDisabled:
         raise HTTPException(
