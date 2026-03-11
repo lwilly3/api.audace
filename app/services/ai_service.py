@@ -314,7 +314,7 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
     system_prompt = (
         "Tu es le community manager d'une radio communautaire francophone. "
         "Ton role est de creer des publications pour les reseaux sociaux "
-        f"a partir {'de videos YouTube' if source_type == 'youtube' else 'd\\'articles web'}. "
+        "a partir " + ("de videos YouTube" if source_type == "youtube" else "d'articles web") + ". "
         "Regles generales :\n"
         "- Ecris en francais, ton amical et accessible\n"
         "- N'inclus PAS de hashtags (ils seront ajoutes separement)\n"
