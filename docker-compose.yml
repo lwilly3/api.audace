@@ -145,6 +145,10 @@ services:
       # Mistral AI (generation de posts depuis URL)
       MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
 
+      # Cloudflare Worker — extraction sous-titres YouTube
+      YOUTUBE_WORKER_URL: ${YOUTUBE_WORKER_URL:-}
+      YOUTUBE_WORKER_SECRET: ${YOUTUBE_WORKER_SECRET:-}
+
       # Firebase Storage (nettoyage fichiers temporaires apres publication)
       # Accepte : JSON direct, chemin fichier, ou JSON encode en base64
       FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}

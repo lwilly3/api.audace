@@ -45,24 +45,24 @@ def extract_youtube_video_id(url: str) -> str | None:
 
 def fetch_youtube_transcript(url: str) -> dict:
     """
-    Extrait les sous-titres d'une video YouTube.
+    Extrait les sous-titres d'une video YouTube via le Cloudflare Worker.
 
-    Utilise youtube-transcript-api pour recuperer la transcription,
-    et l'endpoint oEmbed pour le titre et l'auteur (sans cle API).
+    Le Worker extrait les sous-titres depuis YouTube (pas de blocage IP cloud).
+    L'endpoint oEmbed est utilise en complement pour le titre et l'auteur.
     Retourne un dict avec video_id, title, author, language, transcript_text, thumbnail_url.
     """
-    from youtube_transcript_api import YouTubeTranscriptApi
-    from youtube_transcript_api._errors import (
-        TranscriptsDisabled,
-        NoTranscriptFound,
-        VideoUnavailable,
-    )
-
     video_id = extract_youtube_video_id(url)
     if not video_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="URL YouTube invalide ou ID video introuvable"
+        )
+
+    worker_url = settings.YOUTUBE_WORKER_URL
+    if not worker_url:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Le service d'extraction YouTube n'est pas configure (YOUTUBE_WORKER_URL manquant)"
         )
 
     # Recuperer le titre et l'auteur via oEmbed (pas de cle API necessaire)
@@ -79,60 +79,48 @@ def fetch_youtube_transcript(url: str) -> dict:
     except Exception as e:
         logger.warning(f"Impossible de recuperer les metadonnees oEmbed pour {video_id}: {e}")
 
-    # Extraire les sous-titres
-    language = "fr"
+    # Appeler le Cloudflare Worker pour extraire les sous-titres
     try:
-        # Instancier l'API (v1.x)
-        ytt_api = YouTubeTranscriptApi()
-        transcript_list = ytt_api.list(video_id)
+        headers = {}
+        if settings.YOUTUBE_WORKER_SECRET:
+            headers["X-Worker-Secret"] = settings.YOUTUBE_WORKER_SECRET
 
-        transcript = None
-        # Chercher des sous-titres manuels d'abord, puis auto-generes
-        for lang_codes in [['fr'], ['en']]:
+        with httpx.Client(timeout=30.0) as client:
+            resp = client.get(
+                worker_url,
+                params={"video_id": video_id, "lang": "fr"},
+                headers=headers,
+            )
+
+        if resp.status_code == 404:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=resp.json().get("error", "Aucun sous-titre disponible pour cette video")
+            )
+        if resp.status_code == 403:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Video privee ou soumise a une restriction d'age"
+            )
+        if resp.status_code != 200:
+            error_msg = "Erreur lors de l'extraction des sous-titres YouTube"
             try:
-                transcript = transcript_list.find_manually_created_transcript(lang_codes)
-                language = lang_codes[0]
-                break
-            except NoTranscriptFound:
-                try:
-                    transcript = transcript_list.find_generated_transcript(lang_codes)
-                    language = lang_codes[0]
-                    break
-                except NoTranscriptFound:
-                    continue
+                error_msg = resp.json().get("error", error_msg)
+            except Exception:
+                pass
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=error_msg
+            )
 
-        # Fallback : prendre le premier sous-titre disponible
-        if transcript is None:
-            for t in transcript_list:
-                transcript = t
-                language = t.language_code
-                break
+        worker_data = resp.json()
+        transcript_text = worker_data.get("full_text", "")
+        language = worker_data.get("language", "fr")
 
-        if transcript is None:
-            raise NoTranscriptFound(video_id, [], [])
-
-        fetched = transcript.fetch()
-        transcript_text = " ".join(snippet.text for snippet in fetched)
-
-    except TranscriptsDisabled:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Les sous-titres sont desactives pour cette video YouTube"
-        )
-    except NoTranscriptFound:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Aucun sous-titre disponible pour cette video (privee ou sous-titres absents)"
-        )
-    except VideoUnavailable:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Video YouTube introuvable ou privee"
-        )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erreur extraction sous-titres YouTube {video_id}: {e}")
+        logger.error(f"Erreur appel Worker YouTube pour {video_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Erreur lors de l'extraction des sous-titres YouTube"
