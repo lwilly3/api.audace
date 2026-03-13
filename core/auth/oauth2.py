@@ -163,6 +163,54 @@ def get_2fa_temp_user(temp_token: str, db: Session):
         raise exception
 
 
+def decode_token_allow_expired(token: str, db: Session, grace_minutes: int = None):
+    """
+    Decode un JWT en autorisant les tokens recemment expires (fenetre de grace).
+    Utilise pour le refresh de token : accepte un token valide ou expire
+    depuis moins de grace_minutes.
+    Retourne le user_id ou leve HTTP 401.
+    """
+    if grace_minutes is None:
+        grace_minutes = settings.REFRESH_GRACE_MINUTES
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token invalide ou expire hors delai de grace",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    # Verifier que le token n'est pas revoque
+    if is_token_revoked(db, token):
+        raise credentials_exception
+
+    try:
+        # Essai de decodage normal (token encore valide)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+        user_id = payload.get("user_id")
+        purpose = payload.get("purpose")
+        # Rejeter les tokens temporaires 2FA
+        if purpose:
+            raise credentials_exception
+        if not user_id:
+            raise credentials_exception
+        return user_id
+    except ExpiredSignatureError:
+        # Token expire — verifier la fenetre de grace
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM, options={"verify_exp": False})
+        user_id = payload.get("user_id")
+        purpose = payload.get("purpose")
+        if purpose or not user_id:
+            raise credentials_exception
+        exp_timestamp = payload.get("exp")
+        if exp_timestamp:
+            exp_time = datetime.utcfromtimestamp(exp_timestamp)
+            if datetime.utcnow() - exp_time <= timedelta(minutes=grace_minutes):
+                return user_id
+        raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+
 
 
      

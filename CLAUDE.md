@@ -92,8 +92,11 @@ app/
     ovh_client.py                    # Client API OVH
     scaleway_client.py               # Client API Scaleway Dedibox
   utils/utils.py                     # hash(), verify() pour mots de passe
-core/auth/oauth2.py                  # JWT : create_acces_token, get_current_user
+  utils/crypto.py                    # Chiffrement TOTP (Fernet AES) + backup codes (bcrypt)
+core/auth/oauth2.py                  # JWT : create_acces_token, get_current_user, refresh avec grace, 2FA temp tokens
 routeur/                             # Routes FastAPI (APIRouter)
+  auth.py                            # Login, logout, refresh token
+  two_factor_route.py                # 2FA TOTP (setup, verify, disable, admin reset)
   search_route/                      # Routes de recherche specialisees
 alembic/versions/                    # Fichiers de migration
 tests/                               # Pytest + conftest.py
@@ -114,6 +117,22 @@ tests/                               # Pytest + conftest.py
 ### Authentification JWT
 Toutes les routes (sauf `/setup` et `/version`) requierent `current_user = Depends(oauth2.get_current_user)`.
 Token cree avec `user_id` dans le payload. Revocation via table `RevokedToken`.
+
+**Renouvellement silencieux du token :**
+- `POST /auth/refresh` accepte un token valide ou expire dans la fenetre de grace (5 min, configurable via `REFRESH_GRACE_MINUTES`)
+- `decode_token_allow_expired()` dans `oauth2.py` decode avec `options={"verify_exp": False}` puis verifie la fenetre
+- L'ancien token est revoque, un nouveau est emis avec permissions fraiches
+- Rejette les tokens 2FA temporaires (claim `purpose`)
+
+### Authentification a deux facteurs (2FA/TOTP)
+Standard TOTP RFC 6238 (Google Authenticator, Authy).
+- Router : `routeur/two_factor_route.py` (prefix `/auth/2fa`, 7 endpoints)
+- CRUD : `app/db/crud/crud_2fa.py` (setup, verify, disable, backup codes, admin reset)
+- Crypto : `app/utils/crypto.py` (Fernet AES pour secrets TOTP, bcrypt pour backup codes)
+- Modele : `model_user.py` (+3 colonnes : `two_factor_enabled`, `totp_secret_encrypted`, `backup_codes_hash`)
+- Permissions : `can_enforce_2fa`, `can_reset_user_2fa` dans `model_user_permissions.py`
+- Token temporaire : JWT 5 min avec claim `purpose: 2fa_verify`, valide uniquement sur `/auth/2fa/verify`
+- Env : `TOTP_ENCRYPTION_KEY` (cle Fernet, requise pour le chiffrement des secrets)
 
 ### Permissions (RBAC)
 Modele `UserPermissions` : colonnes Boolean par permission (70+ champs).
@@ -159,6 +178,8 @@ SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRATION_MINUTE
 
 Optionnelles :
 ```
+TOTP_ENCRYPTION_KEY                # Cle Fernet pour chiffrement secrets 2FA (requise si 2FA active)
+REFRESH_GRACE_MINUTES              # Fenetre de grace refresh token en min (defaut: 5)
 ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EMAIL, ADMIN_NAME, ADMIN_FAMILY_NAME
 OVH_ENDPOINT, OVH_APPLICATION_KEY, OVH_APPLICATION_SECRET, OVH_CONSUMER_KEY
 SCW_SECRET_KEY
@@ -167,7 +188,12 @@ FRONTEND_URL, BACKEND_URL, ENVIRONMENT, DEBUG, WORKERS
 FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, FACEBOOK_CONFIG_ID
 MISTRAL_API_KEY
 FIREBASE_SERVICE_ACCOUNT
+YOUTUBE_WORKER_URL, YOUTUBE_WORKER_SECRET
+WP_AUDACEMAGAZINE_URL, WP_AUDACEMAGAZINE_USER, WP_AUDACEMAGAZINE_APP_PASSWORD
+WP_RADIOAUDACE_URL, WP_RADIOAUDACE_USER, WP_RADIOAUDACE_APP_PASSWORD
 ```
+
+> **Important** : toute nouvelle variable doit etre ajoutee dans `docker-compose.yml` (section `environment:` du service `api`) ET dans le `.env` du serveur de production.
 
 ## Stack technique
 
@@ -175,10 +201,13 @@ FIREBASE_SERVICE_ACCOUNT
 - SQLAlchemy 2.0 + Alembic (PostgreSQL 15)
 - Pydantic 2 / pydantic-settings
 - python-jose (JWT) / passlib + bcrypt
+- pyotp (TOTP 2FA) / qrcode (QR generation)
+- cryptography (Fernet AES pour secrets TOTP)
 - Gunicorn + Uvicorn workers
 - Traefik reverse proxy (docker-compose)
 - OVH Python SDK (`ovh>=1.1.0`)
-- httpx (client HTTP asynchrone pour Dedibox API)
+- httpx (client HTTP asynchrone pour Dedibox API, WordPress proxy)
+- mistralai (generation IA de contenu)
 
 ## Modules API externes
 

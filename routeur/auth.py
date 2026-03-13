@@ -107,6 +107,39 @@ def logout(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get
     # Retourne une réponse 204 (No Content) pour indiquer que la déconnexion a réussi
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+
+@router.post('/refresh')
+def refresh_token(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get_db)):
+    """Renouvelle un token d'acces. Accepte les tokens valides ou recemment expires (fenetre de grace)."""
+    user_id = oauth2.decode_token_allow_expired(token, db)
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+
+    user = db.query(model_user.User).filter(model_user.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable")
+
+    # Revoquer l'ancien token
+    revoke_token(db, token)
+
+    # Creer un nouveau token
+    new_access_token = oauth2.create_acces_token(data={'user_id': user.id})
+    permissions = get_user_permissions(db, user.id)
+    log_action(db, user.id, "token_refresh", "auth", user.id)
+
+    return {
+        "access_token": new_access_token,
+        "token_type": "bearer",
+        "user_id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "family_name": user.family_name,
+        "name": user.name,
+        "phone_number": user.phone_number,
+        "profilePicture": user.profilePicture,
+        "permissions": permissions,
+    }
+
 class SignupRequest(BaseModel):
     email: EmailStr
     password: str

@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # Generer via: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     TOTP_ENCRYPTION_KEY:str = ""
 
+    # Delai de grace (en minutes) pour le refresh de token apres expiration
+    REFRESH_GRACE_MINUTES:int = 5
+
     # OVH API
     OVH_ENDPOINT:str = "ovh-eu"
     OVH_APPLICATION_KEY:str = ""

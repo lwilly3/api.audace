@@ -68,6 +68,23 @@ python scripts/show_migrations_history.py --changelog
 
 ## [Non publié]
 
+### Securite — Authentification a deux facteurs (2FA/TOTP)
+- Systeme 2FA complet base sur TOTP RFC 6238 (Google Authenticator, Authy)
+- Router `two_factor_route.py` : 7 endpoints sous `/auth/2fa/*` (setup, verify-setup, verify, verify-backup, disable, backup-codes/regenerate, admin/reset)
+- CRUD `crud_2fa.py` : setup, verification OTP, backup codes, admin reset
+- Utilitaire `crypto.py` : chiffrement Fernet (AES) des secrets TOTP, bcrypt pour backup codes
+- Token temporaire JWT 5 min avec claim `purpose: 2fa_verify` pour le flow login 2FA
+- Modification du login (`auth.py`) : bifurcation si `two_factor_enabled` → retourne `{requires_2fa, temp_token}`
+- Fonction `create_2fa_temp_token()` et `get_2fa_temp_user()` dans `oauth2.py`
+- Dependencies : pyotp>=2.9.0, qrcode[pil]>=7.4
+
+### Securite — Renouvellement silencieux du token
+- Endpoint `POST /auth/refresh` : renouvelle un token valide ou recemment expire (fenetre de grace configurable)
+- Fonction `decode_token_allow_expired()` dans `oauth2.py` : decode avec grace, rejette tokens revoques et tokens 2FA
+- Setting `REFRESH_GRACE_MINUTES` (defaut: 5 min) dans `config.py`
+- L'ancien token est revoque, un nouveau est emis avec permissions fraiches
+- Audit log `token_refresh` pour tracabilite
+
 ### Ajouté
 - Nouvelles permissions pour le module Citations (intégration Firebase)
   - 8 nouvelles permissions : `quotes_view`, `quotes_create`, `quotes_edit`, `quotes_delete`, `quotes_publish`, `stream_transcription_view`, `stream_transcription_create`, `quotes_capture_live`
@@ -118,11 +135,14 @@ python scripts/show_migrations_history.py --changelog
 - Timezone planification : les dates sont maintenant stockées en UTC
 
 ### Modifié
+- Modèle `User` : ajout de 3 colonnes (`two_factor_enabled`, `totp_secret_encrypted`, `backup_codes_hash`)
+- Modèle `UserPermissions` : ajout de 2 colonnes (`can_enforce_2fa`, `can_reset_user_2fa`)
 - Modèle `UserPermissions` : ajout de 8 colonnes booléennes pour les permissions Citations
 - Fonction `update_all_permissions_to_true()` dans `app/db/init_admin.py` : inclut maintenant les permissions Citations
 - `README.md` : ajout des liens vers la documentation de traçabilité
 
 ### Base de données
+- Migration Alembic `9f728a09` : ajout colonnes 2FA (`users.two_factor_enabled`, `users.totp_secret_encrypted`, `users.backup_codes_hash`, `user_permissions.can_enforce_2fa`, `user_permissions.can_reset_user_2fa`)
 - Migration Alembic `75574b12` : ajout des colonnes de permissions Citations dans `user_permissions`
 
 ### Documentation
