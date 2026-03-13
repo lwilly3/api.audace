@@ -63,6 +63,8 @@ services:
       - "traefik.http.middlewares.api-compress.compress=true"
       
       # CORS — middleware dédié (s'applique avant tout, y compris sur les erreurs)
+      # ⚠️ IMPORTANT: Cette config Traefik ECRASE le CORS de FastAPI (maintest.py).
+      # Tout nouveau header custom doit être ajouté ICI dans accessControlAllowHeaders.
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowOriginList=https://app.cloud.audace.ovh,https://app.radio.audace.ovh"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Authorization,Content-Type,Accept,Origin,X-Requested-With,X-Trusted-Device"
