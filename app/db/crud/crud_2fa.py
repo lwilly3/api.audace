@@ -1,17 +1,21 @@
 """
-CRUD pour la gestion du 2FA (TOTP).
+CRUD pour la gestion du 2FA (TOTP) et des appareils de confiance.
 
-Operations : setup, confirm, verify, disable, admin reset, backup codes.
+Operations : setup, confirm, verify, disable, admin reset, backup codes, trusted devices.
 """
 
 import io
+import uuid
+import hashlib
 import base64
 import pyotp
 import qrcode
+from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.model_user import User
+from app.models.model_trusted_device import TrustedDevice
 from app.utils.crypto import (
     encrypt_totp_secret,
     decrypt_totp_secret,
@@ -143,6 +147,8 @@ def disable_totp(db: Session, user_id: int, otp_code: str) -> None:
     user.two_factor_enabled = False
     user.totp_secret_encrypted = None
     user.backup_codes_hash = None
+    # Revoquer tous les appareils de confiance
+    db.query(TrustedDevice).filter(TrustedDevice.user_id == user_id).delete()
     db.commit()
 
 
@@ -157,6 +163,8 @@ def admin_reset_totp(db: Session, user_id: int) -> None:
     user.two_factor_enabled = False
     user.totp_secret_encrypted = None
     user.backup_codes_hash = None
+    # Revoquer tous les appareils de confiance
+    db.query(TrustedDevice).filter(TrustedDevice.user_id == user_id).delete()
     db.commit()
 
 
@@ -181,3 +189,102 @@ def regenerate_backup_codes(db: Session, user_id: int, otp_code: str) -> dict:
     db.commit()
 
     return {"backup_codes": backup_codes}
+
+
+# ========================================================================
+# Appareils de confiance (Trusted Devices)
+# ========================================================================
+
+TRUSTED_DEVICE_DAYS = 30
+
+
+def _hash_device_token(token: str) -> str:
+    """Hash SHA-256 d'un device token."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def create_trusted_device(db: Session, user_id: int, user_agent: str = None) -> str:
+    """
+    Cree un appareil de confiance pour l'utilisateur.
+    Retourne le device token en clair (a stocker cote client).
+    """
+    device_token = uuid.uuid4().hex
+    device = TrustedDevice(
+        user_id=user_id,
+        device_token_hash=_hash_device_token(device_token),
+        user_agent=user_agent[:500] if user_agent else None,
+        expires_at=datetime.utcnow() + timedelta(days=TRUSTED_DEVICE_DAYS),
+    )
+    db.add(device)
+    db.commit()
+    return device_token
+
+
+def verify_trusted_device(db: Session, user_id: int, device_token: str) -> bool:
+    """
+    Verifie un device token. Retourne True si valide et non expire.
+    Met a jour last_used_at en cas de succes.
+    """
+    token_hash = _hash_device_token(device_token)
+    device = db.query(TrustedDevice).filter(
+        TrustedDevice.user_id == user_id,
+        TrustedDevice.device_token_hash == token_hash,
+    ).first()
+
+    if not device:
+        return False
+
+    if device.expires_at < datetime.utcnow():
+        db.delete(device)
+        db.commit()
+        return False
+
+    device.last_used_at = datetime.utcnow()
+    db.commit()
+    return True
+
+
+def revoke_trusted_devices(db: Session, user_id: int) -> int:
+    """Supprime tous les appareils de confiance d'un utilisateur."""
+    count = db.query(TrustedDevice).filter(TrustedDevice.user_id == user_id).delete()
+    db.commit()
+    return count
+
+
+def revoke_trusted_device(db: Session, user_id: int, device_id: int) -> bool:
+    """Supprime un appareil de confiance specifique."""
+    device = db.query(TrustedDevice).filter(
+        TrustedDevice.id == device_id,
+        TrustedDevice.user_id == user_id,
+    ).first()
+    if not device:
+        return False
+    db.delete(device)
+    db.commit()
+    return True
+
+
+def get_trusted_devices(db: Session, user_id: int) -> list:
+    """Liste les appareils de confiance d'un utilisateur."""
+    devices = db.query(TrustedDevice).filter(
+        TrustedDevice.user_id == user_id,
+    ).order_by(TrustedDevice.last_used_at.desc()).all()
+    return [
+        {
+            "id": d.id,
+            "user_agent": d.user_agent,
+            "created_at": d.created_at.isoformat() if d.created_at else None,
+            "expires_at": d.expires_at.isoformat() if d.expires_at else None,
+            "last_used_at": d.last_used_at.isoformat() if d.last_used_at else None,
+        }
+        for d in devices
+    ]
+
+
+def cleanup_expired_devices(db: Session) -> int:
+    """Supprime les appareils de confiance expires."""
+    count = db.query(TrustedDevice).filter(
+        TrustedDevice.expires_at < datetime.utcnow()
+    ).delete()
+    db.commit()
+    return count

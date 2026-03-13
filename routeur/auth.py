@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Response, status, Depends, APIRouter, Query
+from fastapi import HTTPException, Response, Request, status, Depends, APIRouter, Query
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -27,6 +27,7 @@ from core.auth.oauth2 import SECRET_KEY, ALGORITHM
 from core.auth.oauth2 import create_2fa_temp_token
 from app.db.crud.crud_password_reset_token import create_reset_token, get_reset_token, mark_reset_token_used
 from app.db.crud.crud_audit_logs import log_action
+from app.db.crud.crud_2fa import verify_trusted_device
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -43,7 +44,7 @@ router=APIRouter(
 # sur la solution au on accede par user_credentials.email ..  pour la deuxieme solution il retourne un dict avec username et password
 # la cle du dict username retourner peux soscker nimporte quoi email, id... en fonction de cequi a ete envoye par lutilisateur
 # les info ne seront plus en voye en json par le body clien mais en form-date 7h12
-def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Session = Depends(database.get_db)): 
+def login(request: Request, user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Session = Depends(database.get_db)):
 # username contien le mail
    user_to_log_on_db= db.query(model_user.User).filter(model_user.User.email== user_credentials_receved.username).first() 
 
@@ -67,14 +68,20 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
 
    # Verifier si le 2FA est active
    if user_to_log_on_db.two_factor_enabled:
-       # Retourner un token temporaire pour la verification 2FA
-       temp_token = create_2fa_temp_token(user_to_log_on_db.id)
-       log_action(db, user_to_log_on_db.id, "login_2fa_required", "users", user_to_log_on_db.id)
-       return {
-           "requires_2fa": True,
-           "temp_token": temp_token,
-           "token_type": "bearer",
-       }
+       # Verifier si un appareil de confiance est presente
+       device_token = request.headers.get("X-Trusted-Device")
+       if device_token and verify_trusted_device(db, user_to_log_on_db.id, device_token):
+           # Appareil de confiance valide → bypass 2FA
+           log_action(db, user_to_log_on_db.id, "login_trusted_device", "users", user_to_log_on_db.id)
+       else:
+           # Pas de device token ou invalide → demander le 2FA
+           temp_token = create_2fa_temp_token(user_to_log_on_db.id)
+           log_action(db, user_to_log_on_db.id, "login_2fa_required", "users", user_to_log_on_db.id)
+           return {
+               "requires_2fa": True,
+               "temp_token": temp_token,
+               "token_type": "bearer",
+           }
 
 
 # creation du token

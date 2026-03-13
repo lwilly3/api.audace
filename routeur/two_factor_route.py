@@ -4,9 +4,10 @@ Routes API pour la gestion du 2FA (TOTP).
 Prefixe : /auth/2fa
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 
 from app.db.database import get_db
 from app.models.model_user import User
@@ -20,6 +21,7 @@ from app.db.crud.crud_2fa import (
     disable_totp,
     admin_reset_totp,
     regenerate_backup_codes,
+    create_trusted_device,
 )
 from app.db.crud.crud_permissions import get_user_permissions
 from core.auth.oauth2 import create_acces_token
@@ -40,10 +42,12 @@ class OTPRequest(BaseModel):
 class VerifyLoginRequest(BaseModel):
     temp_token: str
     otp_code: str
+    trust_browser: Optional[bool] = False
 
 class BackupCodeLoginRequest(BaseModel):
     temp_token: str
     backup_code: str
+    trust_browser: Optional[bool] = False
 
 
 # --- Endpoints authentifies (Bearer token complet) ---
@@ -99,12 +103,14 @@ def two_factor_regenerate_backup_codes(
 @router.post('/verify')
 def two_factor_verify_login(
     request: VerifyLoginRequest,
+    http_request: Request,
     db: Session = Depends(get_db),
 ):
     """
     Verifie le code OTP pendant le login (2eme etape).
     Accepte un temp_token (JWT 5min avec purpose=2fa_verify).
     Retourne le token complet + permissions si valide.
+    Si trust_browser=True, genere un device token pour les connexions futures.
     """
     # Valider le temp token et extraire le user_id
     user_data = get_2fa_temp_user(request.temp_token, db)
@@ -117,12 +123,22 @@ def two_factor_verify_login(
         )
 
     # Generer le token complet
-    return _build_login_response(db, user_data)
+    response = _build_login_response(db, user_data)
+
+    # Si trust_browser, generer un device token
+    if request.trust_browser:
+        user_agent = http_request.headers.get("User-Agent", "")
+        device_token = create_trusted_device(db, user_data.id, user_agent)
+        response["trusted_device_token"] = device_token
+        log_action(db, user_data.id, "trusted_device_created", "users", user_data.id)
+
+    return response
 
 
 @router.post('/verify-backup')
 def two_factor_verify_backup(
     request: BackupCodeLoginRequest,
+    http_request: Request,
     db: Session = Depends(get_db),
 ):
     """
@@ -137,7 +153,16 @@ def two_factor_verify_backup(
         )
 
     log_action(db, user_data.id, "2fa_backup_code_used", "users", user_data.id)
-    return _build_login_response(db, user_data)
+    response = _build_login_response(db, user_data)
+
+    # Si trust_browser, generer un device token
+    if request.trust_browser:
+        user_agent = http_request.headers.get("User-Agent", "")
+        device_token = create_trusted_device(db, user_data.id, user_agent)
+        response["trusted_device_token"] = device_token
+        log_action(db, user_data.id, "trusted_device_created", "users", user_data.id)
+
+    return response
 
 
 # --- Endpoint admin ---
