@@ -84,6 +84,7 @@ from app.schemas.schema_social import (
     FollowerTrendResponse,
     VideoPerformanceResponse,
     GenerateFromUrlRequest,
+    ImproveTextRequest,
 )
 from app.services.social_oauth import (
     build_authorization_url,
@@ -529,6 +530,32 @@ def generate_from_url(
         "source_type": content_data["source_type"],
         "youtube_metadata": content_data["metadata"] if content_data["source_type"] == "youtube" else None,
     }
+
+
+@router.post("/improve-text")
+def improve_text_endpoint(
+    body: ImproveTextRequest,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Ameliorer un texte existant via l'IA Mistral.
+
+    Actions disponibles :
+    - correct : corrige orthographe et grammaire
+    - improve : ameliore la mise en page et presentation
+    - generate_title : genere un titre a partir du contenu
+    """
+    from app.services.ai_service import improve_text
+
+    if body.action not in ("correct", "improve", "generate_title"):
+        raise HTTPException(status_code=422, detail="Action invalide")
+    if body.content_type not in ("post", "article"):
+        raise HTTPException(status_code=422, detail="Type de contenu invalide")
+
+    result = improve_text(body.text, body.content_type, body.action)
+    log_action(db, current_user.id, "ai_improve", "social_content", 0)
+    return result
 
 
 # ════════════════════════════════════════════════════════════════

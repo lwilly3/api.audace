@@ -330,3 +330,14 @@ class GenerateFromUrlResponse(BaseModel):
     source_url: str = Field(..., description="URL source utilisee")
     source_type: str = Field("article", description="Type de source: article ou youtube")
     youtube_metadata: Optional[dict] = Field(None, description="Metadonnees YouTube (video_id, title, author, language, thumbnail_url)")
+
+
+# ════════════════════════════════════════════════════════════════
+# AMELIORATION IA DE TEXTE
+# ════════════════════════════════════════════════════════════════
+
+class ImproveTextRequest(BaseModel):
+    """Requete pour ameliorer un texte existant via l'IA."""
+    text: str = Field(..., min_length=10, max_length=15000, description="Texte a ameliorer")
+    content_type: str = Field("post", description="Type de contenu: post (texte brut) ou article (HTML)")
+    action: str = Field("correct", description="Action: correct, improve, generate_title")

@@ -640,3 +640,153 @@ def generate_article_excerpt(content: str, site_key: str = "audacemagazine") -> 
 
     logger.info(f"Extrait IA genere ({len(excerpt)} chars) pour site {site_key}")
     return excerpt
+
+
+# ════════════════════════════════════════════════════════════════
+# AMELIORATION DE TEXTE EXISTANT
+# ════════════════════════════════════════════════════════════════
+
+# Limite de caracteres pour les textes a ameliorer
+MAX_IMPROVE_CHARS = 8000
+
+
+def improve_text(
+    text: str,
+    content_type: str = "post",
+    action: str = "correct",
+) -> dict:
+    """
+    Ameliore un texte existant via Mistral.
+
+    Actions :
+    - correct : corrige l'orthographe et la grammaire
+    - improve : ameliore la mise en page et la presentation
+    - generate_title : genere un titre a partir du contenu
+
+    content_type : 'post' (texte brut) ou 'article' (HTML)
+    """
+    if not text or len(text.strip()) < 10:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Le texte est trop court pour etre ameliore"
+        )
+
+    # Preparer le texte
+    input_text = text.strip()
+    if len(input_text) > MAX_IMPROVE_CHARS:
+        input_text = input_text[:MAX_IMPROVE_CHARS] + "..."
+
+    is_html = content_type == "article"
+
+    if action == "correct":
+        result = _improve_correct(input_text, is_html)
+    elif action == "improve":
+        result = _improve_layout(input_text, is_html)
+    elif action == "generate_title":
+        result = _improve_generate_title(input_text, is_html)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Action invalide: {action}"
+        )
+
+    logger.info(f"Texte ameliore ({action}, {content_type}, {len(result)} chars)")
+
+    return {
+        "result": result,
+        "action": action,
+        "content_type": content_type,
+    }
+
+
+def _improve_correct(text: str, is_html: bool) -> str:
+    """Corrige l'orthographe et la grammaire du texte."""
+    html_instruction = (
+        "Le contenu est en HTML. Conserve toutes les balises HTML intactes. "
+        "Ne modifie que le texte entre les balises."
+    ) if is_html else (
+        "Le contenu est du texte brut (publication pour reseaux sociaux). "
+        "Conserve le formatage (sauts de ligne, emojis, hashtags)."
+    )
+
+    system_prompt = (
+        "Tu es un correcteur professionnel francophone. "
+        "Corrige uniquement les fautes d'orthographe, de grammaire, de conjugaison et de ponctuation. "
+        "NE MODIFIE PAS le sens, le ton, le style ou la structure du texte. "
+        f"{html_instruction}\n"
+        "Reponds UNIQUEMENT avec le texte corrige, sans explication ni commentaire."
+    )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": text},
+    ]
+
+    max_tokens = 1500 if is_html else 500
+    return _call_mistral(messages, max_tokens=max_tokens, temperature=0.3)
+
+
+def _improve_layout(text: str, is_html: bool) -> str:
+    """Ameliore la mise en page et la presentation du texte."""
+    if is_html:
+        html_instruction = (
+            "Le contenu est en HTML pour un article WordPress. Ameliore :\n"
+            "- La structure HTML : utilise <h2>, <h3> pour les sous-titres, <p> pour les paragraphes\n"
+            "- Ajoute des <strong> pour les points importants\n"
+            "- Ajoute des <blockquote> pour les citations si pertinent\n"
+            "- Ameliore le decoupage en paragraphes et la fluidite\n"
+            "- Conserve le sens et les informations du texte original\n"
+            "Reponds UNIQUEMENT avec le contenu HTML ameliore."
+        )
+    else:
+        html_instruction = (
+            "Le contenu est une publication pour reseaux sociaux (texte brut). Ameliore :\n"
+            "- L'accroche (premiere phrase percutante)\n"
+            "- La structure (paragraphes courts, listes si pertinent)\n"
+            "- L'appel a l'action en fin de publication\n"
+            "- Conserve le sens et le ton original\n"
+            "- Conserve les emojis et hashtags existants\n"
+            "Reponds UNIQUEMENT avec le texte ameliore."
+        )
+
+    system_prompt = (
+        "Tu es un redacteur web professionnel francophone. "
+        "Ameliore la presentation et la mise en page du texte suivant, "
+        "tout en preservant le contenu et le sens original.\n"
+        f"{html_instruction}"
+    )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": text},
+    ]
+
+    max_tokens = 2000 if is_html else 500
+    return _call_mistral(messages, max_tokens=max_tokens, temperature=0.6)
+
+
+def _improve_generate_title(text: str, is_html: bool) -> str:
+    """Genere un titre accrocheur a partir du contenu."""
+    # Pour les articles HTML, extraire le texte brut pour l'analyse
+    plain_text = _strip_html_simple(text) if is_html else text
+    if len(plain_text) > 2000:
+        plain_text = plain_text[:2000] + "..."
+
+    system_prompt = (
+        "Tu es un redacteur web professionnel francophone specialise en titraille. "
+        "Genere UN titre accrocheur, informatif et optimise SEO pour le contenu suivant.\n"
+        "Regles :\n"
+        "- Maximum 80 caracteres\n"
+        "- Pas de guillemets, pas de ponctuation finale\n"
+        "- Donne envie de lire\n"
+        "- Reponds UNIQUEMENT avec le titre, rien d'autre"
+    )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": plain_text},
+    ]
+
+    title = _call_mistral(messages, max_tokens=60, temperature=0.7)
+    # Nettoyer les guillemets eventuels
+    return title.strip("\"'«»")
