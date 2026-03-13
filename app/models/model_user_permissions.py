@@ -185,6 +185,10 @@ class UserPermissions(Base):
     social_edit_pinned = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Modifier des contenus epingles
     social_delete_pinned = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Desepingler des contenus
 
+    # Permissions pour la sécurité (2FA)
+    can_enforce_2fa = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Peut forcer le 2FA par rôle
+    can_reset_user_2fa = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Peut reset le 2FA d'un utilisateur
+
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
 

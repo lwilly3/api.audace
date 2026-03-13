@@ -24,6 +24,7 @@ from app.models.model_user_permissions import UserPermissions
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from core.auth.oauth2 import SECRET_KEY, ALGORITHM
+from core.auth.oauth2 import create_2fa_temp_token
 from app.db.crud.crud_password_reset_token import create_reset_token, get_reset_token, mark_reset_token_used
 from app.db.crud.crud_audit_logs import log_action
 
@@ -63,8 +64,19 @@ def login(user_credentials_receved: OAuth2PasswordRequestForm=Depends(), db: Ses
            valid = False
    if not valid:
        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="authentification invalide")
- 
-    
+
+   # Verifier si le 2FA est active
+   if user_to_log_on_db.two_factor_enabled:
+       # Retourner un token temporaire pour la verification 2FA
+       temp_token = create_2fa_temp_token(user_to_log_on_db.id)
+       log_action(db, user_to_log_on_db.id, "login_2fa_required", "users", user_to_log_on_db.id)
+       return {
+           "requires_2fa": True,
+           "temp_token": temp_token,
+           "token_type": "bearer",
+       }
+
+
 # creation du token
 #    le data contien ce que je veux inclure dans le  payloard
 #    le token peut etre visualiser dans https://jwt.io/  9h09

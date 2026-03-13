@@ -207,6 +207,10 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "social_edit_pinned": permissions.social_edit_pinned,
     "social_delete_pinned": permissions.social_delete_pinned,
 
+    # Permissions pour la securite (2FA)
+    "can_enforce_2fa": permissions.can_enforce_2fa,
+    "can_reset_user_2fa": permissions.can_reset_user_2fa,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
@@ -371,7 +375,11 @@ def initialize_user_permissions(db: Session, user_id: int):
     social_view_pinned=False,
     social_create_pinned=False,
     social_edit_pinned=False,
-    social_delete_pinned=False
+    social_delete_pinned=False,
+
+    # Securite (2FA)
+    can_enforce_2fa=False,
+    can_reset_user_2fa=False
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -672,7 +680,11 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'social_view_pinned',
     'social_create_pinned',
     'social_edit_pinned',
-    'social_delete_pinned'
+    'social_delete_pinned',
+
+    # Securite (2FA)
+    'can_enforce_2fa',
+    'can_reset_user_2fa'
 }
 
         # Vérifier les permissions fournies

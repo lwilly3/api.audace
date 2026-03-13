@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     ALGORITHM:str
     ACCESS_TOKEN_EXPIRATION_MINUTE:int
 
+    # 2FA TOTP encryption key (Fernet)
+    # Generer via: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    TOTP_ENCRYPTION_KEY:str = ""
+
     # OVH API
     OVH_ENDPOINT:str = "ovh-eu"
     OVH_APPLICATION_KEY:str = ""

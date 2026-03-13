@@ -35,6 +35,12 @@ class User(BaseModel):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))  # Date de création
     phone_number = Column(String, nullable=True, index=True)  # Numéro de téléphone de l'utilisateur (optionnel)
     profilePicture = Column(Text, nullable=True)
+
+    # Champs 2FA (TOTP)
+    two_factor_enabled = Column(Boolean, default=False, nullable=False)
+    totp_secret_encrypted = Column(Text, nullable=True)
+    backup_codes_hash = Column(Text, nullable=True)  # JSON array de codes hashés
+
     # Relations avec d'autres tables
     # roles = relationship('Role', secondary='user_roles', back_populates='users') # Relation avec les rôles via UserRole
     # user_roles = relationship("UserRole", back_populates="user")

@@ -52,7 +52,17 @@ def create_acces_token(data: dict):
 
     encoded_jwt=jwt.encode(data_to_encode, SECRET_KEY,algorithm=ALGORITHM)
 
-    return encoded_jwt 
+    return encoded_jwt
+
+
+def create_2fa_temp_token(user_id: int) -> str:
+    """Cree un token temporaire pour la verification 2FA (5 min, purpose=2fa_verify)."""
+    data = {
+        'user_id': user_id,
+        'purpose': '2fa_verify',
+        'exp': datetime.utcnow() + timedelta(minutes=5),
+    }
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
 
 # Vérifie la validité d'un token JWT et si il n'est pas révoqué
 # extrait l'id du token en vue deventuelle traitement a base de l'id de lutilisateur
@@ -122,6 +132,35 @@ def get_current_user(token: str= Depends(oauth2_scheme), db: Session = Depends(d
 
 
     return current_user_info
+
+
+def get_2fa_temp_user(temp_token: str, db: Session):
+    """
+    Valide un token temporaire 2FA et retourne l'utilisateur.
+    Rejette les tokens qui n'ont pas purpose=2fa_verify.
+    """
+    exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token 2FA invalide ou expire",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(temp_token, SECRET_KEY, algorithms=ALGORITHM)
+        user_id = payload.get("user_id")
+        purpose = payload.get("purpose")
+
+        if not user_id or purpose != "2fa_verify":
+            raise exception
+
+        user = db.query(model_user.User).filter(model_user.User.id == user_id).first()
+        if not user:
+            raise exception
+
+        return user
+    except ExpiredSignatureError:
+        raise exception
+    except JWTError:
+        raise exception
 
 
 
