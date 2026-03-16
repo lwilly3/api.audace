@@ -15,6 +15,33 @@ docker-compose up -d          # lance PostgreSQL + API
 docker-compose run --rm migrate  # migration seule
 ```
 
+## Docker & Deploiement — REGLES CRITIQUES
+
+### Entrypoint
+Le conteneur utilise `entrypoint.sh` (PAS un `command:` inline dans docker-compose).
+L'entrypoint fait dans l'ordre : attente DB (retry 30x2s) → `alembic upgrade head` → gunicorn.
+
+**INTERDIT :**
+- Remettre un `command:` inline dans `docker-compose.yml` pour le service `api`
+- Remplacer `ENTRYPOINT` par `CMD` dans le Dockerfile
+- Supprimer ou modifier `entrypoint.sh` sans comprendre l'impact
+
+### Connexion base de donnees
+`app/db/database.py` utilise `URL.create()` de SQLAlchemy (PAS de construction manuelle d'URL).
+`alembic/env.py` importe `SQLALCHEMY_DATABASE_URL` depuis `database.py` (PAS de `config.set_main_option()`).
+
+**INTERDIT :**
+- Utiliser `f"postgresql://user:{password}@host"` pour construire l'URL
+- Utiliser `config.set_main_option("sqlalchemy.url", ...)` dans `env.py` (configparser corrompt les `%`)
+- Utiliser `quote_plus()` pour encoder le mot de passe
+
+### Mot de passe PostgreSQL
+Le mot de passe `DATABASE_PASSWORD` doit etre **alphanumerique pur** (pas de `@`, `*`, `#`, `%`).
+Dokploy/docker-compose peut tronquer les valeurs contenant ces caracteres.
+
+### Documentation
+Voir `docs/docker/DEPLOYMENT_RECOVERY.md` pour le guide complet de deploiement et recuperation (niveau junior).
+
 ## Tests
 
 ```bash

@@ -64,6 +64,25 @@ Documentation détaillée de la logique métier par module.
 
 ---
 
+### 3. 🐳 [Docker & Déploiement](docker/)
+Documentation Docker, déploiement et récupération.
+
+**Fichiers disponibles :**
+- **[README.md](docker/README.md)** - Index de la documentation Docker
+- **[DOKPLOY_ENV.md](docker/DOKPLOY_ENV.md)** - Configuration Dokploy (env vars, Traefik)
+- **[MAINTENANCE_GUIDE.md](docker/MAINTENANCE_GUIDE.md)** - Guide de maintenance production
+- **[DATABASE_SECURITY.md](docker/DATABASE_SECURITY.md)** - Sécurité et sauvegardes DB
+- **[CRON_GUIDE.md](docker/CRON_GUIDE.md)** - Automatisation avec Cron
+- **[Docker_guide_api_audace.md](docker/Docker_guide_api_audace.md)** - Architecture Docker complète
+- **[DEPLOYMENT_RECOVERY.md](docker/DEPLOYMENT_RECOVERY.md)** - Déploiement et récupération (niveau junior)
+
+**Utilisez cette section pour :**
+- Comprendre comment le serveur démarre (entrypoint.sh)
+- Résoudre les problèmes de déploiement
+- Récupérer après un crash
+
+---
+
 ## 📊 Statistiques de la documentation
 
 | Section | Fichiers | Lignes | Fonctions | Exemples |
@@ -242,7 +261,7 @@ Code complet d'utilisation
 
 ### Prochaines évolutions
 - [ ] Documentation des tests
-- [ ] Documentation du déploiement
+- [x] Documentation du déploiement → [DEPLOYMENT_RECOVERY.md](docker/DEPLOYMENT_RECOVERY.md)
 - [ ] Tutoriels vidéo
 - [ ] FAQ étendue
 

@@ -63,7 +63,7 @@ Documentation complète pour le déploiement et la maintenance de l'API Audace a
 ---
 
 ### 🐳 [Guide Docker Complet](Docker_guide_api_audace.md)
-**Pour qui :** Développeurs, DevOps  
+**Pour qui :** Développeurs, DevOps
 **Contenu :**
 - Architecture Docker de l'application
 - Explication du Dockerfile
@@ -72,6 +72,20 @@ Documentation complète pour le déploiement et la maintenance de l'API Audace a
 - Variables d'environnement détaillées
 
 **Référence technique** pour comprendre l'infrastructure.
+
+---
+
+### 🔄 [Déploiement et Récupération](DEPLOYMENT_RECOVERY.md)
+**Pour qui :** Développeurs juniors, opérations de maintenance
+**Contenu :**
+- Comment le serveur démarre (`entrypoint.sh`)
+- Connexion à la base de données (`URL.create()`)
+- Migrations Alembic (chaîne, idempotence, `alembic_version`)
+- Procédure de récupération complète (drop + recreate DB)
+- Problèmes courants et solutions (password, DuplicateTable, hostname)
+- Checklist de déploiement
+
+**Guide de référence** pour comprendre et résoudre les problèmes de déploiement.
 
 ---
 
@@ -84,7 +98,8 @@ docs/docker/
 ├── MAINTENANCE_GUIDE.md         # Guide de maintenance
 ├── DATABASE_SECURITY.md         # Sécurité de la base
 ├── CRON_GUIDE.md               # Automatisation avec Cron
-└── Docker_guide_api_audace.md  # Guide technique Docker
+├── Docker_guide_api_audace.md  # Guide technique Docker
+└── DEPLOYMENT_RECOVERY.md      # Déploiement et récupération (niveau junior)
 ```
 
 ---
@@ -104,8 +119,9 @@ docs/docker/
 
 ### En cas de problème :
 1. Section "Dépannage" du [MAINTENANCE_GUIDE.md](MAINTENANCE_GUIDE.md)
-2. Vérifiez les logs : `sudo docker logs audace_api --tail 100`
-3. Plan de restauration : [DATABASE_SECURITY.md](DATABASE_SECURITY.md)
+2. Guide complet de récupération : [DEPLOYMENT_RECOVERY.md](DEPLOYMENT_RECOVERY.md)
+3. Vérifiez les logs : `sudo docker logs audace_api --tail 100`
+4. Plan de restauration : [DATABASE_SECURITY.md](DATABASE_SECURITY.md)
 
 ---
 
@@ -153,6 +169,6 @@ Pour toute question ou problème :
 
 ---
 
-**Dernière mise à jour :** 10 décembre 2025  
-**Version de l'API :** 1.0.0  
+**Dernière mise à jour :** 16 mars 2026
+**Version de l'API :** 1.2.0
 **Environnement :** Production (Dokploy + Traefik)
