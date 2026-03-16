@@ -100,3 +100,16 @@ class BackupFileInfo(BaseModel):
     source: str  # "local" ou "drive"
     google_drive_file_id: Optional[str] = None
     modified_at: Optional[datetime] = None
+
+
+# ── Drive Folders ─────────────────────────────────────────────
+
+class DriveFolderInfo(BaseModel):
+    """Information sur un dossier Google Drive."""
+    id: str
+    name: str
+
+
+class CreateFolderRequest(BaseModel):
+    """Requete de creation d'un dossier Drive."""
+    folder_name: str = Field(..., min_length=1, max_length=255)

@@ -395,6 +395,90 @@ def download_from_drive(access_token: str, file_id: str, dest_path: str) -> str:
         )
 
 
+def create_drive_folder(access_token: str, folder_name: str, parent_id: str | None = None) -> dict:
+    """
+    Cree un dossier dans Google Drive.
+    Fonctionne avec le scope drive.file car l'app cree le dossier.
+
+    Returns:
+        Dict avec id et name du dossier cree
+    """
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+    metadata: dict = {
+        "name": folder_name,
+        "mimeType": "application/vnd.google-apps.folder",
+    }
+    if parent_id:
+        metadata["parents"] = [parent_id]
+
+    try:
+        with httpx.Client(timeout=TIMEOUT_DEFAULT) as client:
+            response = client.post(
+                f"{GOOGLE_DRIVE_API}/files",
+                headers=headers,
+                json=metadata,
+            )
+
+        if response.status_code not in (200, 201):
+            logger.error(f"Creation dossier Drive echouee: {response.status_code} - {response.text[:300]}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Echec de la creation du dossier Google Drive"
+            )
+
+        data = response.json()
+        return {"id": data.get("id"), "name": data.get("name")}
+
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Timeout lors de la creation du dossier Google Drive"
+        )
+    except httpx.RequestError as e:
+        logger.error(f"Erreur reseau creation dossier Drive: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Erreur reseau lors de la creation du dossier Google Drive"
+        )
+
+
+def list_drive_folders(access_token: str) -> list[dict]:
+    """
+    Liste les dossiers crees par cette application (scope drive.file).
+
+    Returns:
+        Liste de dicts avec id, name, createdTime
+    """
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {
+        "q": "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        "fields": "files(id,name,createdTime)",
+        "orderBy": "createdTime desc",
+        "pageSize": 50,
+    }
+
+    try:
+        with httpx.Client(timeout=TIMEOUT_DEFAULT) as client:
+            response = client.get(
+                f"{GOOGLE_DRIVE_API}/files",
+                headers=headers,
+                params=params,
+            )
+
+        if response.status_code != 200:
+            logger.error(f"Liste dossiers Drive echouee: {response.status_code} - {response.text[:300]}")
+            return []
+
+        return response.json().get("files", [])
+
+    except Exception as e:
+        logger.error(f"Erreur liste dossiers Drive: {e}")
+        return []
+
+
 def delete_drive_file(access_token: str, file_id: str) -> bool:
     """Supprime un fichier de Google Drive. Retourne True si succes."""
     headers = {"Authorization": f"Bearer {access_token}"}

@@ -1,7 +1,9 @@
 from functools import lru_cache  # Décorateur pour mettre en cache les appels de fonction
 from contextlib import asynccontextmanager  # Pour le lifespan event handler
-from fastapi import FastAPI  # Classe principale pour créer une application FastAPI
+from fastapi import FastAPI, Request  # Classe principale pour créer une application FastAPI
 from fastapi.middleware.cors import CORSMiddleware  # Middleware pour la gestion des CORS
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from app.__version__ import get_version, get_version_info, API_V1_PREFIX
 # from db.init_db_rolePermissions import create_default_role_and_permission
 # from app.db.init_db_rolePermissions import create_default_role_and_permission
@@ -152,6 +154,22 @@ app = FastAPI(
         "name": "Proprietary",
     }
 )
+
+
+# Handler custom pour RequestValidationError — evite UnicodeDecodeError
+# quand des fichiers binaires (.sql.gz) sont dans les details de validation
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        clean_error = {}
+        for key, value in error.items():
+            if isinstance(value, bytes):
+                clean_error[key] = f"<binary {len(value)} bytes>"
+            else:
+                clean_error[key] = value
+        errors.append(clean_error)
+    return JSONResponse(status_code=422, content={"detail": errors})
 
 
 # Ajout du middleware personnalisé pour journaliser les requêtes

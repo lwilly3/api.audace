@@ -24,7 +24,7 @@ import subprocess
 import threading
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -50,15 +50,19 @@ from app.schemas.schema_backup import (
     BackupRestoreRequest,
     BackupRestoreResponse,
     BackupTriggerResponse,
+    CreateFolderRequest,
+    DriveFolderInfo,
     OAuthUrlResponse,
 )
 from app.services import sync_tasks
 from app.services.google_drive_client import (
     build_google_auth_url,
+    create_drive_folder,
     download_from_drive,
     ensure_valid_token,
     exchange_google_code,
     list_drive_files,
+    list_drive_folders,
     upload_to_drive,
     verify_google_state,
 )
@@ -213,6 +217,26 @@ def oauth_callback(
             )
 
             log_action(db, user_id, "oauth_connect", "backup_config", 0)
+
+            # Auto-creation du dossier par defaut si aucun n'est configure
+            try:
+                cfg = get_backup_config(db)
+                if not cfg.google_drive_folder_id:
+                    folder_result = create_drive_folder(
+                        token_data["access_token"],
+                        "RadioManager-Backups"
+                    )
+                    if folder_result.get("id"):
+                        upsert_backup_config(
+                            db,
+                            google_drive_folder_id=folder_result["id"],
+                            google_drive_folder_name="RadioManager-Backups",
+                        )
+                        logger.info(f"Dossier Drive auto-cree: {folder_result['id']}")
+            except Exception as e:
+                logger.warning(f"Impossible de creer le dossier par defaut: {e}")
+                # Non-bloquant : la connexion reste valide
+
         finally:
             db.close()
 
@@ -524,4 +548,146 @@ def trigger_restore(
     return BackupRestoreResponse(
         task_id=task_id,
         message=f"Restauration de {backup.filename} lancee en arriere-plan",
+    )
+
+
+# ════════════════════════════════════════════════════════════════
+# DRIVE FOLDERS
+# ════════════════════════════════════════════════════════════════
+
+@router.get("/drive/folders", response_model=list[DriveFolderInfo])
+def get_drive_folders(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Liste les dossiers Google Drive crees par l'application."""
+    _check_backup_permission(db, current_user)
+
+    access_token = ensure_valid_token(db)
+    if not access_token:
+        raise HTTPException(status_code=400, detail="Token Google invalide ou expire")
+
+    folders = list_drive_folders(access_token)
+    return [DriveFolderInfo(id=f["id"], name=f["name"]) for f in folders if f.get("id")]
+
+
+@router.post("/drive/folders", response_model=DriveFolderInfo)
+def create_folder(
+    body: CreateFolderRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Cree un nouveau dossier dans Google Drive."""
+    _check_backup_permission(db, current_user)
+
+    access_token = ensure_valid_token(db)
+    if not access_token:
+        raise HTTPException(status_code=400, detail="Token Google invalide ou expire")
+
+    result = create_drive_folder(access_token, body.folder_name)
+    if not result.get("id"):
+        raise HTTPException(status_code=502, detail="Echec de la creation du dossier Drive")
+
+    log_action(db, current_user.id, "create", "drive_folder", 0)
+    return DriveFolderInfo(id=result["id"], name=result["name"])
+
+
+# ════════════════════════════════════════════════════════════════
+# RESTORE FROM UPLOAD
+# ════════════════════════════════════════════════════════════════
+
+MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 Mo
+
+@router.post("/restore/upload", response_model=BackupRestoreResponse)
+def restore_from_upload(
+    file: UploadFile = File(...),
+    confirm: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Restaure la base depuis un fichier .sql.gz uploade.
+    Necessite confirm='RESTAURER' dans le body.
+    """
+    _check_backup_permission(db, current_user)
+
+    if confirm != "RESTAURER":
+        raise HTTPException(
+            status_code=400,
+            detail="Pour confirmer la restauration, envoyez confirm='RESTAURER'"
+        )
+
+    if not file.filename or not file.filename.endswith(".sql.gz"):
+        raise HTTPException(status_code=400, detail="Le fichier doit etre au format .sql.gz")
+
+    # Sauvegarder le fichier uploade
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    safe_name = f"upload_{timestamp}_{file.filename}"
+    filepath = os.path.join(BACKUP_DIR, safe_name)
+
+    try:
+        os.makedirs(BACKUP_DIR, exist_ok=True)
+        total_size = 0
+        with open(filepath, "wb") as f:
+            while True:
+                chunk = file.file.read(8192)
+                if not chunk:
+                    break
+                total_size += len(chunk)
+                if total_size > MAX_UPLOAD_SIZE:
+                    f.close()
+                    os.remove(filepath)
+                    raise HTTPException(status_code=413, detail="Fichier trop volumineux (max 500 Mo)")
+                f.write(chunk)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur sauvegarde fichier upload: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la sauvegarde du fichier")
+
+    task_id = sync_tasks.create(label=f"restore-upload-{safe_name}")
+
+    def _run_upload_restore():
+        session = SessionLocal()
+        try:
+            sync_tasks.update(task_id, progress="Restauration de la base de donnees...", percent=30)
+
+            result = subprocess.run(
+                f"gunzip -c {filepath} | PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME",
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
+
+            if result.returncode != 0:
+                error_msg = result.stderr[:500] if result.stderr else "Erreur inconnue"
+                sync_tasks.fail(task_id, f"psql erreur: {error_msg}")
+                return
+
+            log_action(session, current_user.id, "restore_upload_complete", "backup_history", 0)
+            sync_tasks.complete(task_id, {"filename": safe_name})
+
+        except subprocess.TimeoutExpired:
+            sync_tasks.fail(task_id, "Timeout: la restauration a depasse 10 minutes")
+        except Exception as e:
+            logger.error(f"Erreur restauration upload: {e}")
+            sync_tasks.fail(task_id, str(e))
+        finally:
+            # Nettoyage du fichier uploade
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except Exception:
+                pass
+            session.close()
+
+    thread = threading.Thread(target=_run_upload_restore, daemon=True)
+    thread.start()
+
+    log_action(db, current_user.id, "restore_upload_trigger", "backup_history", 0)
+
+    return BackupRestoreResponse(
+        task_id=task_id,
+        message=f"Restauration depuis {file.filename} lancee en arriere-plan",
     )
