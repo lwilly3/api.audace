@@ -89,7 +89,7 @@ def test_admin_creation():
         
         # 4. Test de connexion
         logger.info("4. Test de connexion avec les credentials par défaut...")
-        default_username = os.getenv("ADMIN_USERNAME", "admin")
+        default_username = os.getenv("ADMIN_USERNAME", "admin@radiomanager.ovh")
         admin_user = db.query(User).filter(User.username == default_username).first()
         
         if admin_user:

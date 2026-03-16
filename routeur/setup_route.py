@@ -280,7 +280,7 @@ def check_environment_variables():
         "environment_variables": {
             "ADMIN_USERNAME": {
                 "defined": os.getenv("ADMIN_USERNAME") is not None,
-                "value": os.getenv("ADMIN_USERNAME", "admin"),
+                "value": os.getenv("ADMIN_USERNAME", "admin@radiomanager.ovh"),
                 "source": "environment" if os.getenv("ADMIN_USERNAME") else "default"
             },
             "ADMIN_PASSWORD": {
@@ -290,7 +290,7 @@ def check_environment_variables():
             },
             "ADMIN_EMAIL": {
                 "defined": os.getenv("ADMIN_EMAIL") is not None,
-                "value": os.getenv("ADMIN_EMAIL", "admin@audace.local"),
+                "value": os.getenv("ADMIN_EMAIL", "admin@radiomanager.ovh"),
                 "source": "environment" if os.getenv("ADMIN_EMAIL") else "default"
             },
             "ADMIN_NAME": {

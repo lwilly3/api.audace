@@ -145,9 +145,9 @@ def create_default_admin(db: Session) -> None:
         logger.info("Etape 3/5: Creation de l'admin par defaut...")
 
         # Recuperer les credentials depuis les variables d'environnement
-        default_username = os.getenv("ADMIN_USERNAME", "admin")
+        default_username = os.getenv("ADMIN_USERNAME", "admin@radiomanager.ovh")
         default_password = os.getenv("ADMIN_PASSWORD", "Admin@2024!")
-        default_email = os.getenv("ADMIN_EMAIL", "admin@audace.local")
+        default_email = os.getenv("ADMIN_EMAIL", "admin@radiomanager.ovh")
         default_name = os.getenv("ADMIN_NAME", "Administrateur")
         default_family_name = os.getenv("ADMIN_FAMILY_NAME", "Système")
 
