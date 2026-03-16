@@ -41,51 +41,19 @@ def create_builtin_roles(db: Session) -> None:
 
 
 # Permissions par defaut pour chaque role builtin
-ALL_PERMISSIONS_TRUE = {
-    "can_acces_showplan_broadcast_section": True, "can_acces_showplan_section": True,
-    "can_create_showplan": True, "can_edit_showplan": True, "can_archive_showplan": True,
-    "can_archiveStatusChange_showplan": True, "can_delete_showplan": True, "can_destroy_showplan": True,
-    "can_changestatus_showplan": True, "can_changestatus_owned_showplan": True,
-    "can_changestatus_archived_showplan": True, "can_setOnline_showplan": True, "can_viewAll_showplan": True,
-    "can_acces_users_section": True, "can_view_users": True, "can_edit_users": True,
-    "can_desable_users": True, "can_delete_users": True,
-    "can_manage_roles": True, "can_assign_roles": True,
-    "can_acces_guests_section": True, "can_view_guests": True, "can_edit_guests": True, "can_delete_guests": True,
-    "can_acces_presenters_section": True, "can_view_presenters": True, "can_create_presenters": True,
-    "can_edit_presenters": True, "can_delete_presenters": True,
-    "can_acces_emissions_section": True, "can_view_emissions": True, "can_create_emissions": True,
-    "can_edit_emissions": True, "can_delete_emissions": True, "can_manage_emissions": True,
-    "can_view_notifications": True, "can_manage_notifications": True,
-    "can_view_audit_logs": True, "can_view_login_history": True, "can_manage_settings": True,
-    "can_view_messages": True, "can_send_messages": True, "can_delete_messages": True,
-    "can_view_files": True, "can_upload_files": True, "can_delete_files": True,
-    "can_view_tasks": True, "can_create_tasks": True, "can_edit_tasks": True,
-    "can_delete_tasks": True, "can_assign_tasks": True,
-    "can_view_archives": True, "can_destroy_archives": True, "can_restore_archives": True, "can_delete_archives": True,
-    "quotes_view": True, "quotes_create": True, "quotes_edit": True, "quotes_delete": True,
-    "quotes_publish": True, "stream_transcription_view": True, "stream_transcription_create": True,
-    "quotes_capture_live": True,
-    "inventory_view": True, "inventory_create": True, "inventory_edit": True,
-    "inventory_delete": True, "inventory_manage": True,
-    "inventory_movement_view": True, "inventory_movement_create": True,
-    "inventory_movement_edit": True, "inventory_movement_delete": True,
-    "inventory_category_view": True, "inventory_category_create": True,
-    "inventory_category_edit": True, "inventory_category_delete": True,
-    "inventory_location_view": True, "inventory_location_manage": True,
-    "ovh_access_section": True, "ovh_view_services": True, "ovh_view_dashboard": True,
-    "ovh_view_billing": True, "ovh_view_account": True, "ovh_manage": True,
-    "scw_access_section": True, "scw_view_instances": True, "scw_view_dashboard": True,
-    "scw_view_billing": True, "scw_view_domains": True, "scw_view_account": True, "scw_manage": True,
-    "social_access_section": True, "social_view_posts": True, "social_create_posts": True,
-    "social_edit_posts": True, "social_delete_posts": True, "social_publish_posts": True,
-    "social_view_inbox": True, "social_reply_comments": True, "social_delete_comments": True,
-    "social_reply_messages": True, "social_view_stats": True, "social_export_stats": True,
-    "social_manage_accounts": True, "social_manage_settings": True,
-    "social_view_articles": True, "social_create_articles": True,
-    "social_edit_articles": True, "social_delete_articles": True,
-    "social_view_pinned": True, "social_create_pinned": True,
-    "social_edit_pinned": True, "social_delete_pinned": True,
-}
+# Genere dynamiquement depuis le modele UserPermissions
+def _build_all_permissions_true() -> dict[str, bool]:
+    """Construit dynamiquement le dict de toutes les permissions a True."""
+    from sqlalchemy import inspect as sa_inspect, Boolean
+    mapper = sa_inspect(UserPermissions)
+    return {
+        col.name: True
+        for col in mapper.columns
+        if col.name not in ("id", "user_id", "granted_at")
+        and isinstance(col.type, Boolean)
+    }
+
+ALL_PERMISSIONS_TRUE = _build_all_permissions_true()
 
 # Admin = tout sauf destruction archives (reservee au super_admin)
 ADMIN_PERMISSIONS = {**ALL_PERMISSIONS_TRUE, "can_destroy_archives": False}
@@ -164,6 +132,11 @@ def create_default_admin(db: Session) -> None:
                     admin.roles.append(super_admin_role)
                     logger.info(f"   -> Promu en super_admin")
             db.commit()
+
+            # Sync les permissions de tous les super_admin a chaque demarrage
+            # Garantit que les nouvelles permissions (ajoutees par migration) sont activees
+            sync_superadmin_permissions(db)
+
             logger.info("=" * 60)
             return
         
@@ -271,162 +244,91 @@ def create_default_admin(db: Session) -> None:
         raise
 
 
+def _get_all_boolean_permission_fields() -> list[str]:
+    """
+    Introspection du modele UserPermissions pour trouver dynamiquement
+    toutes les colonnes Boolean (= permissions).
+    Exclut les colonnes techniques : id, user_id, granted_at.
+    """
+    from sqlalchemy import inspect as sa_inspect, Boolean
+    mapper = sa_inspect(UserPermissions)
+    fields = []
+    for col in mapper.columns:
+        if col.name in ("id", "user_id", "granted_at"):
+            continue
+        if isinstance(col.type, Boolean):
+            fields.append(col.name)
+    return fields
+
+
 def update_all_permissions_to_true(db: Session, user_id: int) -> None:
     """
-    Met à jour les permissions d'un utilisateur pour avoir tous les droits admin.
-    
-    Args:
-        db: Session de base de données
-        user_id: ID de l'utilisateur dont mettre à jour les permissions
+    Met a jour les permissions d'un utilisateur pour avoir tous les droits admin.
+    Utilise l'introspection du modele : toute nouvelle colonne Boolean dans
+    UserPermissions sera automatiquement activee, sans modification manuelle.
     """
     try:
         permissions = db.query(UserPermissions).filter(
             UserPermissions.user_id == user_id
         ).first()
-        
+
         if not permissions:
-            logger.error(f"Aucune permission trouvée pour l'utilisateur {user_id}")
+            logger.error(f"Aucune permission trouvee pour l'utilisateur {user_id}")
             return
-        
-        # Mettre à jour toutes les permissions à True (selon les champs réels du modèle)
-        
-        # Showplans
-        permissions.can_acces_showplan_broadcast_section = True
-        permissions.can_acces_showplan_section = True
-        permissions.can_create_showplan = True
-        permissions.can_edit_showplan = True
-        permissions.can_archive_showplan = True
-        permissions.can_archiveStatusChange_showplan = True
-        permissions.can_delete_showplan = True
-        permissions.can_destroy_showplan = True
-        permissions.can_changestatus_showplan = True
-        permissions.can_changestatus_owned_showplan = True
-        permissions.can_changestatus_archived_showplan = True
-        permissions.can_setOnline_showplan = True
-        permissions.can_viewAll_showplan = True
-        
-        # Users
-        permissions.can_acces_users_section = True
-        permissions.can_view_users = True
-        permissions.can_edit_users = True
-        permissions.can_desable_users = True
-        permissions.can_delete_users = True
-        
-        # Roles
-        permissions.can_manage_roles = True
-        permissions.can_assign_roles = True
-        
-        # Guests
-        permissions.can_acces_guests_section = True
-        permissions.can_view_guests = True
-        permissions.can_edit_guests = True
-        permissions.can_delete_guests = True
-        
-        # Presenters
-        permissions.can_acces_presenters_section = True
-        permissions.can_view_presenters = True
-        permissions.can_create_presenters = True
-        permissions.can_edit_presenters = True
-        permissions.can_delete_presenters = True
-        
-        # Emissions
-        permissions.can_acces_emissions_section = True
-        permissions.can_view_emissions = True
-        permissions.can_create_emissions = True
-        permissions.can_edit_emissions = True
-        permissions.can_delete_emissions = True
-        permissions.can_manage_emissions = True
-        
-        # Notifications
-        permissions.can_view_notifications = True
-        permissions.can_manage_notifications = True
-        
-        # Audit logs
-        permissions.can_view_audit_logs = True
-        permissions.can_view_login_history = True
-        
-        # Settings
-        permissions.can_manage_settings = True
-        
-        # Messages
-        permissions.can_view_messages = True
-        permissions.can_send_messages = True
-        permissions.can_delete_messages = True
-        
-        # Files
-        permissions.can_view_files = True
-        permissions.can_upload_files = True
-        permissions.can_delete_files = True
-        
-        # Tasks
-        permissions.can_view_tasks = True
-        permissions.can_create_tasks = True
-        permissions.can_edit_tasks = True
-        permissions.can_delete_tasks = True
-        permissions.can_assign_tasks = True
-        
-        # Archives
-        permissions.can_view_archives = True
-        permissions.can_destroy_archives = True
-        permissions.can_restore_archives = True
-        permissions.can_delete_archives = True
-        
-        # Citations et transcriptions (module Firebase)
-        permissions.quotes_view = True
-        permissions.quotes_create = True
-        permissions.quotes_edit = True
-        permissions.quotes_delete = True
-        permissions.quotes_publish = True
-        permissions.stream_transcription_view = True
-        permissions.stream_transcription_create = True
-        permissions.quotes_capture_live = True
 
-        # OVH (module consultation API)
-        permissions.ovh_access_section = True
-        permissions.ovh_view_services = True
-        permissions.ovh_view_dashboard = True
-        permissions.ovh_view_billing = True
-        permissions.ovh_view_account = True
-        permissions.ovh_manage = True
+        fields = _get_all_boolean_permission_fields()
+        updated = 0
+        for field in fields:
+            if not getattr(permissions, field, True):
+                setattr(permissions, field, True)
+                updated += 1
 
-        # Scaleway Dedibox (module consultation API)
-        permissions.scw_access_section = True
-        permissions.scw_view_instances = True
-        permissions.scw_view_dashboard = True
-        permissions.scw_view_billing = True
-        permissions.scw_view_domains = True
-        permissions.scw_view_account = True
-        permissions.scw_manage = True
+        if updated:
+            logger.info(f"  {updated} permission(s) activee(s) pour l'utilisateur {user_id}")
+        logger.info(f"Toutes les permissions admin activees pour l'utilisateur {user_id} ({len(fields)} champs)")
 
-        # Social (reseaux sociaux)
-        permissions.social_access_section = True
-        permissions.social_view_posts = True
-        permissions.social_create_posts = True
-        permissions.social_edit_posts = True
-        permissions.social_delete_posts = True
-        permissions.social_publish_posts = True
-        permissions.social_view_inbox = True
-        permissions.social_reply_comments = True
-        permissions.social_delete_comments = True
-        permissions.social_reply_messages = True
-        permissions.social_view_stats = True
-        permissions.social_export_stats = True
-        permissions.social_manage_accounts = True
-        permissions.social_manage_settings = True
-        permissions.social_view_articles = True
-        permissions.social_create_articles = True
-        permissions.social_edit_articles = True
-        permissions.social_delete_articles = True
-        permissions.social_view_pinned = True
-        permissions.social_create_pinned = True
-        permissions.social_edit_pinned = True
-        permissions.social_delete_pinned = True
-
-        logger.info(f"✅ Toutes les permissions admin activées pour l'utilisateur {user_id}")
-        
     except SQLAlchemyError as e:
-        logger.error(f"Erreur lors de la mise à jour des permissions admin: {e}")
+        logger.error(f"Erreur lors de la mise a jour des permissions admin: {e}")
         raise
+
+
+def sync_superadmin_permissions(db: Session) -> None:
+    """
+    Synchronise les permissions de TOUS les super_admin au demarrage.
+    Garantit que les super_admin aient toujours toutes les permissions a True,
+    y compris les nouvelles permissions ajoutees par migration Alembic.
+    Appelee a chaque demarrage de l'application.
+    """
+    try:
+        super_admin_role = db.query(Role).filter(Role.name == "super_admin").first()
+        if not super_admin_role:
+            return
+
+        super_admins = db.query(User).join(User.roles).filter(
+            Role.name == "super_admin",
+            User.is_deleted == False,
+            User.is_active == True
+        ).all()
+
+        if not super_admins:
+            return
+
+        logger.info(f"Sync permissions pour {len(super_admins)} super_admin(s)...")
+        for admin in super_admins:
+            # S'assurer que la ligne UserPermissions existe
+            perms = db.query(UserPermissions).filter(
+                UserPermissions.user_id == admin.id
+            ).first()
+            if not perms:
+                initialize_user_permissions(db, admin.id)
+            update_all_permissions_to_true(db, admin.id)
+
+        db.commit()
+        logger.info("Sync permissions super_admin terminee")
+
+    except SQLAlchemyError as e:
+        logger.error(f"Erreur sync permissions super_admin: {e}")
+        db.rollback()
 
 
 def verify_admin_exists(db: Session) -> bool:

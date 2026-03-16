@@ -164,9 +164,35 @@ Filtrer avec `.filter(Entity.is_deleted == False)`.
 ### Ajout de permissions
 Modifier ces 4 fichiers a chaque nouvelle permission :
 1. `app/models/model_user_permissions.py` — Column Boolean
-2. `app/db/init_admin.py` — `ALL_PERMISSIONS_TRUE` dict + `update_all_permissions_to_true()`
-3. `app/db/crud/crud_permissions.py` — `get_user_permissions()` return dict + `initialize_user_permissions()` defaults + `valid_permissions` set dans `update_user_permissions()`
-4. Migration Alembic (`--autogenerate`)
+2. `app/db/crud/crud_permissions.py` — `get_user_permissions()` return dict + `initialize_user_permissions()` defaults + `valid_permissions` set dans `update_user_permissions()`
+3. Migration Alembic (`--autogenerate`)
+4. Frontend : `src/shared/types/permissions.ts` — interface + `permissionCategories`
+
+**Fichiers auto-synchronises (NE PAS modifier manuellement) :**
+- `app/db/init_admin.py` — `ALL_PERMISSIONS_TRUE`, `update_all_permissions_to_true()`, `sync_superadmin_permissions()` utilisent l'**introspection dynamique** du modele `UserPermissions`. Toute nouvelle colonne Boolean est detectee automatiquement. Aucune modification manuelle n'est necessaire dans ce fichier lors de l'ajout d'une permission.
+
+### Sync automatique des permissions super_admin au demarrage — REGLE CRITIQUE
+
+> **Au demarrage de l'application**, `create_default_admin()` appelle `sync_superadmin_permissions()` qui active automatiquement TOUTES les permissions Boolean pour chaque utilisateur ayant le role `super_admin`.
+
+**Mecanisme :**
+- `_get_all_boolean_permission_fields()` fait une introspection SQLAlchemy du modele `UserPermissions`
+- Trouve dynamiquement toutes les colonnes `Boolean` (exclut `id`, `user_id`, `granted_at`)
+- `update_all_permissions_to_true()` met chaque champ a `True` via `setattr()`
+- `ALL_PERMISSIONS_TRUE` et les templates builtin sont aussi generes dynamiquement
+
+**Consequence :** quand une migration Alembic ajoute une nouvelle colonne Boolean dans `UserPermissions`, au prochain demarrage :
+1. La colonne est detectee automatiquement par introspection
+2. Tous les super_admin recoivent `True` pour cette permission
+3. Les templates builtin (`super_admin`, `Admin`, etc.) incluent aussi la nouvelle permission
+4. **Aucune modification manuelle de `init_admin.py` n'est necessaire**
+
+**Ce que l'agent DOIT faire lors de l'ajout d'une permission :**
+1. Ajouter la colonne dans `model_user_permissions.py` (avec `server_default=text('false')`)
+2. Ajouter dans `crud_permissions.py` (3 endroits : `get_user_permissions`, `initialize_user_permissions`, `valid_permissions`)
+3. Generer la migration Alembic (`--autogenerate`)
+4. Mettre a jour le frontend (`permissions.ts`)
+5. **NE PAS toucher** a `init_admin.py` — la sync est automatique
 
 ## Variables d'environnement (.env)
 
