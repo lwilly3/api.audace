@@ -49,7 +49,7 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
             return {"error": f"Aucune permission trouvée pour l'utilisateur avec l'ID {user_id}"}
 
        # Retourner toutes les permissions sous forme de dictionnaire
-        return {
+        result = {
     "user_id": permissions.user_id,
     # Permissions pour les showplans
     "can_acces_showplan_broadcast_section": permissions.can_acces_showplan_broadcast_section,
@@ -214,6 +214,19 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
+
+        # Enforcement 2FA par role : verifier si les roles de l'utilisateur exigent le 2FA
+        user = db.query(User).filter(User.id == user_id).first()
+        role_requires_2fa = False
+        if user:
+            for role in user.roles:
+                if role.require_2fa or role.name == 'super_admin':
+                    role_requires_2fa = True
+                    break
+        result["needs_2fa_setup"] = role_requires_2fa and not getattr(user, 'two_factor_enabled', False)
+        result["role_requires_2fa"] = role_requires_2fa
+
+        return result
 
     except SQLAlchemyError as e:
         raise SQLAlchemyError(f"Erreur de base de données lors de la récupération des permissions : {str(e)}") from e

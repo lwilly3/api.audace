@@ -5,12 +5,14 @@ from typing import Optional, List
 class RoleBase(BaseModel):
     name: str
     hierarchy_level: int = 20
+    require_2fa: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RoleCreate(RoleBase):
     hierarchy_level: Optional[int] = 20
+    require_2fa: Optional[bool] = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -26,7 +28,8 @@ class RoleRead(RoleBase):
     model_config = ConfigDict(from_attributes=True)
 
 class RoleUpdate(BaseModel):
-    name: Optional[str]
+    name: Optional[str] = None
+    require_2fa: Optional[bool] = None
 
     model_config = ConfigDict(from_attributes=True)
 

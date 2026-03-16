@@ -1,5 +1,6 @@
 
 from typing import List
+from pydantic import BaseModel as PydanticBaseModel
 from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.database import get_db
@@ -198,6 +199,34 @@ def list_user_roles_route(user_id: int, db: Session = Depends(get_db)):
 
 
 # ////////////////////////// end assigne roles ///////////////
+
+
+# ////////////////////////// 2FA enforcement par role ///////////////
+
+class Require2FAUpdate(PydanticBaseModel):
+    require_2fa: bool
+
+@router.patch("/require-2fa/{role_id}")
+def toggle_require_2fa(
+    role_id: int,
+    body: Require2FAUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(oauth2.get_current_user)
+):
+    """Active/desactive l'exigence 2FA pour un role. Requiert can_enforce_2fa."""
+    perms = db.query(UserPermissions).filter(UserPermissions.user_id == current_user.id).first()
+    if not perms or not perms.can_enforce_2fa:
+        raise HTTPException(status_code=403, detail="Permission can_enforce_2fa requise")
+
+    role = get_role_by_id(db, role_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role non trouve")
+
+    role.require_2fa = body.require_2fa
+    db.commit()
+    db.refresh(role)
+    log_action(db, current_user.id, "toggle_require_2fa", "roles", role_id)
+    return {"id": role.id, "name": role.name, "require_2fa": role.require_2fa}
 
 
 

@@ -81,6 +81,13 @@ def two_factor_disable(
     db: Session = Depends(get_db),
 ):
     """Desactive le 2FA (requiert un code OTP valide)."""
+    # Verifier si un role de l'utilisateur exige le 2FA
+    for role in current_user.roles:
+        if role.require_2fa or role.name == 'super_admin':
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Votre role exige l'activation du 2FA. Vous ne pouvez pas le desactiver."
+            )
     disable_totp(db, current_user.id, request.otp_code)
     log_action(db, current_user.id, "2fa_disabled", "users", current_user.id)
     return {"message": "2FA desactive avec succes"}
