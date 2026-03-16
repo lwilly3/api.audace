@@ -12,6 +12,7 @@ from app.config.config import settings
 from app.db.database import Base
 # Importer tous les modèles pour qu'Alembic les détecte
 import app.models  # noqa: F401
+from urllib.parse import quote_plus
 
 # Charger les modèles de votre projet
 target_metadata = Base.metadata
@@ -35,7 +36,7 @@ target_metadata = Base.metadata
 # access to the values within the .ini file in use.
 config = context.config
 # 10h39
-config.set_main_option("sqlalchemy.url",f"postgresql+psycopg2://{settings.DATABASE_USERNAME}:{settings.DATABASE_PASSWORD}@{settings.DATABASE_HOSTNAME}:{settings.DATABASE_PORT}/{settings.DATABASE_NAME}")
+config.set_main_option("sqlalchemy.url",f"postgresql+psycopg2://{settings.DATABASE_USERNAME}:{quote_plus(settings.DATABASE_PASSWORD)}@{settings.DATABASE_HOSTNAME}:{settings.DATABASE_PORT}/{settings.DATABASE_NAME}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

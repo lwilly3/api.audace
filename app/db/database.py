@@ -1,26 +1,21 @@
 from functools import lru_cache
 # from app.models import  Role, Permission, RolePermission
 from fastapi import  Depends
+from urllib.parse import quote_plus
 
 
 from sqlalchemy import create_engine
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-# import config 
+# import config
 from app.config import config
 # suite: 9h19 ok
 from sqlalchemy import MetaData
 
-# from db.init_db_rolePermissions import create_default_role_and_permission
-# @lru_cache  #https://fastapi.tiangolo.com/yo/advanced/settings/#__tabbed_5_1     mise a jour python 3.9
-# def get_settings():
-#     return Settings()
-
-# setting=get_settings()
-# 8h54 creation de la variable denvirionement pour securiser les infos sensibles de mon code tel les pass
-# SQLALCHEMY_DATABASE_URL = "postgresql://<username>:<password>@p<ip-address/hostname>/<database name>"
-SQLALCHEMY_DATABASE_URL = f"postgresql://{config.settings.DATABASE_USERNAME}:{config.settings.DATABASE_PASSWORD}@{config.settings.DATABASE_HOSTNAME}:{config.settings.DATABASE_PORT}/{config.settings.DATABASE_NAME}"
+# URL-encoder le mot de passe pour gerer les caracteres speciaux (@, #, %, etc.)
+_encoded_password = quote_plus(config.settings.DATABASE_PASSWORD)
+SQLALCHEMY_DATABASE_URL = f"postgresql://{config.settings.DATABASE_USERNAME}:{_encoded_password}@{config.settings.DATABASE_HOSTNAME}:{config.settings.DATABASE_PORT}/{config.settings.DATABASE_NAME}"
 
 
 engine=create_engine(SQLALCHEMY_DATABASE_URL)
