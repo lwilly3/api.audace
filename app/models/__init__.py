@@ -44,6 +44,7 @@ from .model_social import (
 from .model_public_alert import PublicAlert
 from .model_listen_event import ListenEvent
 from .model_now_playing_track import NowPlayingTrack
+from .model_backup import BackupConfig, BackupHistory
 
 # from .model_show_segment import ShowSegment
 # from .model_show_presenter import ShowPresenter

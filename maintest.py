@@ -38,6 +38,7 @@ from routeur import (
      public_route,  # Routes publiques pour l'integration WordPress
      article_route,  # Routes pour les articles WordPress (proxy wp-json)
      two_factor_route,  # Routes pour le 2FA (TOTP)
+     backup_route,  # Routes pour la gestion des sauvegardes (Backup Management)
 
 
 
@@ -218,6 +219,7 @@ app.include_router(scaleway_route.router) # Routes pour la consultation des serv
 app.include_router(social_route.router) # Routes pour le module Social (réseaux sociaux)
 app.include_router(article_route.router) # Routes pour les articles WordPress
 app.include_router(two_factor_route.router) # Routes pour le 2FA (TOTP)
+app.include_router(backup_route.router) # Routes pour la gestion des sauvegardes
 
 
 

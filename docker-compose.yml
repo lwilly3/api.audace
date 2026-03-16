@@ -164,6 +164,10 @@ services:
       WP_RADIOAUDACE_USER: ${WP_RADIOAUDACE_USER:-}
       WP_RADIOAUDACE_APP_PASSWORD: ${WP_RADIOAUDACE_APP_PASSWORD:-}
 
+      # Google OAuth (Backup Management — Google Drive)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0
       PORT: 8000
@@ -172,6 +176,7 @@ services:
       - "8000"
     volumes:
       - ./logs:/app/logs
+      - ./backups:/backups
     networks:
       - audace_network
       - dokploy-network

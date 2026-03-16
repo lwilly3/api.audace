@@ -25,6 +25,7 @@ Cette documentation est organisée en modules métier, chacun dans un fichier d�
 - **[NOTIFICATIONS.md](NOTIFICATIONS.md)** ✅ - Système de notifications utilisateurs (lu/non lu)
 - **[AUDIT.md](AUDIT.md)** ✅ - Logs d'audit et traçabilité (logs actifs/archivés)
 - **[UTILITIES.md](UTILITIES.md)** ✅ - Recherche globale et tableau de bord avec statistiques
+- **[BACKUP.md](BACKUP.md)** ✅ - Gestion des sauvegardes Google Drive (backup, restore, OAuth2)
 
 ---
 

@@ -54,6 +54,7 @@ Documentation détaillée de la logique métier par module.
 - **[NOTIFICATIONS.md](business-logic/NOTIFICATIONS.md)** - Système de notifications (7 fonctions)
 - **[AUDIT.md](business-logic/AUDIT.md)** - Logs d'audit (7 fonctions)
 - **[UTILITIES.md](business-logic/UTILITIES.md)** - Recherche + Dashboard (6 fonctions)
+- **🆕 [BACKUP.md](business-logic/BACKUP.md)** - Sauvegardes Google Drive (backup, restore, OAuth2)
 
 **Utilisez cette section pour :**
 - Comprendre la logique métier de chaque module

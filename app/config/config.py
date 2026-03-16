@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     # Accepte soit le contenu JSON direct, soit un chemin vers le fichier JSON
     FIREBASE_SERVICE_ACCOUNT:str = ""
 
+    # Google OAuth (Backup Management — Google Drive)
+    GOOGLE_CLIENT_ID:str = ""
+    GOOGLE_CLIENT_SECRET:str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
    
     # class Config:

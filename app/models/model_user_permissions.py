@@ -189,6 +189,9 @@ class UserPermissions(Base):
     can_enforce_2fa = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Peut forcer le 2FA par rôle
     can_reset_user_2fa = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Peut reset le 2FA d'un utilisateur
 
+    # Permissions pour les sauvegardes (Backup management)
+    can_manage_backups = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
 
