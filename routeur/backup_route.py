@@ -464,6 +464,106 @@ def list_files(
 # RESTORE
 # ════════════════════════════════════════════════════════════════
 
+# IMPORTANT: /restore/upload DOIT etre declare AVANT /restore/{backup_id}
+# sinon FastAPI interprete "upload" comme un backup_id entier
+
+MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 Mo
+
+@router.post("/restore/upload", response_model=BackupRestoreResponse)
+def restore_from_upload(
+    file: UploadFile = File(...),
+    confirm: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Restaure la base depuis un fichier .sql.gz uploade.
+    Necessite confirm='RESTAURER' dans le body.
+    """
+    _check_backup_permission(db, current_user)
+
+    if confirm != "RESTAURER":
+        raise HTTPException(
+            status_code=400,
+            detail="Pour confirmer la restauration, envoyez confirm='RESTAURER'"
+        )
+
+    if not file.filename or not file.filename.endswith(".sql.gz"):
+        raise HTTPException(status_code=400, detail="Le fichier doit etre au format .sql.gz")
+
+    # Sauvegarder le fichier uploade
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    safe_name = f"upload_{timestamp}_{file.filename}"
+    filepath = os.path.join(BACKUP_DIR, safe_name)
+
+    try:
+        os.makedirs(BACKUP_DIR, exist_ok=True)
+        total_size = 0
+        with open(filepath, "wb") as f:
+            while True:
+                chunk = file.file.read(8192)
+                if not chunk:
+                    break
+                total_size += len(chunk)
+                if total_size > MAX_UPLOAD_SIZE:
+                    f.close()
+                    os.remove(filepath)
+                    raise HTTPException(status_code=413, detail="Fichier trop volumineux (max 500 Mo)")
+                f.write(chunk)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur sauvegarde fichier upload: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de la sauvegarde du fichier")
+
+    task_id = sync_tasks.create(label=f"restore-upload-{safe_name}")
+
+    def _run_upload_restore():
+        session = SessionLocal()
+        try:
+            sync_tasks.update(task_id, progress="Restauration de la base de donnees...", percent=30)
+
+            result = subprocess.run(
+                f"gunzip -c {filepath} | PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME",
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
+
+            if result.returncode != 0:
+                error_msg = result.stderr[:500] if result.stderr else "Erreur inconnue"
+                sync_tasks.fail(task_id, f"psql erreur: {error_msg}")
+                return
+
+            log_action(session, current_user.id, "restore_upload_complete", "backup_history", 0)
+            sync_tasks.complete(task_id, {"filename": safe_name})
+
+        except subprocess.TimeoutExpired:
+            sync_tasks.fail(task_id, "Timeout: la restauration a depasse 10 minutes")
+        except Exception as e:
+            logger.error(f"Erreur restauration upload: {e}")
+            sync_tasks.fail(task_id, str(e))
+        finally:
+            # Nettoyage du fichier uploade
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+            except Exception:
+                pass
+            session.close()
+
+    thread = threading.Thread(target=_run_upload_restore, daemon=True)
+    thread.start()
+
+    log_action(db, current_user.id, "restore_upload_trigger", "backup_history", 0)
+
+    return BackupRestoreResponse(
+        task_id=task_id,
+        message=f"Restauration depuis {file.filename} lancee en arriere-plan",
+    )
+
+
 @router.post("/restore/{backup_id}", response_model=BackupRestoreResponse)
 def trigger_restore(
     backup_id: int,
@@ -590,104 +690,3 @@ def create_folder(
 
     log_action(db, current_user.id, "create", "drive_folder", 0)
     return DriveFolderInfo(id=result["id"], name=result["name"])
-
-
-# ════════════════════════════════════════════════════════════════
-# RESTORE FROM UPLOAD
-# ════════════════════════════════════════════════════════════════
-
-MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 Mo
-
-@router.post("/restore/upload", response_model=BackupRestoreResponse)
-def restore_from_upload(
-    file: UploadFile = File(...),
-    confirm: str = Form(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """
-    Restaure la base depuis un fichier .sql.gz uploade.
-    Necessite confirm='RESTAURER' dans le body.
-    """
-    _check_backup_permission(db, current_user)
-
-    if confirm != "RESTAURER":
-        raise HTTPException(
-            status_code=400,
-            detail="Pour confirmer la restauration, envoyez confirm='RESTAURER'"
-        )
-
-    if not file.filename or not file.filename.endswith(".sql.gz"):
-        raise HTTPException(status_code=400, detail="Le fichier doit etre au format .sql.gz")
-
-    # Sauvegarder le fichier uploade
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    safe_name = f"upload_{timestamp}_{file.filename}"
-    filepath = os.path.join(BACKUP_DIR, safe_name)
-
-    try:
-        os.makedirs(BACKUP_DIR, exist_ok=True)
-        total_size = 0
-        with open(filepath, "wb") as f:
-            while True:
-                chunk = file.file.read(8192)
-                if not chunk:
-                    break
-                total_size += len(chunk)
-                if total_size > MAX_UPLOAD_SIZE:
-                    f.close()
-                    os.remove(filepath)
-                    raise HTTPException(status_code=413, detail="Fichier trop volumineux (max 500 Mo)")
-                f.write(chunk)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erreur sauvegarde fichier upload: {e}")
-        raise HTTPException(status_code=500, detail="Erreur lors de la sauvegarde du fichier")
-
-    task_id = sync_tasks.create(label=f"restore-upload-{safe_name}")
-
-    def _run_upload_restore():
-        session = SessionLocal()
-        try:
-            sync_tasks.update(task_id, progress="Restauration de la base de donnees...", percent=30)
-
-            result = subprocess.run(
-                f"gunzip -c {filepath} | PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME",
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=600,
-            )
-
-            if result.returncode != 0:
-                error_msg = result.stderr[:500] if result.stderr else "Erreur inconnue"
-                sync_tasks.fail(task_id, f"psql erreur: {error_msg}")
-                return
-
-            log_action(session, current_user.id, "restore_upload_complete", "backup_history", 0)
-            sync_tasks.complete(task_id, {"filename": safe_name})
-
-        except subprocess.TimeoutExpired:
-            sync_tasks.fail(task_id, "Timeout: la restauration a depasse 10 minutes")
-        except Exception as e:
-            logger.error(f"Erreur restauration upload: {e}")
-            sync_tasks.fail(task_id, str(e))
-        finally:
-            # Nettoyage du fichier uploade
-            try:
-                if os.path.exists(filepath):
-                    os.remove(filepath)
-            except Exception:
-                pass
-            session.close()
-
-    thread = threading.Thread(target=_run_upload_restore, daemon=True)
-    thread.start()
-
-    log_action(db, current_user.id, "restore_upload_trigger", "backup_history", 0)
-
-    return BackupRestoreResponse(
-        task_id=task_id,
-        message=f"Restauration depuis {file.filename} lancee en arriere-plan",
-    )
