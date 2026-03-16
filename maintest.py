@@ -169,6 +169,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             else:
                 clean_error[key] = value
         errors.append(clean_error)
+    logger.warning(f"Validation error on {request.method} {request.url.path}: {errors}")
     return JSONResponse(status_code=422, content={"detail": errors})
 
 
