@@ -54,7 +54,7 @@ Backend (API FastAPI) :
 ├── app/schemas/schema_backup.py        # Validation des donnees (Pydantic)
 ├── app/db/crud/crud_backup.py          # Lectures/ecritures en base
 ├── app/services/google_drive_client.py # Communication avec Google Drive
-├── routeur/backup_route.py             # Endpoints API (10 routes)
+├── routeur/backup_route.py             # Endpoints API (13 routes)
 └── app/config/config.py                # GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
 Frontend (React) :
@@ -103,7 +103,7 @@ from app.services import sync_tasks  # Suivi de progression des taches
 TON SERVEUR                    INTERNET                  GOOGLE DRIVE
 ┌─────────────┐                                         ┌─────────────┐
 │             │                                         │             │
-│  PostgreSQL │   1. pg_dumpall                         │   Dossier   │
+│  PostgreSQL │   1. pg_dump                          │   Dossier   │
 │  (ta base)  │──────────────┐                          │  "Backups"  │
 │             │              │                          │             │
 └─────────────┘              ▼                          │  ┌───────┐  │
@@ -125,9 +125,13 @@ TON SERVEUR                    INTERNET                  GOOGLE DRIVE
 
 Un cron job (tache automatique) sur le serveur execute toutes les nuits :
 ```bash
-pg_dumpall | gzip > /backups/dump_2026-03-16_03-00.sql.gz
+pg_dump --clean --if-exists -U postgres audace_db | gzip > /backups/dump_2026-03-16_03-00.sql.gz
 ```
-Ca prend TOUTE la base PostgreSQL, la compresse, et la sauvegarde dans `/backups/`.
+Ca exporte la base `audace_db` avec des instructions `DROP TABLE IF EXISTS` avant chaque `CREATE TABLE`, la compresse, et la sauvegarde dans `/backups/`.
+
+> **Note** : on utilise `pg_dump` (une seule base) et non `pg_dumpall` (cluster entier).
+> `pg_dump --clean` produit un dump compatible avec `psql -d audace_db` pour la restauration.
+> Les anciens dumps `pg_dumpall` restent compatibles avec la restauration (le backend gere les deux formats).
 
 **Etape 2 — L'API envoie le fichier sur Google Drive**
 
@@ -444,7 +448,10 @@ Tous les endpoints sont sous le prefixe `/backup` et necessitent :
 | GET | `/backup/status/{task_id}` | Statut d'une tache | - |
 | GET | `/backup/history` | Historique des backups | Query: `skip`, `limit` |
 | GET | `/backup/files` | Fichiers disponibles | - |
+| POST | `/backup/restore/upload` | Restaurer depuis un fichier uploade | `multipart/form-data: file + confirm` |
 | POST | `/backup/restore/{backup_id}` | Restaurer un backup | `{ "confirm": "RESTAURER" }` |
+| GET | `/backup/drive/folders` | Lister les dossiers Google Drive | - |
+| POST | `/backup/drive/folders` | Creer un dossier Google Drive | `{ "name": "..." }` |
 
 ### Detail des endpoints
 
@@ -612,9 +619,35 @@ Restaure la base de donnees depuis un backup. **Action dangereuse** — necessit
 
 **Ce qui se passe en arriere-plan :**
 1. Si le fichier n'est pas en local, le telecharge depuis Google Drive
-2. Decompresse le fichier (`gunzip`)
-3. Injecte dans PostgreSQL (`psql`)
-4. Met a jour le statut de la tache
+2. **Nettoie le schema** : `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` (supprime toutes les tables pour eviter les conflits)
+3. Decompresse le fichier (`gunzip`)
+4. Injecte dans PostgreSQL (`psql`)
+5. **Resynchronise les sequences** : recalcule tous les auto-increments (`setval` sur chaque sequence)
+6. Met a jour le statut de la tache
+
+> **Pourquoi le nettoyage du schema ?** Sans `DROP SCHEMA`, les `CREATE TABLE` du dump echouent (tables existantes), les `COPY` echouent (cles primaires dupliquees), et `psql` retourne 0 sans rien restaurer. Le `DROP SCHEMA` garantit une restauration propre.
+
+> **Pourquoi resynchroniser les sequences ?** Apres restauration, les sequences auto-increment (IDs des tables) peuvent etre desynchronisees, causant des erreurs `UniqueViolation` sur les prochains INSERT.
+
+#### POST `/backup/restore/upload`
+
+Restaure la base de donnees depuis un fichier backup envoye par l'admin (upload direct). Utile quand le backup n'est pas dans l'historique (ex: backup telecharge depuis Google Drive manuellement, ou backup d'un ancien serveur).
+
+```
+// Request (multipart/form-data)
+file: <fichier .sql.gz>
+confirm: "RESTAURER"
+
+// Response
+{
+  "task_id": "task-restore-upload-xyz",
+  "message": "Restauration depuis dump_20260316.sql.gz lancee en arriere-plan"
+}
+```
+
+**Limitations** : taille max 500 Mo. Le fichier doit etre au format `.sql.gz` (dump PostgreSQL compresse).
+
+**Meme processus en arriere-plan** : nettoyage schema → gunzip/psql → resync sequences.
 
 ---
 
@@ -777,7 +810,7 @@ Toutes les actions critiques sont loguees :
 | `app/models/model_user_permissions.py` | Verification de la permission `can_manage_backups` |
 | `app/db/crud/crud_audit_logs.py` | Journalisation des actions (audit log) |
 | `app/config/config.py` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `FRONTEND_URL` |
-| Volume Docker `/backups` | Acces aux fichiers pg_dumpall |
+| Volume Docker `/backups` | Acces aux fichiers pg_dump |
 
 ### Diagramme de dependances
 
@@ -813,7 +846,7 @@ Toutes les actions critiques sont loguees :
 ### Limitations
 
 - **Pas de backup incremental** : Chaque backup est un dump complet ("photocopie entiere du cahier"). Pas de diff entre deux backups.
-- **Dependance au cron** : Si le cron `pg_dumpall` ne tourne pas, il n'y a aucun fichier a envoyer. L'API ne cree pas le dump elle-meme.
+- **Dependance au cron** : Si le cron `pg_dump` ne tourne pas, il n'y a aucun fichier a envoyer. L'API ne cree pas le dump elle-meme.
 - **Single worker** : Si Gunicorn tourne avec 4 workers, le scheduler `auto_backup` pourrait declencher 4 fois. La verification `get_today_backup()` mitige ce risque mais une race condition reste theoriquement possible.
 - **Pas de notification** : En cas d'echec du backup, l'admin doit consulter l'historique. Pas de notification push ni email.
 
@@ -884,11 +917,16 @@ Toutes les actions critiques sont loguees :
 
 ### "Aucun fichier de backup trouve dans /backups"
 
-**Cause** : Le cron `pg_dumpall` n'a pas genere de fichier, ou le volume Docker n'est pas monte.
+**Cause** : Le cron `pg_dump` n'a pas genere de fichier, ou le volume Docker n'est pas monte.
 **Solutions** :
 - Verifier que le cron tourne sur le serveur : `crontab -l | grep pg_dump`
 - Verifier le volume Docker : `docker exec -it audace_api ls /backups/`
-- Lancer manuellement : `pg_dumpall | gzip > /backups/dump_$(date +%Y-%m-%d).sql.gz`
+- Lancer manuellement : `pg_dump --clean --if-exists -U postgres audace_db | gzip > /backups/dump_$(date +%Y-%m-%d).sql.gz`
+
+### "Aucun fichier de backup trouve" lors de restore/upload
+
+**Cause** : Le fichier uploade n'est pas au format `.sql.gz`, ou depasse la limite de 500 Mo.
+**Solution** : Verifier que le fichier est bien un dump PostgreSQL compresse avec gzip.
 
 ### "Token Google invalide ou expire"
 
@@ -902,6 +940,22 @@ Toutes les actions critiques sont loguees :
 - Verifier les logs du conteneur : `docker logs audace_api --tail 100`
 - Tester manuellement : `gunzip -c /backups/dump.sql.gz | head -20`
 - Verifier que les variables d'environnement DB sont correctes
+
+### Alembic "overlaps with other requested revisions" apres restauration
+
+**Cause** : La table `alembic_version` contient 2 lignes au lieu d'une. Cela arrive quand une restauration est faite sans vider le schema (bug corrige en v0.22.0).
+**Diagnostic** :
+```bash
+docker exec -i audace_db psql -U audace_user -d audace_db -c "SELECT * FROM alembic_version;"
+# Si 2 lignes → c'est le probleme
+```
+**Solution** :
+1. Identifier quelle version correspond au vrai etat de la base (celle du backup restaure)
+2. Supprimer l'autre : `DELETE FROM alembic_version WHERE version_num = '<ancienne_ou_fausse>';`
+3. Si les colonnes manquent (ex: `two_factor_enabled does not exist`), remettre la version au niveau du backup : `UPDATE alembic_version SET version_num = '<version_du_backup>';`
+4. Redemarrer le container : `docker restart audace_api` (Alembic appliquera les migrations manquantes)
+
+> **Depuis v0.22.0** : ce probleme ne peut plus se reproduire. La restauration fait `DROP SCHEMA CASCADE` avant d'injecter le dump, garantissant une seule ligne dans `alembic_version`.
 
 ### Le backup reste "en cours" indefiniment
 
@@ -927,3 +981,4 @@ Toutes les actions critiques sont loguees :
 | Version | Date | Description |
 |---------|------|-------------|
 | 0.21.0 | 2026-03-16 | Creation du module Backup Management |
+| 0.22.0 | 2026-03-16 | Selecteur dossiers Drive, restauration par upload, fix restore (DROP SCHEMA + resync sequences) |
