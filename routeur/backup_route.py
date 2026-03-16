@@ -521,6 +521,23 @@ def restore_from_upload(
     def _run_upload_restore():
         session = SessionLocal()
         try:
+            sync_tasks.update(task_id, progress="Nettoyage du schema avant restauration...", percent=10)
+
+            # Vider le schema public pour eviter les conflits (tables existantes, PK dupliquees)
+            drop_result = subprocess.run(
+                'PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME '
+                '-c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"',
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if drop_result.returncode != 0:
+                error_msg = drop_result.stderr[:500] if drop_result.stderr else "Erreur inconnue"
+                logger.error(f"Erreur DROP SCHEMA: {error_msg}")
+                sync_tasks.fail(task_id, f"Echec nettoyage schema: {error_msg}")
+                return
+
             sync_tasks.update(task_id, progress="Restauration de la base de donnees...", percent=30)
 
             result = subprocess.run(
@@ -531,10 +548,38 @@ def restore_from_upload(
                 timeout=600,
             )
 
-            if result.returncode != 0:
-                error_msg = result.stderr[:500] if result.stderr else "Erreur inconnue"
+            # psql retourne 0 meme avec des erreurs non fatales (CREATE ROLE, CREATE DATABASE)
+            # On verifie stderr pour les erreurs critiques (hors role/database qui sont attendues)
+            stderr = result.stderr or ""
+            critical_errors = [
+                line for line in stderr.splitlines()
+                if "ERROR:" in line
+                and "already exists" not in line
+                and "role" not in line.lower()
+                and "database" not in line.lower()
+            ]
+
+            if result.returncode != 0 and critical_errors:
+                error_msg = "\n".join(critical_errors[:5])
+                logger.error(f"Erreurs critiques restauration: {error_msg}")
                 sync_tasks.fail(task_id, f"psql erreur: {error_msg}")
                 return
+
+            if critical_errors:
+                logger.warning(f"Restauration terminee avec avertissements: {len(critical_errors)} erreurs")
+
+            # Resynchroniser toutes les sequences auto-increment apres restauration
+            sync_tasks.update(task_id, progress="Resynchronisation des sequences...", percent=90)
+            subprocess.run(
+                "PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME -c \""
+                "DO \\$\\$ DECLARE r RECORD; BEGIN "
+                "FOR r IN (SELECT sequencename, tablename, columnname FROM pg_sequences ps "
+                "JOIN information_schema.columns c ON c.column_default LIKE '%' || ps.sequencename || '%' "
+                "WHERE ps.schemaname = 'public') LOOP "
+                "EXECUTE format('SELECT setval(''%I'', COALESCE(MAX(%I), 1)) FROM %I', r.sequencename, r.columnname, r.tablename); "
+                "END LOOP; END \\$\\$;\"",
+                shell=True, capture_output=True, text=True, timeout=30,
+            )
 
             log_action(session, current_user.id, "restore_upload_complete", "backup_history", 0)
             sync_tasks.complete(task_id, {"filename": safe_name})
@@ -612,10 +657,25 @@ def trigger_restore(
                 sync_tasks.fail(task_id, f"Fichier {backup.filename} introuvable")
                 return
 
+            sync_tasks.update(task_id, progress="Nettoyage du schema avant restauration...", percent=40)
+
+            # Vider le schema public pour eviter les conflits (tables existantes, PK dupliquees)
+            drop_result = subprocess.run(
+                'PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME '
+                '-c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"',
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if drop_result.returncode != 0:
+                error_msg = drop_result.stderr[:500] if drop_result.stderr else "Erreur inconnue"
+                logger.error(f"Erreur DROP SCHEMA: {error_msg}")
+                sync_tasks.fail(task_id, f"Echec nettoyage schema: {error_msg}")
+                return
+
             sync_tasks.update(task_id, progress="Restauration de la base de donnees...", percent=50)
 
-            # gunzip + psql via le conteneur PostgreSQL
-            # Le conteneur API a acces a /backups via le volume partage
             result = subprocess.run(
                 f"gunzip -c {filepath} | PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME",
                 shell=True,
@@ -624,10 +684,37 @@ def trigger_restore(
                 timeout=600,
             )
 
-            if result.returncode != 0:
-                error_msg = result.stderr[:500] if result.stderr else "Erreur inconnue"
+            # psql retourne 0 meme avec des erreurs non fatales (CREATE ROLE, CREATE DATABASE)
+            stderr = result.stderr or ""
+            critical_errors = [
+                line for line in stderr.splitlines()
+                if "ERROR:" in line
+                and "already exists" not in line
+                and "role" not in line.lower()
+                and "database" not in line.lower()
+            ]
+
+            if result.returncode != 0 and critical_errors:
+                error_msg = "\n".join(critical_errors[:5])
+                logger.error(f"Erreurs critiques restauration: {error_msg}")
                 sync_tasks.fail(task_id, f"psql erreur: {error_msg}")
                 return
+
+            if critical_errors:
+                logger.warning(f"Restauration terminee avec avertissements: {len(critical_errors)} erreurs")
+
+            # Resynchroniser toutes les sequences auto-increment apres restauration
+            sync_tasks.update(task_id, progress="Resynchronisation des sequences...", percent=90)
+            subprocess.run(
+                "PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME -c \""
+                "DO \\$\\$ DECLARE r RECORD; BEGIN "
+                "FOR r IN (SELECT sequencename, tablename, columnname FROM pg_sequences ps "
+                "JOIN information_schema.columns c ON c.column_default LIKE '%' || ps.sequencename || '%' "
+                "WHERE ps.schemaname = 'public') LOOP "
+                "EXECUTE format('SELECT setval(''%I'', COALESCE(MAX(%I), 1)) FROM %I', r.sequencename, r.columnname, r.tablename); "
+                "END LOOP; END \\$\\$;\"",
+                shell=True, capture_output=True, text=True, timeout=30,
+            )
 
             log_action(session, current_user.id, "restore_complete", "backup_history", backup_id)
             sync_tasks.complete(task_id, {"backup_id": backup_id, "filename": backup.filename})
