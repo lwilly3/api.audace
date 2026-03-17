@@ -57,6 +57,7 @@ from routeur.search_route import (
 #   invites, posts, users, auth, votes, presentateur,
 #     programs, segment_conducteur, competences, conducteur
 from app.config.config import settings  # Importation des paramètres de configuration
+from sqlalchemy import text
 from app.middleware.logger import LoggerMiddleware  # Importation du middleware personnalisé
 
 # Configuration du logger global
@@ -86,6 +87,22 @@ def get_settings():
     return settings()
 
 
+def ensure_roles_require_2fa_column(db) -> None:
+    """
+    Garantit la presence de la colonne roles.require_2fa.
+
+    Ce garde-fou evite un crash complet de l'API si la base est en retard
+    par rapport au modele SQLAlchemy (cas observe apres reset partiel).
+    """
+    db.execute(text(
+        """
+        ALTER TABLE roles
+        ADD COLUMN IF NOT EXISTS require_2fa BOOLEAN NOT NULL DEFAULT FALSE
+        """
+    ))
+    db.commit()
+
+
 # Lifespan event handler pour initialiser l'admin au démarrage
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -108,6 +125,8 @@ async def lifespan(app: FastAPI):
     
     db = SessionLocal()
     try:
+        ensure_roles_require_2fa_column(db)
+        logger.info("✅ Verification schema roles.require_2fa terminee")
         create_default_admin(db)
         logger.info("✅ Initialisation de l'admin terminée")
     except Exception as e:
