@@ -103,6 +103,34 @@ def ensure_roles_require_2fa_column(db) -> None:
     db.commit()
 
 
+def ensure_users_2fa_columns(db) -> None:
+    """
+    Garantit la presence des colonnes users liees au 2FA.
+
+    Evite les erreurs UndefinedColumn au login quand une base ancienne
+    n'a pas recu toutes les migrations 2FA.
+    """
+    db.execute(text(
+        """
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE
+        """
+    ))
+    db.execute(text(
+        """
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS totp_secret_encrypted TEXT
+        """
+    ))
+    db.execute(text(
+        """
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS backup_codes_hash JSONB
+        """
+    ))
+    db.commit()
+
+
 # Lifespan event handler pour initialiser l'admin au démarrage
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -127,6 +155,8 @@ async def lifespan(app: FastAPI):
     try:
         ensure_roles_require_2fa_column(db)
         logger.info("✅ Verification schema roles.require_2fa terminee")
+        ensure_users_2fa_columns(db)
+        logger.info("✅ Verification schema users 2FA terminee")
         create_default_admin(db)
         logger.info("✅ Initialisation de l'admin terminée")
     except Exception as e:
