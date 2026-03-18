@@ -82,7 +82,13 @@ BACKUP_DIR = "/backups"
 # ════════════════════════════════════════════════════════════════
 
 def _check_backup_permission(db: Session, user: User):
-    """Verifie que l'utilisateur a la permission can_manage_backups."""
+    """Verifie que l'utilisateur a la permission can_manage_backups.
+    Les super_admin ont un acces automatique (bypass)."""
+    # Bypass pour les super_admin (hierarchy_level 100)
+    if hasattr(user, 'roles') and user.roles:
+        for role in user.roles:
+            if role.name == 'super_admin':
+                return
     perms = db.query(UserPermissions).filter(UserPermissions.user_id == user.id).first()
     if not perms or not perms.can_manage_backups:
         raise HTTPException(
