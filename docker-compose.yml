@@ -207,7 +207,11 @@ services:
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0
       PORT: 8000
-      WORKERS: ${WORKERS:-4}
+      # 1 worker requis : sync_tasks stocke les taches en memoire (dict Python).
+      # Avec N workers (= N processus), le worker qui cree la tache n'est pas
+      # forcement celui qui recoit le GET /status → 404.
+      # Uvicorn async gere tres bien la concurrence avec 1 worker.
+      WORKERS: ${WORKERS:-1}
     expose:
       - "8000"
     volumes:
