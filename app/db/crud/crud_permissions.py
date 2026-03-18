@@ -211,6 +211,9 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "can_enforce_2fa": permissions.can_enforce_2fa,
     "can_reset_user_2fa": permissions.can_reset_user_2fa,
 
+    # Permissions pour les sauvegardes
+    "can_manage_backups": permissions.can_manage_backups,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
@@ -562,16 +565,26 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
         ValueError: Si l'utilisateur n'est pas trouvé, si les permissions sont invalides, ou si l'utilisateur connecté n'a pas les droits.
     """
     try:
-        # Vérifier si l'utilisateur connecté existe et a les droits nécessaires
-        connected_permissions = db.query(UserPermissions).options(load_only(
-            UserPermissions.can_edit_users, UserPermissions.can_manage_roles
-        )).filter(UserPermissions.user_id == user_connected_id).first()
-  
+        # Bypass pour super_admin : acces total sans verification de permissions
+        connected_user = db.query(User).filter(User.id == user_connected_id).first()
+        is_super_admin = False
+        if connected_user:
+            for role in connected_user.roles:
+                if role.name == 'super_admin':
+                    is_super_admin = True
+                    break
 
-        if not connected_permissions:
-            raise ValueError("Aucune permission trouvée pour l'utilisateur connecté.")
-        if not (connected_permissions.can_edit_users or connected_permissions.can_manage_roles):
-            raise ValueError("Vous n'avez pas les droits pour modifier les permissions.")
+        if not is_super_admin:
+            # Vérifier si l'utilisateur connecté existe et a les droits nécessaires
+            connected_permissions = db.query(UserPermissions).options(load_only(
+                UserPermissions.can_edit_users, UserPermissions.can_manage_roles
+            )).filter(UserPermissions.user_id == user_connected_id).first()
+
+
+            if not connected_permissions:
+                raise ValueError("Aucune permission trouvée pour l'utilisateur connecté.")
+            if not (connected_permissions.can_edit_users or connected_permissions.can_manage_roles):
+                raise ValueError("Vous n'avez pas les droits pour modifier les permissions.")
 
         # Vérifier si l'utilisateur cible existe
         user_permission = db.query(UserPermissions).filter(UserPermissions.user_id == user_id).first()
@@ -697,7 +710,10 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
 
     # Securite (2FA)
     'can_enforce_2fa',
-    'can_reset_user_2fa'
+    'can_reset_user_2fa',
+
+    # Sauvegardes
+    'can_manage_backups'
 }
 
         # Vérifier les permissions fournies
