@@ -12,13 +12,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backups:/backups  # Dossier de sauvegarde accessible depuis l'hôte
+      - backups_data:/backups  # Volume partage pour les sauvegardes (db + api)
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     networks:
       - audace_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-audace_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-audace_user} -d ${POSTGRES_DB:-audace_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -176,7 +176,7 @@ services:
       - "8000"
     volumes:
       - ./logs:/app/logs
-      - ./backups:/backups
+      - backups_data:/backups
     networks:
       - audace_network
       - dokploy-network
@@ -218,4 +218,6 @@ networks:
 
 volumes:
   postgres_data:
+    driver: local
+  backups_data:
     driver: local
