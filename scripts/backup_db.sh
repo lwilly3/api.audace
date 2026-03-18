@@ -9,8 +9,8 @@ set -e  # Arrêter en cas d'erreur
 
 # Configuration
 CONTAINER_NAME="audace_db"
-DB_USER="postgres"
-DB_NAME="fastapi"
+DB_USER="audace_user"
+DB_NAME="audace_db"
 BACKUP_DIR="/home/ubuntu/backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="audace_db_${TIMESTAMP}.sql.gz"

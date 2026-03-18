@@ -9,8 +9,8 @@ set -e
 
 # Configuration
 CONTAINER_NAME="audace_db"
-DB_USER="postgres"
-DB_NAME="fastapi"
+DB_USER="audace_user"
+DB_NAME="audace_db"
 
 # Couleurs
 GREEN='\033[0;32m'
