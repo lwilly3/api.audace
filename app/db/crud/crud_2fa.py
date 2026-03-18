@@ -168,6 +168,28 @@ def admin_reset_totp(db: Session, user_id: int) -> None:
     db.commit()
 
 
+def admin_reset_all_totp(db: Session) -> int:
+    """
+    Reset admin du 2FA de TOUS les utilisateurs (post-restauration).
+    Utilise des requetes bulk pour la performance.
+    Retourne le nombre d'utilisateurs affectes.
+    """
+    affected_count = db.query(User).filter(User.two_factor_enabled == True).count()
+
+    if affected_count > 0:
+        db.query(User).filter(User.two_factor_enabled == True).update({
+            User.two_factor_enabled: False,
+            User.totp_secret_encrypted: None,
+            User.backup_codes_hash: None,
+        }, synchronize_session='fetch')
+
+    # Supprimer tous les appareils de confiance
+    db.query(TrustedDevice).delete()
+
+    db.commit()
+    return affected_count
+
+
 def regenerate_backup_codes(db: Session, user_id: int, otp_code: str) -> dict:
     """
     Regenere les codes de secours (requiert un code OTP valide).

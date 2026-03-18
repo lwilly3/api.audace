@@ -20,6 +20,7 @@ from app.db.crud.crud_2fa import (
     verify_and_consume_backup_code,
     disable_totp,
     admin_reset_totp,
+    admin_reset_all_totp,
     regenerate_backup_codes,
     create_trusted_device,
 )
@@ -173,6 +174,30 @@ def two_factor_verify_backup(
 
 
 # --- Endpoint admin ---
+
+@router.post('/admin/reset-all')
+def two_factor_admin_reset_all(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Reset le 2FA de TOUS les utilisateurs (post-restauration)."""
+    # Bypass super_admin
+    is_super_admin = any(r.name == 'super_admin' for r in current_user.roles)
+    if not is_super_admin:
+        perms = db.query(UserPermissions).filter(UserPermissions.user_id == current_user.id).first()
+        if not perms or not perms.can_reset_user_2fa:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission can_reset_user_2fa requise"
+            )
+
+    affected = admin_reset_all_totp(db)
+    log_action(db, current_user.id, "2fa_admin_reset_all", "users", 0)
+    return {
+        "message": f"2FA reinitialise pour {affected} utilisateur(s)",
+        "affected_count": affected,
+    }
+
 
 @router.post('/admin/reset/{user_id}')
 def two_factor_admin_reset(
