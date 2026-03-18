@@ -720,6 +720,7 @@ def trigger_restore(
     Declenche une restauration depuis un backup.
     Necessite confirm='RESTAURER' dans le body.
     """
+    logger.info(f"[RESTORE] Requete restauration backup_id={backup_id} par user={current_user.id} ({current_user.email})")
     _check_backup_permission(db, current_user)
 
     if body.confirm != "RESTAURER":
@@ -740,23 +741,39 @@ def trigger_restore(
     def _run_restore():
         session = SessionLocal()
         try:
+            logger.info(f"[RESTORE] Demarrage restauration backup_id={backup_id} filename={backup.filename}")
             sync_tasks.update(task_id, progress="Preparation de la restauration...", percent=10)
 
+            # S'assurer que le repertoire de backup existe
+            os.makedirs(BACKUP_DIR, exist_ok=True)
+
             filepath = os.path.join(BACKUP_DIR, backup.filename)
+            logger.info(f"[RESTORE] Fichier cible: {filepath}, existe={os.path.exists(filepath)}, drive_id={backup.google_drive_file_id}")
 
             # Telecharger depuis Drive si le fichier n'est pas en local
             if not os.path.exists(filepath) and backup.google_drive_file_id:
                 sync_tasks.update(task_id, progress="Telechargement depuis Google Drive...", percent=20)
+                logger.info(f"[RESTORE] Telechargement depuis Drive: {backup.google_drive_file_id}")
                 access_token = ensure_valid_token(session)
                 if not access_token:
+                    logger.error("[RESTORE] Token Google invalide ou impossible a rafraichir")
                     sync_tasks.fail(task_id, "Token Google invalide")
                     return
-                download_from_drive(access_token, backup.google_drive_file_id, filepath)
+                try:
+                    download_from_drive(access_token, backup.google_drive_file_id, filepath)
+                    file_size = os.path.getsize(filepath) if os.path.exists(filepath) else 0
+                    logger.info(f"[RESTORE] Telechargement OK: {filepath} ({file_size} bytes)")
+                except Exception as dl_err:
+                    logger.error(f"[RESTORE] Echec telechargement Drive: {dl_err}")
+                    sync_tasks.fail(task_id, f"Erreur telechargement Drive: {dl_err}")
+                    return
 
             if not os.path.exists(filepath):
+                logger.error(f"[RESTORE] Fichier introuvable apres tentative: {filepath}")
                 sync_tasks.fail(task_id, f"Fichier {backup.filename} introuvable")
                 return
 
+            logger.info(f"[RESTORE] Fichier pret: {filepath} ({os.path.getsize(filepath)} bytes)")
             sync_tasks.update(task_id, progress="Nettoyage du schema avant restauration...", percent=40)
 
             # Vider le schema public pour eviter les conflits (tables existantes, PK dupliquees)
@@ -770,10 +787,11 @@ def trigger_restore(
             )
             if drop_result.returncode != 0:
                 error_msg = drop_result.stderr[:500] if drop_result.stderr else "Erreur inconnue"
-                logger.error(f"Erreur DROP SCHEMA: {error_msg}")
+                logger.error(f"[RESTORE] Erreur DROP SCHEMA (rc={drop_result.returncode}): {error_msg}")
                 sync_tasks.fail(task_id, f"Echec nettoyage schema: {error_msg}")
                 return
 
+            logger.info("[RESTORE] DROP SCHEMA OK, lancement psql restore...")
             sync_tasks.update(task_id, progress="Restauration de la base de donnees...", percent=50)
 
             result = subprocess.run(
@@ -783,6 +801,8 @@ def trigger_restore(
                 text=True,
                 timeout=600,
             )
+
+            logger.info(f"[RESTORE] psql termine rc={result.returncode}, stderr_len={len(result.stderr or '')}")
 
             # psql retourne 0 meme avec des erreurs non fatales (CREATE ROLE, CREATE DATABASE)
             stderr = result.stderr or ""
@@ -796,14 +816,15 @@ def trigger_restore(
 
             if result.returncode != 0 and critical_errors:
                 error_msg = "\n".join(critical_errors[:5])
-                logger.error(f"Erreurs critiques restauration: {error_msg}")
+                logger.error(f"[RESTORE] Erreurs critiques psql: {error_msg}")
                 sync_tasks.fail(task_id, f"psql erreur: {error_msg}")
                 return
 
             if critical_errors:
-                logger.warning(f"Restauration terminee avec avertissements: {len(critical_errors)} erreurs")
+                logger.warning(f"[RESTORE] Restauration avec avertissements: {len(critical_errors)} erreurs non-critiques")
 
             # Resynchroniser toutes les sequences auto-increment apres restauration
+            logger.info("[RESTORE] Resynchronisation des sequences...")
             sync_tasks.update(task_id, progress="Resynchronisation des sequences...", percent=90)
             subprocess.run(
                 "PGPASSWORD=$DATABASE_PASSWORD psql -h $DATABASE_HOSTNAME -U $DATABASE_USERNAME -d $DATABASE_NAME -c \""
@@ -816,13 +837,15 @@ def trigger_restore(
                 shell=True, capture_output=True, text=True, timeout=30,
             )
 
+            logger.info(f"[RESTORE] Restauration terminee avec succes: {backup.filename}")
             log_action(session, current_user.id, "restore_complete", "backup_history", backup_id)
             sync_tasks.complete(task_id, {"backup_id": backup_id, "filename": backup.filename})
 
         except subprocess.TimeoutExpired:
+            logger.error(f"[RESTORE] Timeout depassé pour {backup.filename}")
             sync_tasks.fail(task_id, "Timeout: la restauration a depasse 10 minutes")
         except Exception as e:
-            logger.error(f"Erreur restauration: {e}")
+            logger.error(f"[RESTORE] Exception inattendue: {e}", exc_info=True)
             sync_tasks.fail(task_id, str(e))
         finally:
             session.close()
