@@ -41,6 +41,7 @@ from app.db.crud.crud_backup import (
 )
 from app.models.model_user import User
 from app.models.model_user_permissions import UserPermissions
+from app.models.model_backup import BackupHistory
 from app.schemas.schema_backup import (
     BackupConfigResponse,
     BackupConfigUpdate,
@@ -95,6 +96,77 @@ def _check_backup_permission(db: Session, user: User):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Permission 'can_manage_backups' requise"
         )
+
+
+def _sync_drive_to_history(db: Session):
+    """Synchronise les fichiers Google Drive vers backup_history.
+
+    Apres une reinstallation du VPS, la table backup_history est vide
+    mais les fichiers existent toujours sur Google Drive. Cette fonction
+    cree des entrees 'completed' pour chaque fichier Drive absent de l'historique,
+    permettant ainsi la restauration directe depuis l'UI.
+    """
+    try:
+        config = get_backup_config(db)
+        if not config or not config.is_connected or not config.google_drive_folder_id:
+            return
+
+        access_token = ensure_valid_token(db)
+        if not access_token:
+            return
+
+        drive_files = list_drive_files(access_token, config.google_drive_folder_id)
+        if not drive_files:
+            return
+
+        # Recuperer les google_drive_file_id deja connus en DB
+        existing_ids = set()
+        existing_records = db.query(BackupHistory.google_drive_file_id).filter(
+            BackupHistory.google_drive_file_id.isnot(None)
+        ).all()
+        for record in existing_records:
+            existing_ids.add(record[0])
+
+        # Creer des entrees pour les fichiers Drive non connus
+        new_count = 0
+        for df in drive_files:
+            file_id = df.get("id")
+            if not file_id or file_id in existing_ids:
+                continue
+
+            filename = df.get("name", "unknown")
+            file_size = int(df["size"]) if df.get("size") else None
+
+            # Parser la date de modification du fichier Drive
+            completed_at = None
+            if df.get("modifiedTime"):
+                try:
+                    completed_at = datetime.fromisoformat(df["modifiedTime"].replace("Z", "+00:00"))
+                except Exception:
+                    completed_at = datetime.now(timezone.utc)
+
+            entry = BackupHistory(
+                filename=filename,
+                file_size_bytes=file_size,
+                backup_type="manual",
+                status="completed",
+                google_drive_file_id=file_id,
+                uploaded_to_drive=True,
+                started_at=completed_at or datetime.now(timezone.utc),
+                completed_at=completed_at,
+                duration_seconds=0,
+                triggered_by=None,
+            )
+            db.add(entry)
+            new_count += 1
+
+        if new_count > 0:
+            db.commit()
+            logger.info(f"Sync Drive → DB : {new_count} fichier(s) importe(s) dans l'historique")
+
+    except Exception as e:
+        db.rollback()
+        logger.warning(f"Erreur sync Drive → historique : {e}")
 
 
 def _config_to_response(config, db: Session) -> BackupConfigResponse:
@@ -422,8 +494,15 @@ def list_history(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Retourne l'historique pagine des backups."""
+    """Retourne l'historique pagine des backups.
+
+    Synchronise automatiquement les fichiers Google Drive non presents
+    dans l'historique local (utile apres reinstallation du VPS).
+    """
     _check_backup_permission(db, current_user)
+
+    # Sync Drive → DB : importer les fichiers Drive non connus localement
+    _sync_drive_to_history(db)
 
     items, total = get_backup_history(db, skip=skip, limit=limit)
     return BackupHistoryPaginated(
