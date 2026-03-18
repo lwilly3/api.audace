@@ -222,17 +222,32 @@ def oauth_callback(
             try:
                 cfg = get_backup_config(db)
                 if not cfg.google_drive_folder_id:
-                    folder_result = create_drive_folder(
-                        token_data["access_token"],
-                        "RadioManager-Backups"
-                    )
-                    if folder_result.get("id"):
+                    default_name = "RadioManager-Backups"
+                    # Chercher un dossier existant avant d'en creer un nouveau
+                    existing_folders = list_drive_folders(token_data["access_token"])
+                    existing = next((f for f in existing_folders if f.get("name") == default_name), None)
+
+                    if existing:
+                        # Reutiliser le dossier existant
                         upsert_backup_config(
                             db,
-                            google_drive_folder_id=folder_result["id"],
-                            google_drive_folder_name="RadioManager-Backups",
+                            google_drive_folder_id=existing["id"],
+                            google_drive_folder_name=default_name,
                         )
-                        logger.info(f"Dossier Drive auto-cree: {folder_result['id']}")
+                        logger.info(f"Dossier Drive existant reutilise: {existing['id']}")
+                    else:
+                        # Creer un nouveau dossier
+                        folder_result = create_drive_folder(
+                            token_data["access_token"],
+                            default_name
+                        )
+                        if folder_result.get("id"):
+                            upsert_backup_config(
+                                db,
+                                google_drive_folder_id=folder_result["id"],
+                                google_drive_folder_name=default_name,
+                            )
+                            logger.info(f"Dossier Drive auto-cree: {folder_result['id']}")
             except Exception as e:
                 logger.warning(f"Impossible de creer le dossier par defaut: {e}")
                 # Non-bloquant : la connexion reste valide
