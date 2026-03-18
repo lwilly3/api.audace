@@ -1,3 +1,37 @@
+# =============================================================================
+# RadioManager API — Docker Compose (Dokploy)
+# =============================================================================
+#
+# Deploiement via Dokploy : ce fichier est lu automatiquement par Dokploy.
+# Les variables d'environnement sont definies dans l'interface Dokploy
+# (Settings > Environment).
+#
+# VARIABLES OBLIGATOIRES (sans default, le deploiement echoue si absentes) :
+#   POSTGRES_PASSWORD        Mot de passe PostgreSQL
+#   SECRET_KEY               Cle secrete JWT (longue chaine aleatoire)
+#   ADMIN_PASSWORD           Mot de passe du compte admin cree au demarrage
+#   TOTP_ENCRYPTION_KEY      Cle Fernet pour chiffrement 2FA
+#                            Generer : python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+#
+# VARIABLES RECOMMANDEES :
+#   GOOGLE_CLIENT_ID         OAuth Google Drive (backups)
+#   GOOGLE_CLIENT_SECRET     OAuth Google Drive (backups)
+#   FRONTEND_URL             https://app.cloud.audace.ovh (default)
+#   BACKEND_URL              https://api.cloud.audace.ovh (default)
+#
+# COMMANDES UTILES (sur le serveur) :
+#   docker logs audace_api --tail 50 -f          Logs API en temps reel
+#   docker logs audace_db --tail 50 -f           Logs PostgreSQL
+#   docker exec audace_db pg_dump -U audace_user audace_db | gzip > backup.sql.gz
+#   docker exec -it audace_api alembic current   Version Alembic actuelle
+#   docker compose run --rm migrate              Lancer les migrations manuellement
+#
+# VOLUMES :
+#   postgres_data   Donnees PostgreSQL (persistant)
+#   backups_data    Sauvegardes SQL (partage entre db et api)
+#
+# =============================================================================
+
 version: '3.8'
 
 services:
@@ -95,7 +129,8 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM:-HS256}
       ACCESS_TOKEN_EXPIRATION_MINUTE: ${ACCESS_TOKEN_EXPIRATION_MINUTE:-30}
-      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:-}
+      # ⚠️ OBLIGATOIRE pour 2FA: Generer via python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY}
       
       # Email (si utilisé pour reset password)
       MAIL_USERNAME: ${MAIL_USERNAME}
@@ -114,8 +149,9 @@ services:
       DEBUG: ${DEBUG:-false}
       
       # Admin par défaut (créé automatiquement au démarrage)
+      # ⚠️ OBLIGATOIRE: Définir ADMIN_PASSWORD dans .env (pas de default pour raison de sécurité)
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin@radiomanager.ovh}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@2024!}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@radiomanager.ovh}
       ADMIN_NAME: ${ADMIN_NAME:-Administrateur}
       ADMIN_FAMILY_NAME: ${ADMIN_FAMILY_NAME:-Système}
@@ -181,7 +217,7 @@ services:
       - audace_network
       - dokploy-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/version/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -204,6 +240,8 @@ services:
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_NAME: ${POSTGRES_DB:-audace_db}
       SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRATION_MINUTE: ${ACCESS_TOKEN_EXPIRATION_MINUTE:-30}
     networks:
       - audace_network
     command: alembic upgrade head
