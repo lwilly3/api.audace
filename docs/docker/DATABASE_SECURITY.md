@@ -25,7 +25,7 @@ Le fichier `docker-compose.yml` a été mis à jour pour inclure un dossier `/ba
 ```yaml
 volumes:
   - postgres_data:/var/lib/postgresql/data
-  - ./backups:/backups
+  - backups_data:/backups
 ```
 
 Cela permet de stocker des sauvegardes **en dehors du conteneur**.
@@ -189,7 +189,7 @@ cd /etc/dokploy/compose/audaceapi-audaceapi-yrlul5/code
 docker compose up -d db
 
 # 3. Vérifier les données
-docker exec audace_db psql -U postgres -d fastapi -c "SELECT COUNT(*) FROM users;"
+docker exec audace_db psql -U audace_user -d audace_db -c "SELECT COUNT(*) FROM users;"
 ```
 
 ### Scénario 2 : Le volume est corrompu

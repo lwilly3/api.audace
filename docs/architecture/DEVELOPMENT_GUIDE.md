@@ -127,7 +127,7 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 
 ```bash
 # Se connecter à PostgreSQL
-psql -U postgres
+psql -U audace_user
 
 # Créer la base
 CREATE DATABASE audace_db;
@@ -860,7 +860,7 @@ def create_show(show: ShowCreate, db: Session = Depends(get_db)):
 
 ```bash
 # Se connecter à la base
-psql -U postgres -d audace_db
+psql -U audace_user -d audace_db
 
 # Voir toutes les tables
 \dt

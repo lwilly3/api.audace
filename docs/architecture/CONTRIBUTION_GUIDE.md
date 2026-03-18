@@ -86,7 +86,7 @@ pip install black flake8 mypy pytest-cov
 ### 3. Créer une base de données de test
 
 ```bash
-psql -U postgres
+psql -U audace_user
 CREATE DATABASE audace_db_test;
 \q
 

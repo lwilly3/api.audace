@@ -125,7 +125,7 @@ TON SERVEUR                    INTERNET                  GOOGLE DRIVE
 
 Un cron job (tache automatique) sur le serveur execute toutes les nuits :
 ```bash
-pg_dump --clean --if-exists -U postgres audace_db | gzip > /backups/dump_2026-03-16_03-00.sql.gz
+pg_dump --clean --if-exists -U audace_user audace_db | gzip > /backups/dump_2026-03-16_03-00.sql.gz
 ```
 Ca exporte la base `audace_db` avec des instructions `DROP TABLE IF EXISTS` avant chaque `CREATE TABLE`, la compresse, et la sauvegarde dans `/backups/`.
 
@@ -921,7 +921,7 @@ Toutes les actions critiques sont loguees :
 **Solutions** :
 - Verifier que le cron tourne sur le serveur : `crontab -l | grep pg_dump`
 - Verifier le volume Docker : `docker exec -it audace_api ls /backups/`
-- Lancer manuellement : `pg_dump --clean --if-exists -U postgres audace_db | gzip > /backups/dump_$(date +%Y-%m-%d).sql.gz`
+- Lancer manuellement : `pg_dump --clean --if-exists -U audace_user audace_db | gzip > /backups/dump_$(date +%Y-%m-%d).sql.gz`
 
 ### "Aucun fichier de backup trouve" lors de restore/upload
 

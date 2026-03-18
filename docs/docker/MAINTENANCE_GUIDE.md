@@ -107,7 +107,7 @@ sudo docker exec -it audace_api /bin/sh
 sudo docker exec audace_api ls -la /app
 
 # Se connecter à PostgreSQL
-sudo docker exec -it audace_db psql -U postgres -d fastapi
+sudo docker exec -it audace_db psql -U audace_user -d audace_db
 ```
 
 ---
@@ -118,16 +118,16 @@ sudo docker exec -it audace_db psql -U postgres -d fastapi
 
 ```bash
 # Tester la connexion
-sudo docker exec audace_db pg_isready -U postgres
+sudo docker exec audace_db pg_isready -U audace_user
 
 # Lister les bases de données
-sudo docker exec audace_db psql -U postgres -c "\l"
+sudo docker exec audace_db psql -U audace_user -c "\l"
 
 # Voir les tables de la base
-sudo docker exec audace_db psql -U postgres -d fastapi -c "\dt"
+sudo docker exec audace_db psql -U audace_user -d audace_db -c "\dt"
 
 # Compter les enregistrements
-sudo docker exec audace_db psql -U postgres -d fastapi -c "SELECT COUNT(*) FROM users;"
+sudo docker exec audace_db psql -U audace_user -d audace_db -c "SELECT COUNT(*) FROM users;"
 ```
 
 ### Exécuter des migrations Alembic
@@ -160,13 +160,13 @@ sudo docker exec audace_api alembic revision --autogenerate -m "description"
 mkdir -p ~/backups
 
 # Sauvegarder la base de données (format custom)
-sudo docker exec audace_db pg_dump -U postgres -Fc fastapi > ~/backups/audace_db_$(date +%Y%m%d_%H%M%S).dump
+sudo docker exec audace_db pg_dump -U audace_user -Fc fastapi > ~/backups/audace_db_$(date +%Y%m%d_%H%M%S).dump
 
 # Sauvegarder en SQL brut
-sudo docker exec audace_db pg_dump -U postgres fastapi > ~/backups/audace_db_$(date +%Y%m%d_%H%M%S).sql
+sudo docker exec audace_db pg_dump -U audace_user fastapi > ~/backups/audace_db_$(date +%Y%m%d_%H%M%S).sql
 
 # Sauvegarder avec compression gzip
-sudo docker exec audace_db pg_dump -U postgres fastapi | gzip > ~/backups/audace_db_$(date +%Y%m%d_%H%M%S).sql.gz
+sudo docker exec audace_db pg_dump -U audace_user fastapi | gzip > ~/backups/audace_db_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
 ### Sauvegarde automatique (cron)
@@ -176,7 +176,7 @@ sudo docker exec audace_db pg_dump -U postgres fastapi | gzip > ~/backups/audace
 crontab -e
 
 # Ajouter cette ligne pour une sauvegarde quotidienne à 2h du matin
-0 2 * * * docker exec audace_db pg_dump -U postgres fastapi | gzip > /home/ubuntu/backups/audace_db_$(date +\%Y\%m\%d).sql.gz
+0 2 * * * docker exec audace_db pg_dump -U audace_user fastapi | gzip > /home/ubuntu/backups/audace_db_$(date +\%Y\%m\%d).sql.gz
 
 # Nettoyer les sauvegardes de plus de 30 jours
 0 3 * * * find /home/ubuntu/backups -name "audace_db_*.sql.gz" -mtime +30 -delete
@@ -210,24 +210,24 @@ sudo docker logs audace_api | gzip > ~/backups/api_logs_$(date +%Y%m%d_%H%M%S).l
 
 ```bash
 # Depuis un dump custom (.dump)
-sudo docker exec -i audace_db pg_restore -U postgres -d fastapi -c < ~/backups/audace_db_20251210.dump
+sudo docker exec -i audace_db pg_restore -U audace_user -d audace_db -c < ~/backups/audace_db_20251210.dump
 
 # Depuis un fichier SQL
-sudo docker exec -i audace_db psql -U postgres -d fastapi < ~/backups/audace_db_20251210.sql
+sudo docker exec -i audace_db psql -U audace_user -d audace_db < ~/backups/audace_db_20251210.sql
 
 # Depuis un fichier compressé
-gunzip -c ~/backups/audace_db_20251210.sql.gz | sudo docker exec -i audace_db psql -U postgres -d fastapi
+gunzip -c ~/backups/audace_db_20251210.sql.gz | sudo docker exec -i audace_db psql -U audace_user -d audace_db
 ```
 
 ### Restaurer avec suppression/recréation de la base
 
 ```bash
 # Supprimer et recréer la base
-sudo docker exec audace_db psql -U postgres -c "DROP DATABASE IF EXISTS fastapi;"
-sudo docker exec audace_db psql -U postgres -c "CREATE DATABASE fastapi;"
+sudo docker exec audace_db psql -U audace_user -c "DROP DATABASE IF EXISTS fastapi;"
+sudo docker exec audace_db psql -U audace_user -c "CREATE DATABASE fastapi;"
 
 # Restaurer
-sudo docker exec -i audace_db psql -U postgres -d fastapi < ~/backups/audace_db_20251210.sql
+sudo docker exec -i audace_db psql -U audace_user -d audace_db < ~/backups/audace_db_20251210.sql
 ```
 
 ### Restaurer le volume Docker
@@ -276,7 +276,7 @@ sudo docker compose up -d api
 ```bash
 # ⚠️ ATTENTION : Toujours sauvegarder avant !
 # 1. Sauvegarder
-sudo docker exec audace_db pg_dump -U postgres fastapi > ~/backups/before_upgrade.sql
+sudo docker exec audace_db pg_dump -U audace_user fastapi > ~/backups/before_upgrade.sql
 
 # 2. Modifier l'image dans docker-compose.yml
 # postgres:15-alpine → postgres:16-alpine
@@ -309,7 +309,7 @@ sudo docker update --restart=no audace_api
 sudo docker exec audace_db pg_isready
 
 # Tester la connexion depuis l'API
-sudo docker exec audace_api psql -h db -U postgres -d fastapi -c "SELECT 1;"
+sudo docker exec audace_api psql -h db -U audace_user -d audace_db -c "SELECT 1;"
 
 # Vérifier les variables d'environnement
 sudo docker exec audace_api env | grep DATABASE
@@ -337,7 +337,7 @@ sudo docker ps -s
 # ⚠️ ATTENTION : Cela supprime TOUTES les données !
 
 # 1. Sauvegarder la base
-sudo docker exec audace_db pg_dump -U postgres fastapi > ~/backups/before_reset.sql
+sudo docker exec audace_db pg_dump -U audace_user fastapi > ~/backups/before_reset.sql
 
 # 2. Tout supprimer
 sudo docker compose down -v
@@ -346,7 +346,7 @@ sudo docker compose down -v
 sudo docker compose up -d --build
 
 # 4. Restaurer si nécessaire
-sudo docker exec -i audace_db psql -U postgres -d fastapi < ~/backups/before_reset.sql
+sudo docker exec -i audace_db psql -U audace_user -d audace_db < ~/backups/before_reset.sql
 ```
 
 ---
@@ -361,7 +361,7 @@ sudo docker ps && df -h
 sudo docker logs -f audace_api
 
 # Sauvegarder maintenant
-sudo docker exec audace_db pg_dump -U postgres fastapi | gzip > ~/backups/manual_backup_$(date +%Y%m%d_%H%M%S).sql.gz
+sudo docker exec audace_db pg_dump -U audace_user fastapi | gzip > ~/backups/manual_backup_$(date +%Y%m%d_%H%M%S).sql.gz
 
 # Redémarrer proprement
 sudo docker compose restart
