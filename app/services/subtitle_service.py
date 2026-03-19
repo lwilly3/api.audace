@@ -191,7 +191,8 @@ def _build_ydl_opts(lang: str, output_path: str) -> dict:
         'outtmpl': output_path,
         'quiet': True,
         'no_warnings': True,
-        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+        'ignore_no_formats_error': True,
+        'extractor_args': {'youtube': {'player_client': ['tv', 'web']}},
     }
     if settings.YTDLP_PROXY:
         opts['proxy'] = settings.YTDLP_PROXY
@@ -346,7 +347,7 @@ def get_available_langs(url: str) -> dict:
     ydl_opts: dict = {
         'quiet': True,
         'no_warnings': True,
-        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+        'extractor_args': {'youtube': {'player_client': ['tv', 'web']}},
     }
     if settings.YTDLP_PROXY:
         ydl_opts['proxy'] = settings.YTDLP_PROXY
