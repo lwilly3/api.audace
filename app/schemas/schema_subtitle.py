@@ -53,3 +53,8 @@ class CookiesStatusResponse(BaseModel):
     count: Optional[int] = None
     size_bytes: Optional[int] = None
     modified_at: Optional[float] = None
+
+
+class CookiesPasteRequest(BaseModel):
+    """Cookies colles depuis le presse-papier (JSON Chrome)."""
+    content: str

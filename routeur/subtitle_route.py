@@ -9,6 +9,7 @@ Endpoints :
 - GET  /social/subtitles/status/{id}    — Poll le statut d'une tache
 - GET  /social/subtitles/langs          — Liste les langues disponibles
 - POST /social/subtitles/upload-cookies — Upload un fichier cookies YouTube
+- POST /social/subtitles/paste-cookies — Coller des cookies JSON depuis le presse-papier
 - GET  /social/subtitles/cookies-status — Statut du fichier cookies
 """
 
@@ -26,6 +27,7 @@ from app.schemas.schema_subtitle import (
     AvailableLangsResponse,
     CookiesUploadResponse,
     CookiesStatusResponse,
+    CookiesPasteRequest,
 )
 from app.services.subtitle_service import (
     create_task,
@@ -135,6 +137,39 @@ async def upload_cookies(
 
     result = save_cookies_file(content, file.filename or "cookies.txt")
     logger.info(f"Upload cookies par user={current_user.id} — resultat: {result}")
+    return CookiesUploadResponse(**result)
+
+
+@router.post("/paste-cookies", response_model=CookiesUploadResponse)
+async def paste_cookies(
+    req: CookiesPasteRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """
+    Coller des cookies YouTube depuis le presse-papier.
+
+    Accepte le JSON copie depuis l'extension Cookie-Editor / EditThisCookie.
+    Le backend detecte le format, convertit en Netscape et stocke.
+    Necessite la permission admin (super_admin ou can_manage_settings).
+    """
+    if not getattr(current_user, 'is_super_admin', False):
+        perms = getattr(current_user, 'permissions', {}) or {}
+        if not perms.get('can_manage_settings', False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission requise : super_admin ou can_manage_settings"
+            )
+
+    raw = req.content.strip()
+    if not raw:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Contenu vide"
+        )
+
+    result = save_cookies_file(raw.encode('utf-8'), "pasted_cookies.json")
+    logger.info(f"Paste cookies par user={current_user.id} — resultat: {result}")
     return CookiesUploadResponse(**result)
 
 
