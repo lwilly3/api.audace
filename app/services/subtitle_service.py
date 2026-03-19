@@ -33,9 +33,11 @@ from app.config.config import settings
 
 logger = logging.getLogger("hapson-api")
 
-# Stockage en memoire des taches async
-# TODO: migrer vers Redis en production multi-worker
-_tasks: dict[str, dict] = {}
+# Stockage des taches async sur le filesystem (partage entre workers Gunicorn)
+# Chaque tache est un fichier JSON dans /app/data/tasks/
+TASKS_DIR = "/app/data/tasks"
+# TTL des fichiers de tache (1 heure) — nettoyes au create
+TASK_TTL_SECONDS = 3600
 
 # Chemin du fichier cookies converti au format Netscape (cache en memoire)
 _netscape_cookies_path: str | None = None
@@ -459,18 +461,65 @@ def _extract_with_fallback(url: str, lang: str, fmt: str, task_id: str) -> dict:
 
 # ════════════════════════════════════════════════════════════════
 # MODE ASYNCHRONE (tache de fond via BackgroundTasks)
+# Stockage sur filesystem partage entre workers Gunicorn
 # ════════════════════════════════════════════════════════════════
 
+def _task_path(task_id: str) -> str:
+    """Retourne le chemin du fichier JSON pour une tache."""
+    return os.path.join(TASKS_DIR, f"{task_id}.json")
+
+
+def _cleanup_old_tasks() -> None:
+    """Supprime les fichiers de tache plus vieux que TASK_TTL_SECONDS."""
+    try:
+        if not os.path.isdir(TASKS_DIR):
+            return
+        now = time.time()
+        for f in os.listdir(TASKS_DIR):
+            if not f.endswith('.json'):
+                continue
+            filepath = os.path.join(TASKS_DIR, f)
+            try:
+                if now - os.path.getmtime(filepath) > TASK_TTL_SECONDS:
+                    os.remove(filepath)
+            except OSError:
+                pass
+    except Exception as e:
+        logger.warning(f"[tasks] Erreur nettoyage taches: {e}")
+
+
 def create_task() -> str:
-    """Cree une tache d'extraction et retourne son ID."""
+    """Cree une tache d'extraction et retourne son ID.
+    Stocke sur le filesystem pour etre accessible par tous les workers."""
+    os.makedirs(TASKS_DIR, exist_ok=True)
+    # Nettoyage opportuniste des vieilles taches
+    _cleanup_old_tasks()
     task_id = str(uuid.uuid4())
-    _tasks[task_id] = {"status": "processing"}
+    with open(_task_path(task_id), 'w', encoding='utf-8') as f:
+        json.dump({"status": "processing"}, f)
     return task_id
 
 
 def get_task(task_id: str) -> Optional[dict]:
-    """Recupere le statut d'une tache."""
-    return _tasks.get(task_id)
+    """Recupere le statut d'une tache depuis le filesystem."""
+    path = _task_path(task_id)
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"[tasks] Erreur lecture tache {task_id}: {e}")
+        return None
+
+
+def _save_task(task_id: str, data: dict) -> None:
+    """Sauvegarde le resultat d'une tache sur le filesystem."""
+    try:
+        with open(_task_path(task_id), 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False)
+    except OSError as e:
+        logger.error(f"[tasks] Erreur sauvegarde tache {task_id}: {e}")
 
 
 def extract_subtitles(task_id: str, url: str, lang: str, fmt: str) -> None:
@@ -478,10 +527,10 @@ def extract_subtitles(task_id: str, url: str, lang: str, fmt: str) -> None:
     Extrait les sous-titres en tache de fond (BackgroundTasks FastAPI).
 
     Utilise la cascade YTA → yt-dlp pour YouTube, yt-dlp direct pour les autres.
-    Met a jour le dict _tasks avec le resultat.
+    Sauvegarde le resultat sur le filesystem (partage entre workers).
     """
     result = _extract_with_fallback(url, lang, fmt, task_id)
-    _tasks[task_id] = result
+    _save_task(task_id, result)
 
 
 # ════════════════════════════════════════════════════════════════
