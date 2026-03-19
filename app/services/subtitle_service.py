@@ -187,12 +187,13 @@ def _build_ydl_opts(lang: str, output_path: str) -> dict:
         'writesubtitles': True,
         'writeautomaticsub': True,
         'subtitleslangs': [lang, f'{lang}-orig'],
-        'subtitlesformat': 'vtt',
+        'subtitlesformat': 'vtt/srt/best',
         'outtmpl': output_path,
         'quiet': True,
         'no_warnings': True,
+        # Eviter l'erreur "Requested format is not available" avec le client Android
+        'format': 'best',
         # Utiliser le client Android pour contourner le bot check YouTube
-        # Le client Android n'est pas soumis aux memes verifications que le client web
         'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
     }
     if settings.YTDLP_PROXY:
@@ -236,11 +237,12 @@ def _cleanup_temp_files(task_id: str) -> None:
                 pass
 
 
-def _find_vtt_file(task_id: str) -> Optional[str]:
-    """Trouve le fichier .vtt genere par yt-dlp dans /tmp."""
-    for f in os.listdir('/tmp'):
-        if f.startswith(task_id) and f.endswith('.vtt'):
-            return f'/tmp/{f}'
+def _find_subtitle_file(task_id: str) -> Optional[str]:
+    """Trouve le fichier de sous-titres (.vtt ou .srt) genere par yt-dlp dans /tmp."""
+    for ext in ('.vtt', '.srt'):
+        for f in os.listdir('/tmp'):
+            if f.startswith(task_id) and f.endswith(ext):
+                return f'/tmp/{f}'
     return None
 
 
@@ -257,7 +259,7 @@ def _extract_and_convert(url: str, lang: str, fmt: str, task_id: str) -> dict:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        vtt_file = _find_vtt_file(task_id)
+        vtt_file = _find_subtitle_file(task_id)
         if not vtt_file:
             return {
                 "status": "error",
