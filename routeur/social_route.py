@@ -513,14 +513,31 @@ def generate_from_url(
     """
     from app.services.ai_service import fetch_content_from_url, generate_post_from_article
 
-    content_data = fetch_content_from_url(body.url)
-    generated_content = generate_post_from_article(
-        content_data["text"],
-        body.url,
-        body.mode,
-        body.custom_instructions,
-        source_type=content_data["source_type"],
-    )
+    try:
+        content_data = fetch_content_from_url(body.url)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Erreur lors de la recuperation du contenu: {e}"
+        )
+
+    try:
+        generated_content = generate_post_from_article(
+            content_data["text"],
+            body.url,
+            body.mode,
+            body.custom_instructions,
+            source_type=content_data["source_type"],
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Erreur lors de la generation IA: {e}"
+        )
 
     log_action(db, current_user.id, "ai_generate", "social_posts", 0)
 

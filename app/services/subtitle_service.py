@@ -187,6 +187,9 @@ def _extract_via_yta(url: str, lang: str, fmt: str) -> dict:
         return {"status": "error", "message": f"Sous-titres desactives pour la video {video_id}"}
     except VideoUnavailable:
         return {"status": "error", "message": f"Video indisponible : {video_id}"}
+    except Exception as e:
+        logger.warning(f"[YTA] Erreur inattendue pour {video_id}: {e}")
+        return {"status": "error", "message": f"Erreur YTA: {e}"}
 
     # Conversion selon le format demande
     if fmt == "vtt":
