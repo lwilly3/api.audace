@@ -7,7 +7,7 @@ Prefixe : /auth/2fa
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 from app.db.database import get_db
 from app.models.model_user import User
@@ -21,6 +21,7 @@ from app.db.crud.crud_2fa import (
     disable_totp,
     admin_reset_totp,
     admin_reset_all_totp,
+    get_users_with_2fa,
     regenerate_backup_codes,
     create_trusted_device,
 )
@@ -49,6 +50,9 @@ class BackupCodeLoginRequest(BaseModel):
     temp_token: str
     backup_code: str
     trust_browser: Optional[bool] = False
+
+class ResetAll2FARequest(BaseModel):
+    user_ids: Optional[List[int]] = None
 
 
 # --- Endpoints authentifies (Bearer token complet) ---
@@ -175,13 +179,30 @@ def two_factor_verify_backup(
 
 # --- Endpoint admin ---
 
-@router.post('/admin/reset-all')
-def two_factor_admin_reset_all(
+@router.get('/admin/users-2fa')
+def list_users_with_2fa(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Reset le 2FA de TOUS les utilisateurs (post-restauration)."""
-    # Bypass super_admin
+    """Liste les utilisateurs avec 2FA actif (pour selection avant reset)."""
+    is_super_admin = any(r.name == 'super_admin' for r in current_user.roles)
+    if not is_super_admin:
+        perms = db.query(UserPermissions).filter(UserPermissions.user_id == current_user.id).first()
+        if not perms or not perms.can_reset_user_2fa:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission can_reset_user_2fa requise"
+            )
+    return get_users_with_2fa(db)
+
+
+@router.post('/admin/reset-all')
+def two_factor_admin_reset_all(
+    body: ResetAll2FARequest = ResetAll2FARequest(),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Reset le 2FA des utilisateurs (tous ou selection). Body optionnel: {user_ids: [1,2,3]}."""
     is_super_admin = any(r.name == 'super_admin' for r in current_user.roles)
     if not is_super_admin:
         perms = db.query(UserPermissions).filter(UserPermissions.user_id == current_user.id).first()
@@ -191,7 +212,7 @@ def two_factor_admin_reset_all(
                 detail="Permission can_reset_user_2fa requise"
             )
 
-    affected = admin_reset_all_totp(db)
+    affected = admin_reset_all_totp(db, user_ids=body.user_ids)
     log_action(db, current_user.id, "2fa_admin_reset_all", "users", 0)
     return {
         "message": f"2FA reinitialise pour {affected} utilisateur(s)",

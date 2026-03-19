@@ -168,26 +168,49 @@ def admin_reset_totp(db: Session, user_id: int) -> None:
     db.commit()
 
 
-def admin_reset_all_totp(db: Session) -> int:
+def admin_reset_all_totp(db: Session, user_ids: list[int] | None = None) -> int:
     """
-    Reset admin du 2FA de TOUS les utilisateurs (post-restauration).
-    Utilise des requetes bulk pour la performance.
+    Reset admin du 2FA des utilisateurs (post-restauration).
+    Si user_ids est fourni, ne reset que ces utilisateurs.
+    Sinon, reset tous les utilisateurs avec 2FA actif.
     Retourne le nombre d'utilisateurs affectes.
     """
-    affected_count = db.query(User).filter(User.two_factor_enabled == True).count()
+    base_filter = db.query(User).filter(User.two_factor_enabled == True)
+    if user_ids:
+        base_filter = base_filter.filter(User.id.in_(user_ids))
+
+    affected_count = base_filter.count()
 
     if affected_count > 0:
-        db.query(User).filter(User.two_factor_enabled == True).update({
+        base_filter.update({
             User.two_factor_enabled: False,
             User.totp_secret_encrypted: None,
             User.backup_codes_hash: None,
         }, synchronize_session='fetch')
 
-    # Supprimer tous les appareils de confiance
-    db.query(TrustedDevice).delete()
+    # Supprimer les appareils de confiance
+    if user_ids:
+        db.query(TrustedDevice).filter(TrustedDevice.user_id.in_(user_ids)).delete(synchronize_session='fetch')
+    else:
+        db.query(TrustedDevice).delete()
 
     db.commit()
     return affected_count
+
+
+def get_users_with_2fa(db: Session) -> list[dict]:
+    """Retourne la liste simplifiee des utilisateurs avec 2FA actif."""
+    users = db.query(User).filter(User.two_factor_enabled == True).all()
+    return [
+        {
+            "id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "name": u.name or "",
+            "family_name": u.family_name or "",
+        }
+        for u in users
+    ]
 
 
 def regenerate_backup_codes(db: Session, user_id: int, otp_code: str) -> dict:
