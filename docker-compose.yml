@@ -101,7 +101,7 @@ services:
       # Tout nouveau header custom doit être ajouté ICI dans accessControlAllowHeaders.
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowOriginList=https://app.cloud.audace.ovh,https://app.radio.audace.ovh"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowMethods=GET,POST,PUT,PATCH,DELETE,OPTIONS"
-      - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Authorization,Content-Type,Accept,Origin,X-Requested-With,X-Trusted-Device"
+      - "traefik.http.middlewares.api-cors.headers.accessControlAllowHeaders=Authorization,Content-Type,Accept,Origin,X-Requested-With,X-Trusted-Device,X-Remember-Device"
       - "traefik.http.middlewares.api-cors.headers.accessControlAllowCredentials=true"
       - "traefik.http.middlewares.api-cors.headers.accessControlExposeHeaders=X-Total-Count"
       - "traefik.http.middlewares.api-cors.headers.accessControlMaxAge=3600"

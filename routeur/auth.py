@@ -24,10 +24,12 @@ from app.models.model_user_permissions import UserPermissions
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 from core.auth.oauth2 import SECRET_KEY, ALGORITHM
+from jose import jwt, JWTError
 from core.auth.oauth2 import create_2fa_temp_token
 from app.db.crud.crud_password_reset_token import create_reset_token, get_reset_token, mark_reset_token_used
 from app.db.crud.crud_audit_logs import log_action
-from app.db.crud.crud_2fa import verify_trusted_device
+from app.config.config import settings
+from app.db.crud.crud_2fa import verify_trusted_device, create_trusted_device, get_trusted_devices, revoke_trusted_device, revoke_trusted_devices
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -91,16 +93,29 @@ def login(request: Request, user_credentials_receved: OAuth2PasswordRequestForm=
 
    permissions= get_user_permissions(db, user_to_log_on_db.id)
    log_action(db, user_to_log_on_db.id, "login", "users", user_to_log_on_db.id)
-   
-   return{"access_token" :access_token, "token_type":"bearer" ,
-          "user_id":user_to_log_on_db.id,
-           "username":user_to_log_on_db.username,
-             "email":user_to_log_on_db.email,
-             "family_name":user_to_log_on_db.family_name,
-             "name":user_to_log_on_db.name,
-             "phone_number":user_to_log_on_db.phone_number,
-             "profilePicture":user_to_log_on_db.profilePicture,
-               "permissions":permissions}
+
+   response_data = {
+       "access_token": access_token,
+       "token_type": "bearer",
+       "user_id": user_to_log_on_db.id,
+       "username": user_to_log_on_db.username,
+       "email": user_to_log_on_db.email,
+       "family_name": user_to_log_on_db.family_name,
+       "name": user_to_log_on_db.name,
+       "phone_number": user_to_log_on_db.phone_number,
+       "profilePicture": user_to_log_on_db.profilePicture,
+       "permissions": permissions,
+   }
+
+   # Si l'utilisateur souhaite enregistrer cet appareil de confiance
+   remember_device = request.headers.get("X-Remember-Device")
+   if remember_device and remember_device.lower() == "true":
+       user_agent = request.headers.get("User-Agent", "Unknown")
+       device_token = create_trusted_device(db, user_to_log_on_db.id, user_agent)
+       response_data["trusted_device_token"] = device_token
+       log_action(db, user_to_log_on_db.id, "register_trusted_device", "users", user_to_log_on_db.id)
+
+   return response_data
 
 
 
@@ -116,9 +131,23 @@ def logout(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get
 
 
 @router.post('/refresh')
-def refresh_token(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get_db)):
-    """Renouvelle un token d'acces. Accepte les tokens valides ou recemment expires (fenetre de grace)."""
-    user_id = oauth2.decode_token_allow_expired(token, db)
+def refresh_token(request: Request, token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get_db)):
+    """Renouvelle un token d'acces. Accepte les tokens valides ou recemment expires (fenetre de grace).
+    Si un appareil de confiance est presente via X-Trusted-Device, la fenetre de grace est etendue."""
+    # Verifier si un appareil de confiance est presente pour etendre la grace
+    device_token = request.headers.get("X-Trusted-Device")
+    grace_minutes = None  # default (5 min)
+
+    if device_token:
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM, options={"verify_exp": False})
+            temp_user_id = payload.get("user_id")
+            if temp_user_id and verify_trusted_device(db, temp_user_id, device_token):
+                grace_minutes = settings.TRUSTED_DEVICE_REFRESH_GRACE_MINUTES
+        except JWTError:
+            pass  # fallback to default grace
+
+    user_id = oauth2.decode_token_allow_expired(token, db, grace_minutes=grace_minutes)
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
 
@@ -146,6 +175,26 @@ def refresh_token(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depe
         "profilePicture": user.profilePicture,
         "permissions": permissions,
     }
+
+# Gestion des appareils de confiance
+@router.get('/devices')
+def list_devices(db: Session = Depends(get_db), current_user: model_user.User = Depends(oauth2.get_current_user)):
+    """Liste les appareils de confiance de l'utilisateur connecte."""
+    return get_trusted_devices(db, current_user.id)
+
+@router.delete('/devices/{device_id}', status_code=status.HTTP_204_NO_CONTENT)
+def remove_device(device_id: int, db: Session = Depends(get_db), current_user: model_user.User = Depends(oauth2.get_current_user)):
+    """Revoque un appareil de confiance specifique."""
+    revoke_trusted_device(db, current_user.id, device_id)
+    log_action(db, current_user.id, "revoke_trusted_device", "users", current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@router.delete('/devices', status_code=status.HTTP_204_NO_CONTENT)
+def remove_all_devices(db: Session = Depends(get_db), current_user: model_user.User = Depends(oauth2.get_current_user)):
+    """Revoque tous les appareils de confiance de l'utilisateur."""
+    revoke_trusted_devices(db, current_user.id)
+    log_action(db, current_user.id, "revoke_all_trusted_devices", "users", current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 class SignupRequest(BaseModel):
     email: EmailStr
