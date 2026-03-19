@@ -97,6 +97,9 @@ def _build_ydl_opts(lang: str, output_path: str) -> dict:
         'outtmpl': output_path,
         'quiet': True,
         'no_warnings': True,
+        # Utiliser le client Android pour contourner le bot check YouTube
+        # Le client Android n'est pas soumis aux memes verifications que le client web
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
     }
     if settings.YTDLP_PROXY:
         opts['proxy'] = settings.YTDLP_PROXY
@@ -248,7 +251,11 @@ def get_available_langs(url: str) -> dict:
     Retourne les langues de sous-titres disponibles pour une URL video.
     Utile pour alimenter un selecteur de langue dans l'UI.
     """
-    ydl_opts: dict = {'quiet': True, 'no_warnings': True}
+    ydl_opts: dict = {
+        'quiet': True,
+        'no_warnings': True,
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+    }
     if settings.YTDLP_PROXY:
         ydl_opts['proxy'] = settings.YTDLP_PROXY
     cookies = _ensure_netscape_cookies()
