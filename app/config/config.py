@@ -64,9 +64,12 @@ class Settings(BaseSettings):
     # Mistral AI (generation de posts depuis URL)
     MISTRAL_API_KEY:str = ""
 
-    # Cloudflare Worker pour extraction sous-titres YouTube
+    # Cloudflare Worker pour extraction sous-titres YouTube (legacy, remplace par yt-dlp)
     YOUTUBE_WORKER_URL:str = ""
     YOUTUBE_WORKER_SECRET:str = ""
+
+    # yt-dlp : proxy residentiel pour contourner le blocage IP YouTube en production
+    YTDLP_PROXY:str = ""
 
     # Firebase Storage (nettoyage fichiers temporaires apres publication)
     # Accepte soit le contenu JSON direct, soit un chemin vers le fichier JSON

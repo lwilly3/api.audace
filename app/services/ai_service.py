@@ -45,24 +45,20 @@ def extract_youtube_video_id(url: str) -> str | None:
 
 def fetch_youtube_transcript(url: str) -> dict:
     """
-    Extrait les sous-titres d'une video YouTube via le Cloudflare Worker.
+    Extrait les sous-titres d'une video YouTube via yt-dlp.
 
-    Le Worker extrait les sous-titres depuis YouTube (pas de blocage IP cloud).
+    Utilise le subtitle_service (yt-dlp) en remplacement du Cloudflare Worker
+    qui etait bloque par les restrictions IP de YouTube.
     L'endpoint oEmbed est utilise en complement pour le titre et l'auteur.
     Retourne un dict avec video_id, title, author, language, transcript_text, thumbnail_url.
     """
+    from app.services.subtitle_service import extract_subtitles_sync
+
     video_id = extract_youtube_video_id(url)
     if not video_id:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="URL YouTube invalide ou ID video introuvable"
-        )
-
-    worker_url = settings.YOUTUBE_WORKER_URL
-    if not worker_url:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Le service d'extraction YouTube n'est pas configure (YOUTUBE_WORKER_URL manquant)"
         )
 
     # Recuperer le titre et l'auteur via oEmbed (pas de cle API necessaire)
@@ -79,51 +75,13 @@ def fetch_youtube_transcript(url: str) -> dict:
     except Exception as e:
         logger.warning(f"Impossible de recuperer les metadonnees oEmbed pour {video_id}: {e}")
 
-    # Appeler le Cloudflare Worker pour extraire les sous-titres
+    # Extraire les sous-titres via yt-dlp (remplace le Cloudflare Worker)
     try:
-        headers = {}
-        if settings.YOUTUBE_WORKER_SECRET:
-            headers["X-Worker-Secret"] = settings.YOUTUBE_WORKER_SECRET
-
-        with httpx.Client(timeout=30.0) as client:
-            resp = client.get(
-                worker_url,
-                params={"video_id": video_id, "lang": "fr"},
-                headers=headers,
-            )
-
-        if resp.status_code == 404:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=resp.json().get("error", "Aucun sous-titre disponible pour cette video")
-            )
-        if resp.status_code == 403:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="Video privee ou soumise a une restriction d'age"
-            )
-        if resp.status_code != 200:
-            error_msg = "Erreur lors de l'extraction des sous-titres YouTube"
-            try:
-                error_msg = resp.json().get("error", error_msg)
-            except Exception:
-                pass
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=error_msg
-            )
-
-        worker_data = resp.json()
-        transcript_text = worker_data.get("full_text", "")
-        language = worker_data.get("language", "fr")
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erreur appel Worker YouTube pour {video_id}: {e}")
+        transcript_text = extract_subtitles_sync(url, lang="fr", fmt="txt")
+    except RuntimeError as e:
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Erreur lors de l'extraction des sous-titres YouTube"
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
         )
 
     # Nettoyer et tronquer
@@ -143,7 +101,7 @@ def fetch_youtube_transcript(url: str) -> dict:
         "video_id": video_id,
         "title": title,
         "author": author,
-        "language": language,
+        "language": "fr",
         "transcript_text": transcript_text,
         "thumbnail_url": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
     }

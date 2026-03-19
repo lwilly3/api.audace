@@ -41,6 +41,7 @@ from routeur import (
      article_route,  # Routes pour les articles WordPress (proxy wp-json)
      two_factor_route,  # Routes pour le 2FA (TOTP)
      backup_route,  # Routes pour la gestion des sauvegardes (Backup Management)
+     subtitle_route,  # Routes pour l'extraction de sous-titres (yt-dlp)
 
 
 
@@ -288,6 +289,7 @@ app.include_router(social_route.router) # Routes pour le module Social (réseaux
 app.include_router(article_route.router) # Routes pour les articles WordPress
 app.include_router(two_factor_route.router) # Routes pour le 2FA (TOTP)
 app.include_router(backup_route.router) # Routes pour la gestion des sauvegardes
+app.include_router(subtitle_route.router) # Routes pour l'extraction de sous-titres
 
 
 
