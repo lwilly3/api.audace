@@ -192,9 +192,6 @@ def _build_ydl_opts(lang: str, output_path: str) -> dict:
         'quiet': True,
         'no_warnings': True,
         'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
-        # Format minimal pour satisfaire la resolution yt-dlp (video non telechargee)
-        'format': 'worst',
-        'allow_unplayable_formats': True,
     }
     if settings.YTDLP_PROXY:
         opts['proxy'] = settings.YTDLP_PROXY
