@@ -184,9 +184,15 @@ services:
       # Mistral AI (generation de posts depuis URL)
       MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
 
-      # Cloudflare Worker — extraction sous-titres YouTube
+      # Cloudflare Worker — extraction sous-titres YouTube (legacy)
       YOUTUBE_WORKER_URL: ${YOUTUBE_WORKER_URL:-}
       YOUTUBE_WORKER_SECRET: ${YOUTUBE_WORKER_SECRET:-}
+
+      # yt-dlp : proxy residentiel pour contourner le blocage IP YouTube
+      # Format : http://user:pass@host:port
+      YTDLP_PROXY: ${YTDLP_PROXY:-}
+      # yt-dlp : chemin cookies YouTube (JSON Chrome ou Netscape, auto-converti)
+      YTDLP_COOKIES_PATH: ${YTDLP_COOKIES_PATH:-/app/data/cookies.txt}
 
       # Firebase Storage (nettoyage fichiers temporaires apres publication)
       # Accepte : JSON direct, chemin fichier, ou JSON encode en base64
@@ -212,6 +218,7 @@ services:
       - "8000"
     volumes:
       - ./logs:/app/logs
+      - ./data:/app/data        # Cookies YouTube (persistant entre redeploys)
       - backups_data:/backups
     networks:
       - audace_network
