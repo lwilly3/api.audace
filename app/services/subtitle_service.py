@@ -17,6 +17,7 @@ import json
 import os
 import re
 import uuid
+import time
 import logging
 from typing import Optional
 
@@ -175,21 +176,30 @@ def _extract_via_yta(url: str, lang: str, fmt: str) -> dict:
 
     ytt = YouTubeTranscriptApi()
 
-    try:
-        transcript_list = ytt.list(video_id)
-        # Tente la langue demandee, fallback anglais
-        transcript = transcript_list.find_transcript([lang, "en"])
-        entries = transcript.fetch()
+    last_error = ""
+    for attempt in range(2):
+        try:
+            transcript_list = ytt.list(video_id)
+            # Tente la langue demandee, fallback anglais
+            transcript = transcript_list.find_transcript([lang, "en"])
+            entries = transcript.fetch()
+            break  # succes
 
-    except NoTranscriptFound:
-        return {"status": "error", "message": f"Aucun sous-titre disponible en '{lang}' pour {video_id}"}
-    except TranscriptsDisabled:
-        return {"status": "error", "message": f"Sous-titres desactives pour la video {video_id}"}
-    except VideoUnavailable:
-        return {"status": "error", "message": f"Video indisponible : {video_id}"}
-    except Exception as e:
-        logger.warning(f"[YTA] Erreur inattendue pour {video_id}: {e}")
-        return {"status": "error", "message": f"Erreur YTA: {e}"}
+        except NoTranscriptFound:
+            return {"status": "error", "message": f"Aucun sous-titre disponible en '{lang}' pour {video_id}"}
+        except TranscriptsDisabled:
+            return {"status": "error", "message": f"Sous-titres desactives pour la video {video_id}"}
+        except VideoUnavailable:
+            return {"status": "error", "message": f"Video indisponible : {video_id}"}
+        except Exception as e:
+            last_error = str(e)
+            logger.warning(f"[YTA] Tentative {attempt + 1}/2 echouee pour {video_id}: {e}")
+            if attempt == 0:
+                time.sleep(1)  # pause avant retry
+            continue
+    else:
+        # Les 2 tentatives ont echoue
+        return {"status": "error", "message": f"Erreur YTA apres 2 tentatives: {last_error}"}
 
     # Conversion selon le format demande
     if fmt == "vtt":
@@ -308,11 +318,15 @@ def _ensure_netscape_cookies() -> str | None:
 
 def _build_ydl_opts(lang: str, output_path: str) -> dict:
     """Construit les options yt-dlp communes."""
+    # Langues a tenter : demandee + variante orig + anglais en fallback
+    langs = [lang, f'{lang}-orig']
+    if lang != 'en':
+        langs.extend(['en', 'en-orig'])
     opts: dict = {
         'skip_download': True,
         'writesubtitles': True,
         'writeautomaticsub': True,
-        'subtitleslangs': [lang, f'{lang}-orig'],
+        'subtitleslangs': langs,
         'subtitlesformat': 'vtt',
         'outtmpl': output_path,
         'quiet': True,
@@ -384,6 +398,9 @@ def _extract_and_convert(url: str, lang: str, fmt: str, task_id: str) -> dict:
 
         vtt_file = _find_vtt_file(task_id)
         if not vtt_file:
+            # Log les fichiers generes pour diagnostic
+            tmp_files = [f for f in os.listdir('/tmp') if f.startswith(task_id)]
+            logger.warning(f"[yt-dlp] Aucun VTT trouve pour {url} (lang={lang}). Fichiers tmp: {tmp_files}")
             return {
                 "status": "error",
                 "message": f"Aucun sous-titre trouve pour la langue '{lang}'",
@@ -429,11 +446,15 @@ def _extract_with_fallback(url: str, lang: str, fmt: str, task_id: str) -> dict:
         result = _extract_via_yta(url, lang, fmt)
         if result["status"] == "done":
             return result
-        logger.warning(f"[subtitles] YTA echoue ({result.get('message')}), fallback yt-dlp")
+        yta_error = result.get("message", "inconnu")
+        logger.warning(f"[subtitles] YTA echoue ({yta_error}), fallback yt-dlp")
 
     # Fallback yt-dlp (autres plateformes ou si YTA echoue)
     logger.info(f"[subtitles] Tentative yt-dlp pour {url}")
-    return _extract_and_convert(url, lang, fmt, task_id)
+    result = _extract_and_convert(url, lang, fmt, task_id)
+    if result["status"] == "error":
+        logger.error(f"[subtitles] Les deux moteurs ont echoue pour {url}: {result.get('message')}")
+    return result
 
 
 # ════════════════════════════════════════════════════════════════
