@@ -41,6 +41,8 @@ def _build_ydl_opts(lang: str, output_path: str) -> dict:
     }
     if settings.YTDLP_PROXY:
         opts['proxy'] = settings.YTDLP_PROXY
+    if settings.YTDLP_COOKIES_PATH and os.path.isfile(settings.YTDLP_COOKIES_PATH):
+        opts['cookiefile'] = settings.YTDLP_COOKIES_PATH
     return opts
 
 
@@ -189,6 +191,8 @@ def get_available_langs(url: str) -> dict:
     ydl_opts: dict = {'quiet': True, 'no_warnings': True}
     if settings.YTDLP_PROXY:
         ydl_opts['proxy'] = settings.YTDLP_PROXY
+    if settings.YTDLP_COOKIES_PATH and os.path.isfile(settings.YTDLP_COOKIES_PATH):
+        ydl_opts['cookiefile'] = settings.YTDLP_COOKIES_PATH
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)

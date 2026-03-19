@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     # yt-dlp : proxy residentiel pour contourner le blocage IP YouTube en production
     YTDLP_PROXY:str = ""
 
+    # yt-dlp : chemin vers le fichier cookies.txt (Netscape format) pour YouTube auth
+    # Exporter depuis le navigateur via l'extension "Get cookies.txt LOCALLY"
+    YTDLP_COOKIES_PATH:str = ""
+
     # Firebase Storage (nettoyage fichiers temporaires apres publication)
     # Accepte soit le contenu JSON direct, soit un chemin vers le fichier JSON
     FIREBASE_SERVICE_ACCOUNT:str = ""
