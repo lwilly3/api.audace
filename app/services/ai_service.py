@@ -25,6 +25,32 @@ MAX_ARTICLE_CHARS = 4000
 # Limite de caracteres pour les transcriptions YouTube (plus genereux car contenu dense)
 MAX_YOUTUBE_TRANSCRIPT_CHARS = 8000
 
+# ═══════════════════════════════════════════════════════════════
+# Unicode Bold — pour le formatage Facebook (pas de Markdown)
+# ═══════════════════════════════════════════════════════════════
+
+# Table de correspondance ASCII → Mathematical Sans-Serif Bold (Unicode)
+_BOLD_MAP = {}
+# Majuscules A-Z → U+1D5D4 à U+1D5ED
+for _i, _c in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+    _BOLD_MAP[_c] = chr(0x1D5D4 + _i)
+# Minuscules a-z → U+1D5EE à U+1D607
+for _i, _c in enumerate("abcdefghijklmnopqrstuvwxyz"):
+    _BOLD_MAP[_c] = chr(0x1D5EE + _i)
+# Chiffres 0-9 → U+1D7EC à U+1D7F5
+for _i, _c in enumerate("0123456789"):
+    _BOLD_MAP[_c] = chr(0x1D7EC + _i)
+
+
+def _to_unicode_bold(text: str) -> str:
+    """Convertit un texte en caracteres Unicode Mathematical Sans-Serif Bold."""
+    return "".join(_BOLD_MAP.get(c, c) for c in text)
+
+
+def _markdown_bold_to_unicode(text: str) -> str:
+    """Remplace les **texte** Markdown par leur equivalent Unicode bold pour Facebook."""
+    return re.sub(r'\*\*(.+?)\*\*', lambda m: _to_unicode_bold(m.group(1)), text)
+
 # Pattern pour detecter les URLs YouTube
 YOUTUBE_URL_PATTERN = re.compile(
     r'(?:https?://)?(?:www\.|m\.)?(?:youtube\.com/(?:watch\?v=|embed/|v/)|youtu\.be/)([\w-]{11})',
@@ -328,6 +354,9 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail="L'IA n'a pas genere de contenu"
             )
+
+        # Convertir le markdown bold (**texte**) en Unicode bold pour Facebook
+        generated = _markdown_bold_to_unicode(generated)
 
         logger.info(f"Post IA genere ({len(generated)} chars) pour URL: {url}")
         return generated
@@ -647,6 +676,10 @@ def improve_text(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Action invalide: {action}"
         )
+
+    # Pour les posts (texte brut), convertir le markdown bold en Unicode bold
+    if not is_html:
+        result = _markdown_bold_to_unicode(result)
 
     logger.info(f"Texte ameliore ({action}, {content_type}, {len(result)} chars)")
 
