@@ -191,7 +191,9 @@ def _build_ydl_opts(lang: str, output_path: str) -> dict:
         'outtmpl': output_path,
         'quiet': True,
         'no_warnings': True,
-        # On ne telecharge pas la video, ignorer les erreurs de format video
+        # Client Android necessaire pour acceder aux sous-titres YouTube
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+        # Ignorer l'erreur de format video (on ne telecharge que les sous-titres)
         'ignore_no_formats_error': True,
     }
     if settings.YTDLP_PROXY:
@@ -348,6 +350,7 @@ def get_available_langs(url: str) -> dict:
     ydl_opts: dict = {
         'quiet': True,
         'no_warnings': True,
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
     }
     if settings.YTDLP_PROXY:
         ydl_opts['proxy'] = settings.YTDLP_PROXY
