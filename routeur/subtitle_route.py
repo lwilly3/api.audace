@@ -117,16 +117,15 @@ async def upload_cookies(
     - Netscape TXT (format standard wget/curl)
 
     Le fichier est auto-converti et stocke de maniere persistante.
-    Necessite la permission admin (super_admin ou can_manage_settings).
+    Necessite la permission admin (super_admin).
     """
-    # Verification permission admin
-    if not getattr(current_user, 'is_super_admin', False):
-        perms = getattr(current_user, 'permissions', {}) or {}
-        if not perms.get('can_manage_settings', False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Permission requise : super_admin ou can_manage_settings"
-            )
+    # Verification permission admin (meme pattern que two_factor_route.py)
+    is_super_admin = any(r.name == 'super_admin' for r in current_user.roles)
+    if not is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission requise : super_admin"
+        )
 
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:  # Max 5 MB
@@ -151,15 +150,14 @@ async def paste_cookies(
 
     Accepte le JSON copie depuis l'extension Cookie-Editor / EditThisCookie.
     Le backend detecte le format, convertit en Netscape et stocke.
-    Necessite la permission admin (super_admin ou can_manage_settings).
+    Necessite la permission admin (super_admin).
     """
-    if not getattr(current_user, 'is_super_admin', False):
-        perms = getattr(current_user, 'permissions', {}) or {}
-        if not perms.get('can_manage_settings', False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Permission requise : super_admin ou can_manage_settings"
-            )
+    is_super_admin = any(r.name == 'super_admin' for r in current_user.roles)
+    if not is_super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission requise : super_admin"
+        )
 
     raw = req.content.strip()
     if not raw:
