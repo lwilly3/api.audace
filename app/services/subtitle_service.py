@@ -10,6 +10,7 @@ Deux modes d'utilisation :
 - Synchrone (pipeline IA) : extract_subtitles_sync() retourne directement le texte
 """
 
+import json
 import os
 import re
 import uuid
@@ -26,6 +27,64 @@ logger = logging.getLogger("hapson-api")
 # TODO: migrer vers Redis en production multi-worker
 _tasks: dict[str, dict] = {}
 
+# Chemin du fichier cookies converti au format Netscape (cache en memoire)
+_netscape_cookies_path: str | None = None
+
+
+def _ensure_netscape_cookies() -> str | None:
+    """
+    Convertit le fichier cookies JSON Chrome en format Netscape si necessaire.
+
+    yt-dlp attend le format Netscape (comme wget/curl), mais la plupart
+    des extensions Chrome exportent en JSON. Cette fonction detecte le format
+    et convertit automatiquement.
+
+    Retourne le chemin vers le fichier Netscape ou None si pas de cookies.
+    """
+    global _netscape_cookies_path
+
+    # Deja converti
+    if _netscape_cookies_path and os.path.isfile(_netscape_cookies_path):
+        return _netscape_cookies_path
+
+    cookies_path = settings.YTDLP_COOKIES_PATH
+    if not cookies_path or not os.path.isfile(cookies_path):
+        return None
+
+    with open(cookies_path, 'r', encoding='utf-8') as f:
+        raw = f.read().strip()
+
+    # Si c'est deja au format Netscape (commence par # ou domaine)
+    if raw.startswith('# Netscape') or raw.startswith('# HTTP') or not raw.startswith('['):
+        _netscape_cookies_path = cookies_path
+        return cookies_path
+
+    # Conversion JSON Chrome → Netscape
+    try:
+        cookies = json.loads(raw)
+        lines = ['# Netscape HTTP Cookie File', '# Converted from Chrome JSON by subtitle_service', '']
+        for c in cookies:
+            domain = c.get('domain', '')
+            host_only = 'FALSE' if c.get('hostOnly', False) else 'TRUE'
+            path = c.get('path', '/')
+            secure = 'TRUE' if c.get('secure', False) else 'FALSE'
+            expiration = str(int(c.get('expirationDate', 0)))
+            name = c.get('name', '')
+            value = c.get('value', '')
+            lines.append(f"{domain}\t{host_only}\t{path}\t{secure}\t{expiration}\t{name}\t{value}")
+
+        netscape_path = '/tmp/yt_cookies_netscape.txt'
+        with open(netscape_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(lines) + '\n')
+
+        _netscape_cookies_path = netscape_path
+        logger.info(f"Cookies JSON convertis en Netscape ({len(cookies)} cookies) → {netscape_path}")
+        return netscape_path
+
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.error(f"Erreur conversion cookies JSON → Netscape: {e}")
+        return None
+
 
 def _build_ydl_opts(lang: str, output_path: str) -> dict:
     """Construit les options yt-dlp communes."""
@@ -41,8 +100,9 @@ def _build_ydl_opts(lang: str, output_path: str) -> dict:
     }
     if settings.YTDLP_PROXY:
         opts['proxy'] = settings.YTDLP_PROXY
-    if settings.YTDLP_COOKIES_PATH and os.path.isfile(settings.YTDLP_COOKIES_PATH):
-        opts['cookiefile'] = settings.YTDLP_COOKIES_PATH
+    cookies = _ensure_netscape_cookies()
+    if cookies:
+        opts['cookiefile'] = cookies
     return opts
 
 
@@ -191,8 +251,9 @@ def get_available_langs(url: str) -> dict:
     ydl_opts: dict = {'quiet': True, 'no_warnings': True}
     if settings.YTDLP_PROXY:
         ydl_opts['proxy'] = settings.YTDLP_PROXY
-    if settings.YTDLP_COOKIES_PATH and os.path.isfile(settings.YTDLP_COOKIES_PATH):
-        ydl_opts['cookiefile'] = settings.YTDLP_COOKIES_PATH
+    cookies = _ensure_netscape_cookies()
+    if cookies:
+        ydl_opts['cookiefile'] = cookies
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)

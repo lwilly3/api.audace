@@ -11,3 +11,7 @@ backups/*.sql
 backups/*.sql.gz
 backups/*.dump
 *.log
+
+# Cookies YouTube (sensible — monte via volume Docker)
+data/cookies.txt
+data/cookies*.txt
