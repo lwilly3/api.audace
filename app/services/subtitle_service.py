@@ -31,6 +31,100 @@ _tasks: dict[str, dict] = {}
 _netscape_cookies_path: str | None = None
 
 
+def save_cookies_file(content: bytes, filename: str) -> dict:
+    """
+    Recoit un fichier cookies uploade, detecte le format (JSON Chrome ou Netscape),
+    convertit si necessaire et stocke dans le chemin persistant.
+
+    Retourne un dict avec le resultat (ok/erreur, nombre de cookies, format detecte).
+    """
+    global _netscape_cookies_path
+
+    cookies_path = settings.YTDLP_COOKIES_PATH or "/app/data/cookies.txt"
+
+    # Creer le dossier parent si necessaire
+    os.makedirs(os.path.dirname(cookies_path), exist_ok=True)
+
+    try:
+        raw = content.decode('utf-8').strip()
+    except UnicodeDecodeError:
+        return {"ok": False, "error": "Fichier non lisible (encodage invalide)"}
+
+    if not raw:
+        return {"ok": False, "error": "Fichier vide"}
+
+    # Detecter le format
+    is_json = raw.startswith('[')
+    is_netscape = raw.startswith('# Netscape') or raw.startswith('# HTTP') or '\t' in raw.split('\n')[0]
+
+    if is_json:
+        # Conversion JSON Chrome → Netscape
+        try:
+            cookies = json.loads(raw)
+            if not isinstance(cookies, list):
+                return {"ok": False, "error": "Format JSON invalide (liste attendue)"}
+
+            lines = ['# Netscape HTTP Cookie File', '# Converted from Chrome JSON by RadioManager', '']
+            for c in cookies:
+                domain = c.get('domain', '')
+                host_only = 'FALSE' if c.get('hostOnly', False) else 'TRUE'
+                path = c.get('path', '/')
+                secure = 'TRUE' if c.get('secure', False) else 'FALSE'
+                expiration = str(int(c.get('expirationDate', 0)))
+                name = c.get('name', '')
+                value = c.get('value', '')
+                lines.append(f"{domain}\t{host_only}\t{path}\t{secure}\t{expiration}\t{name}\t{value}")
+
+            netscape_content = '\n'.join(lines) + '\n'
+            with open(cookies_path, 'w', encoding='utf-8') as f:
+                f.write(netscape_content)
+
+            # Reset le cache
+            _netscape_cookies_path = cookies_path
+            logger.info(f"Cookies JSON Chrome convertis et sauvegardes ({len(cookies)} cookies) → {cookies_path}")
+            return {"ok": True, "count": len(cookies), "format_detected": "chrome_json"}
+
+        except (json.JSONDecodeError, KeyError) as e:
+            return {"ok": False, "error": f"Erreur parsing JSON: {e}"}
+
+    elif is_netscape:
+        # Deja au format Netscape, sauvegarder directement
+        with open(cookies_path, 'w', encoding='utf-8') as f:
+            f.write(raw + '\n')
+
+        cookie_count = sum(1 for line in raw.split('\n') if line.strip() and not line.startswith('#'))
+        _netscape_cookies_path = cookies_path
+        logger.info(f"Cookies Netscape sauvegardes ({cookie_count} cookies) → {cookies_path}")
+        return {"ok": True, "count": cookie_count, "format_detected": "netscape"}
+
+    else:
+        return {"ok": False, "error": "Format non reconnu (attendu: JSON Chrome ou Netscape txt)"}
+
+
+def get_cookies_status() -> dict:
+    """
+    Retourne le statut du fichier cookies : present, nombre de cookies, date de modification.
+    """
+    cookies_path = settings.YTDLP_COOKIES_PATH or "/app/data/cookies.txt"
+
+    if not os.path.isfile(cookies_path):
+        return {"has_cookies": False}
+
+    try:
+        stat = os.stat(cookies_path)
+        with open(cookies_path, 'r', encoding='utf-8') as f:
+            raw = f.read()
+        cookie_count = sum(1 for line in raw.split('\n') if line.strip() and not line.startswith('#'))
+        return {
+            "has_cookies": True,
+            "count": cookie_count,
+            "size_bytes": stat.st_size,
+            "modified_at": stat.st_mtime,
+        }
+    except Exception:
+        return {"has_cookies": False}
+
+
 def _ensure_netscape_cookies() -> str | None:
     """
     Convertit le fichier cookies JSON Chrome en format Netscape si necessaire.

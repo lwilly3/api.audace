@@ -5,14 +5,16 @@ Prefix : /social/subtitles
 Tags : subtitles
 
 Endpoints :
-- POST /social/subtitles/extract     — Soumet une extraction async
-- GET  /social/subtitles/status/{id} — Poll le statut d'une tache
-- GET  /social/subtitles/langs       — Liste les langues disponibles
+- POST /social/subtitles/extract        — Soumet une extraction async
+- GET  /social/subtitles/status/{id}    — Poll le statut d'une tache
+- GET  /social/subtitles/langs          — Liste les langues disponibles
+- POST /social/subtitles/upload-cookies — Upload un fichier cookies YouTube
+- GET  /social/subtitles/cookies-status — Statut du fichier cookies
 """
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, UploadFile, File, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -22,12 +24,16 @@ from app.schemas.schema_subtitle import (
     SubtitleTaskResponse,
     SubtitleTaskStatus,
     AvailableLangsResponse,
+    CookiesUploadResponse,
+    CookiesStatusResponse,
 )
 from app.services.subtitle_service import (
     create_task,
     get_task,
     extract_subtitles,
     get_available_langs,
+    save_cookies_file,
+    get_cookies_status,
 )
 
 logger = logging.getLogger("hapson-api")
@@ -93,3 +99,50 @@ async def list_available_langs(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
         )
+
+
+@router.post("/upload-cookies", response_model=CookiesUploadResponse)
+async def upload_cookies(
+    file: UploadFile = File(..., description="Fichier cookies (.txt Netscape ou .json Chrome)"),
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """
+    Upload un fichier cookies YouTube.
+
+    Accepte deux formats :
+    - JSON Chrome (exporte via extension EditThisCookie / Cookie-Editor)
+    - Netscape TXT (format standard wget/curl)
+
+    Le fichier est auto-converti et stocke de maniere persistante.
+    Necessite la permission admin (super_admin ou can_manage_settings).
+    """
+    # Verification permission admin
+    if not getattr(current_user, 'is_super_admin', False):
+        perms = getattr(current_user, 'permissions', {}) or {}
+        if not perms.get('can_manage_settings', False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission requise : super_admin ou can_manage_settings"
+            )
+
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:  # Max 5 MB
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Fichier trop volumineux (max 5 MB)"
+        )
+
+    result = save_cookies_file(content, file.filename or "cookies.txt")
+    logger.info(f"Upload cookies par user={current_user.id} — resultat: {result}")
+    return CookiesUploadResponse(**result)
+
+
+@router.get("/cookies-status", response_model=CookiesStatusResponse)
+async def cookies_status(
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Retourne le statut du fichier cookies (present, nombre, date)."""
+    result = get_cookies_status()
+    return CookiesStatusResponse(**result)

@@ -37,3 +37,19 @@ class AvailableLangsResponse(BaseModel):
     """Langues de sous-titres disponibles pour une video."""
     manual: list[str]
     auto: list[str]
+
+
+class CookiesUploadResponse(BaseModel):
+    """Reponse apres upload d'un fichier cookies."""
+    ok: bool
+    count: Optional[int] = None
+    format_detected: Optional[str] = None
+    error: Optional[str] = None
+
+
+class CookiesStatusResponse(BaseModel):
+    """Statut du fichier cookies sur le serveur."""
+    has_cookies: bool
+    count: Optional[int] = None
+    size_bytes: Optional[int] = None
+    modified_at: Optional[float] = None
