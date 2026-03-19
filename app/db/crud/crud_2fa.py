@@ -10,7 +10,7 @@ import hashlib
 import base64
 import pyotp
 import qrcode
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
@@ -258,7 +258,7 @@ def create_trusted_device(db: Session, user_id: int, user_agent: str = None) -> 
         user_id=user_id,
         device_token_hash=_hash_device_token(device_token),
         user_agent=user_agent[:500] if user_agent else None,
-        expires_at=datetime.utcnow() + timedelta(days=TRUSTED_DEVICE_DAYS),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=TRUSTED_DEVICE_DAYS),
     )
     db.add(device)
     db.commit()
@@ -279,12 +279,12 @@ def verify_trusted_device(db: Session, user_id: int, device_token: str) -> bool:
     if not device:
         return False
 
-    if device.expires_at < datetime.utcnow():
+    if device.expires_at < datetime.now(timezone.utc):
         db.delete(device)
         db.commit()
         return False
 
-    device.last_used_at = datetime.utcnow()
+    device.last_used_at = datetime.now(timezone.utc)
     db.commit()
     return True
 
@@ -329,7 +329,7 @@ def get_trusted_devices(db: Session, user_id: int) -> list:
 def cleanup_expired_devices(db: Session) -> int:
     """Supprime les appareils de confiance expires."""
     count = db.query(TrustedDevice).filter(
-        TrustedDevice.expires_at < datetime.utcnow()
+        TrustedDevice.expires_at < datetime.now(timezone.utc)
     ).delete()
     db.commit()
     return count
