@@ -110,10 +110,15 @@ def login(request: Request, user_credentials_receved: OAuth2PasswordRequestForm=
    # Si l'utilisateur souhaite enregistrer cet appareil de confiance
    remember_device = request.headers.get("X-Remember-Device")
    if remember_device and remember_device.lower() == "true":
-       user_agent = request.headers.get("User-Agent", "Unknown")
-       device_token = create_trusted_device(db, user_to_log_on_db.id, user_agent)
-       response_data["trusted_device_token"] = device_token
-       log_action(db, user_to_log_on_db.id, "register_trusted_device", "users", user_to_log_on_db.id)
+       try:
+           user_agent = request.headers.get("User-Agent", "Unknown")
+           device_token = create_trusted_device(db, user_to_log_on_db.id, user_agent)
+           response_data["trusted_device_token"] = device_token
+           log_action(db, user_to_log_on_db.id, "register_trusted_device", "users", user_to_log_on_db.id)
+       except Exception as e:
+           # Ne pas bloquer le login si la creation du device echoue
+           import logging
+           logging.getLogger("hapson-api").warning(f"Echec creation trusted device: {e}")
 
    return response_data
 
@@ -144,7 +149,7 @@ def refresh_token(request: Request, token: str = Depends(oauth2.oauth2_scheme), 
             temp_user_id = payload.get("user_id")
             if temp_user_id and verify_trusted_device(db, temp_user_id, device_token):
                 grace_minutes = settings.TRUSTED_DEVICE_REFRESH_GRACE_MINUTES
-        except JWTError:
+        except (JWTError, Exception):
             pass  # fallback to default grace
 
     user_id = oauth2.decode_token_allow_expired(token, db, grace_minutes=grace_minutes)

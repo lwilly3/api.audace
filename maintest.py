@@ -149,6 +149,7 @@ async def lifespan(app: FastAPI):
     from app.db.database import SessionLocal
     from app.db.init_admin import create_default_admin
     from app.services.social_scheduler import scheduler as social_scheduler
+    from app.services.backup_scheduler import backup_scheduler
     
     logger.info("🚀 Démarrage de l'application - Vérification de l'admin par défaut...")
     
@@ -169,9 +170,14 @@ async def lifespan(app: FastAPI):
     social_scheduler.start()
     logger.info("✅ Social scheduler démarré")
 
+    # Demarrer le scheduler Backup (sauvegarde automatique quotidienne)
+    backup_scheduler.start()
+    logger.info("✅ Backup scheduler demarre")
+
     yield  # L'application s'exécute ici
-    
+
     # Shutdown
+    backup_scheduler.stop()
     social_scheduler.stop()
     logger.info("🛑 Arrêt de l'application...")
 

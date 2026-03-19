@@ -469,6 +469,22 @@ def trigger_backup(
 
 
 # ════════════════════════════════════════════════════════════════
+# SCHEDULER STATUS
+# ════════════════════════════════════════════════════════════════
+
+@router.get("/scheduler-status")
+def get_scheduler_status(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retourne le statut du backup scheduler (pour diagnostic)."""
+    _check_backup_permission(db, current_user)
+
+    from app.services.backup_scheduler import backup_scheduler
+    return backup_scheduler.get_status()
+
+
+# ════════════════════════════════════════════════════════════════
 # STATUS / HISTORY / FILES
 # ════════════════════════════════════════════════════════════════
 
