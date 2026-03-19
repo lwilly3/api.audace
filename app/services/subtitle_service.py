@@ -1,9 +1,12 @@
 """
-Service d'extraction de sous-titres via yt-dlp.
+Service d'extraction de sous-titres — architecture hybride.
 
-Remplace le Cloudflare Worker (bloque par YouTube) pour extraire
-les sous-titres de videos YouTube et 1000+ autres plateformes.
-Supporte les formats VTT, SRT et texte brut.
+Deux moteurs d'extraction :
+1. youtube-transcript-api (YTA) — leger, rapide, YouTube uniquement
+2. yt-dlp — universel, 1000+ plateformes, fallback YouTube
+
+Strategie : YouTube → YTA d'abord, yt-dlp en fallback.
+            Autres plateformes → yt-dlp directement.
 
 Deux modes d'utilisation :
 - Asynchrone (tache de fond) : extract_subtitles() + create_task() + get_task()
@@ -18,6 +21,12 @@ import logging
 from typing import Optional
 
 import yt_dlp
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import (
+    TranscriptsDisabled,
+    NoTranscriptFound,
+    VideoUnavailable,
+)
 
 from app.config.config import settings
 
@@ -30,6 +39,10 @@ _tasks: dict[str, dict] = {}
 # Chemin du fichier cookies converti au format Netscape (cache en memoire)
 _netscape_cookies_path: str | None = None
 
+
+# ════════════════════════════════════════════════════════════════
+# GESTION DES COOKIES (upload, paste, statut)
+# ════════════════════════════════════════════════════════════════
 
 def save_cookies_file(content: bytes, filename: str) -> dict:
     """
@@ -124,6 +137,116 @@ def get_cookies_status() -> dict:
     except Exception:
         return {"has_cookies": False}
 
+
+# ════════════════════════════════════════════════════════════════
+# YOUTUBE-TRANSCRIPT-API (moteur principal pour YouTube)
+# ════════════════════════════════════════════════════════════════
+
+def _extract_video_id(url: str) -> str | None:
+    """Extrait l'ID (11 chars) depuis n'importe quel format d'URL YouTube."""
+    pattern = r'(?:v=|youtu\.be/|embed/)([a-zA-Z0-9_-]{11})'
+    match = re.search(pattern, url)
+    return match.group(1) if match else None
+
+
+def _is_youtube_url(url: str) -> bool:
+    """Verifie si l'URL est une video YouTube."""
+    return "youtube.com" in url or "youtu.be" in url
+
+
+def _seconds_to_vtt(seconds: float) -> str:
+    """Convertit des secondes en timestamp VTT (HH:MM:SS.mmm)."""
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = seconds % 60
+    return f"{h:02d}:{m:02d}:{s:06.3f}"
+
+
+def _extract_via_yta(url: str, lang: str, fmt: str) -> dict:
+    """
+    Extraction via youtube-transcript-api.
+    Plus legere que yt-dlp, moins detectee, mais YouTube uniquement.
+
+    Retourne un dict compatible avec le format _extract_and_convert.
+    """
+    video_id = _extract_video_id(url)
+    if not video_id:
+        return {"status": "error", "message": f"Impossible d'extraire l'ID video depuis : {url}"}
+
+    ytt = YouTubeTranscriptApi()
+
+    try:
+        transcript_list = ytt.list(video_id)
+        # Tente la langue demandee, fallback anglais
+        transcript = transcript_list.find_transcript([lang, "en"])
+        entries = transcript.fetch()
+
+    except NoTranscriptFound:
+        return {"status": "error", "message": f"Aucun sous-titre disponible en '{lang}' pour {video_id}"}
+    except TranscriptsDisabled:
+        return {"status": "error", "message": f"Sous-titres desactives pour la video {video_id}"}
+    except VideoUnavailable:
+        return {"status": "error", "message": f"Video indisponible : {video_id}"}
+
+    # Conversion selon le format demande
+    if fmt == "vtt":
+        lines = ["WEBVTT", ""]
+        for e in entries:
+            start = _seconds_to_vtt(e.start)
+            end = _seconds_to_vtt(e.start + e.duration)
+            lines += [f"{start} --> {end}", e.text, ""]
+        content = "\n".join(lines)
+    elif fmt == "json":
+        content = json.dumps(
+            [{"text": e.text, "start": e.start, "duration": e.duration} for e in entries],
+            ensure_ascii=False, indent=2,
+        )
+    else:
+        # txt par defaut
+        content = "\n".join(e.text for e in entries)
+
+    logger.info(f"[YTA] Sous-titres extraits ({len(content)} chars, {fmt}) pour {url}")
+
+    return {
+        "status": "done",
+        "content": content,
+        "format": fmt,
+        "lang": lang,
+    }
+
+
+def _get_langs_via_yta(url: str) -> dict | None:
+    """
+    Retourne les langues disponibles via youtube-transcript-api.
+    Plus rapide que yt-dlp pour cette operation.
+    Retourne None en cas d'echec (fallback yt-dlp).
+    """
+    video_id = _extract_video_id(url)
+    if not video_id:
+        return None
+
+    try:
+        ytt = YouTubeTranscriptApi()
+        transcript_list = ytt.list(video_id)
+
+        manual = []
+        auto = []
+        for t in transcript_list:
+            if t.is_generated:
+                auto.append(t.language_code)
+            else:
+                manual.append(t.language_code)
+
+        return {"manual": manual, "auto": auto}
+
+    except Exception as e:
+        logger.warning(f"[YTA] Detection langues echouee pour {url}: {e}")
+        return None
+
+
+# ════════════════════════════════════════════════════════════════
+# YT-DLP (moteur universel, fallback YouTube)
+# ════════════════════════════════════════════════════════════════
 
 def _ensure_netscape_cookies() -> str | None:
     """
@@ -245,7 +368,7 @@ def _find_vtt_file(task_id: str) -> Optional[str]:
 
 def _extract_and_convert(url: str, lang: str, fmt: str, task_id: str) -> dict:
     """
-    Logique commune d'extraction : telecharge les sous-titres et les convertit.
+    Extraction via yt-dlp (universel, 1000+ plateformes).
 
     Retourne un dict avec status, content, format, lang, message.
     """
@@ -270,7 +393,7 @@ def _extract_and_convert(url: str, lang: str, fmt: str, task_id: str) -> dict:
         if fmt == 'txt':
             content = convert_vtt_to_txt(content)
 
-        logger.info(f"Sous-titres extraits ({len(content)} chars, {fmt}) pour {url}")
+        logger.info(f"[yt-dlp] Sous-titres extraits ({len(content)} chars, {fmt}) pour {url}")
 
         return {
             "status": "done",
@@ -280,10 +403,34 @@ def _extract_and_convert(url: str, lang: str, fmt: str, task_id: str) -> dict:
         }
 
     except Exception as e:
-        logger.error(f"Erreur extraction sous-titres pour {url}: {e}")
+        logger.error(f"[yt-dlp] Erreur extraction sous-titres pour {url}: {e}")
         return {"status": "error", "message": str(e)}
     finally:
         _cleanup_temp_files(task_id)
+
+
+# ════════════════════════════════════════════════════════════════
+# EXTRACTION HYBRIDE (YTA → yt-dlp fallback)
+# ════════════════════════════════════════════════════════════════
+
+def _extract_with_fallback(url: str, lang: str, fmt: str, task_id: str) -> dict:
+    """
+    Extraction hybride avec cascade de fallback :
+      1. youtube-transcript-api → leger, peu detecte (YouTube seulement)
+      2. yt-dlp → universel, plus robuste
+
+    Retourne un dict avec status, content, format, lang, message.
+    """
+    if _is_youtube_url(url):
+        logger.info(f"[subtitles] Tentative YTA pour {url}")
+        result = _extract_via_yta(url, lang, fmt)
+        if result["status"] == "done":
+            return result
+        logger.warning(f"[subtitles] YTA echoue ({result.get('message')}), fallback yt-dlp")
+
+    # Fallback yt-dlp (autres plateformes ou si YTA echoue)
+    logger.info(f"[subtitles] Tentative yt-dlp pour {url}")
+    return _extract_and_convert(url, lang, fmt, task_id)
 
 
 # ════════════════════════════════════════════════════════════════
@@ -306,9 +453,10 @@ def extract_subtitles(task_id: str, url: str, lang: str, fmt: str) -> None:
     """
     Extrait les sous-titres en tache de fond (BackgroundTasks FastAPI).
 
+    Utilise la cascade YTA → yt-dlp pour YouTube, yt-dlp direct pour les autres.
     Met a jour le dict _tasks avec le resultat.
     """
-    result = _extract_and_convert(url, lang, fmt, task_id)
+    result = _extract_with_fallback(url, lang, fmt, task_id)
     _tasks[task_id] = result
 
 
@@ -318,16 +466,18 @@ def extract_subtitles(task_id: str, url: str, lang: str, fmt: str) -> None:
 
 def extract_subtitles_sync(url: str, lang: str = "fr", fmt: str = "txt") -> str:
     """
-    Extraction synchrone — retourne directement le texte.
+    Extraction synchrone avec cascade de fallback :
+      1. youtube-transcript-api → leger, peu detecte (YouTube seulement)
+      2. yt-dlp → universel, plus robuste
 
     Utilise par ai_service.fetch_youtube_transcript() pour alimenter
     le pipeline de generation de contenu Mistral.
 
     Raises:
-        RuntimeError si aucun sous-titre n'est trouve.
+        RuntimeError si les deux methodes echouent.
     """
     task_id = str(uuid.uuid4())
-    result = _extract_and_convert(url, lang, fmt, task_id)
+    result = _extract_with_fallback(url, lang, fmt, task_id)
 
     if result["status"] == "error":
         raise RuntimeError(result.get("message", "Erreur extraction sous-titres"))
@@ -342,11 +492,19 @@ def extract_subtitles_sync(url: str, lang: str = "fr", fmt: str = "txt") -> str:
 def get_available_langs(url: str) -> dict:
     """
     Retourne les langues de sous-titres disponibles pour une URL video.
-    Utile pour alimenter un selecteur de langue dans l'UI.
+    YouTube → YTA (rapide), autres → yt-dlp.
     """
+    if _is_youtube_url(url):
+        result = _get_langs_via_yta(url)
+        if result is not None:
+            return result
+        logger.warning(f"[subtitles] YTA langs echoue, fallback yt-dlp pour {url}")
+
+    # Fallback yt-dlp
     ydl_opts: dict = {
         'quiet': True,
         'no_warnings': True,
+        'ignore_no_formats_error': True,
         'extractor_args': {'youtube': {'player_client': ['tv', 'web']}},
     }
     if settings.YTDLP_PROXY:
