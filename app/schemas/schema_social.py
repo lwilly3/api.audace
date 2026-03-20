@@ -322,6 +322,7 @@ class GenerateFromUrlRequest(BaseModel):
     url: str = Field(..., min_length=10, max_length=2000, description="URL de l'article ou de la video YouTube")
     mode: str = Field("post_engageant", description="Mode de generation: post_engageant, resume, informatif, annonce, resume_video, points_cles")
     custom_instructions: Optional[str] = Field(None, max_length=500, description="Instructions supplementaires de l'utilisateur")
+    subtitle_text: Optional[str] = Field(None, max_length=10000, description="Texte de sous-titres fourni manuellement en complement de l'URL")
 
 
 class GenerateFromUrlResponse(BaseModel):

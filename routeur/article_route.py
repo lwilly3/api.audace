@@ -117,6 +117,7 @@ def generate_article(
         site_key=body.site,
         mode=body.mode,
         custom_instructions=body.custom_instructions,
+        subtitle_text=body.subtitle_text,
     )
     log_action(db, current_user.id, "ai_generate", "wp_articles", 0)
     return result

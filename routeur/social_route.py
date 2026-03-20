@@ -530,6 +530,7 @@ def generate_from_url(
             body.mode,
             body.custom_instructions,
             source_type=content_data["source_type"],
+            subtitle_text=body.subtitle_text,
         )
     except HTTPException:
         raise

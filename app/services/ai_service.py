@@ -225,7 +225,7 @@ def fetch_article_text(url: str) -> str:
         )
 
 
-def generate_post_from_article(article_text: str, url: str, mode: str = "post_engageant", custom_instructions: str | None = None, source_type: str = "article") -> str:
+def generate_post_from_article(article_text: str, url: str, mode: str = "post_engageant", custom_instructions: str | None = None, source_type: str = "article", subtitle_text: str | None = None) -> str:
     """
     Genere un post a partir du texte d'un article ou d'une transcription YouTube.
 
@@ -317,6 +317,13 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
             f"{article_text}\n\n"
             f"URL source : {url}\n\n"
             f"Genere une publication Facebook courte et engageante pour notre page de radio communautaire."
+        )
+
+    # Ajouter les sous-titres complementaires si fournis
+    if subtitle_text and subtitle_text.strip():
+        user_prompt += (
+            f"\n\n--- SOUS-TITRES COMPLEMENTAIRES ---\n"
+            f"{subtitle_text.strip()[:8000]}"
         )
 
     messages = [
@@ -438,6 +445,7 @@ def generate_article_from_urls(
     site_key: str,
     mode: str = "article_magazine",
     custom_instructions: str | None = None,
+    subtitle_text: str | None = None,
 ) -> dict:
     """
     Genere un article HTML complet a partir d'une ou plusieurs URLs source.
@@ -481,6 +489,10 @@ def generate_article_from_urls(
             sources_text += f"\n--- Source {i} — {label} ({src['url']}) ---\n{src['text']}\n"
         else:
             sources_text += f"\n--- Source {i} — Article ({src['url']}) ---\n{src['text']}\n"
+
+    # Ajouter les sous-titres complementaires si fournis
+    if subtitle_text and subtitle_text.strip():
+        sources_text += f"\n--- SOUS-TITRES COMPLEMENTAIRES ---\n{subtitle_text.strip()[:6000]}\n"
 
     # Prompts selon le mode
     mode_instructions = {
