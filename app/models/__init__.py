@@ -46,6 +46,17 @@ from .model_listen_event import ListenEvent
 from .model_now_playing_track import NowPlayingTrack
 from .model_backup import BackupConfig, BackupHistory
 
+# Module Inventaire
+from .model_inventory_company import InventoryCompany
+from .model_inventory_site import InventorySite
+from .model_inventory_room import InventoryRoom
+from .model_inventory_settings import InventoryConfigOption, InventoryGlobalSettings
+from .model_inventory_equipment import InventoryEquipment
+from .model_inventory_document import InventoryDocument
+from .model_inventory_movement import InventoryMovement
+from .model_inventory_maintenance import InventoryMaintenance
+from .model_inventory_subscription import InventorySubscription
+
 # from .model_show_segment import ShowSegment
 # from .model_show_presenter import ShowPresenter
 

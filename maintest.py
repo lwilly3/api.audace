@@ -42,6 +42,13 @@ from routeur import (
      two_factor_route,  # Routes pour le 2FA (TOTP)
      backup_route,  # Routes pour la gestion des sauvegardes (Backup Management)
      subtitle_route,  # Routes pour l'extraction de sous-titres (yt-dlp)
+     inventory_location_route,  # Routes pour les localisations inventaire (entreprises, sites, locaux)
+     inventory_settings_route,  # Routes pour les parametres du module inventaire
+     inventory_equipment_route,  # Routes pour les equipements inventaire
+     inventory_movement_route,  # Routes pour les mouvements inventaire (transferts, prets, approbations)
+     inventory_maintenance_route,  # Routes pour la maintenance inventaire
+     inventory_subscription_route,  # Routes pour les abonnements/services inventaire
+     inventory_dashboard_route,  # Routes pour le dashboard inventaire (alertes, stats)
 
 
 
@@ -296,6 +303,13 @@ app.include_router(article_route.router) # Routes pour les articles WordPress
 app.include_router(two_factor_route.router) # Routes pour le 2FA (TOTP)
 app.include_router(backup_route.router) # Routes pour la gestion des sauvegardes
 app.include_router(subtitle_route.router) # Routes pour l'extraction de sous-titres
+app.include_router(inventory_location_route.router) # Routes pour les localisations inventaire
+app.include_router(inventory_settings_route.router) # Routes pour les parametres inventaire
+app.include_router(inventory_equipment_route.router) # Routes pour les equipements inventaire
+app.include_router(inventory_movement_route.router) # Routes pour les mouvements inventaire
+app.include_router(inventory_maintenance_route.router) # Routes pour la maintenance inventaire
+app.include_router(inventory_subscription_route.router) # Routes pour les abonnements inventaire
+app.include_router(inventory_dashboard_route.router) # Routes pour le dashboard inventaire
 
 
 
