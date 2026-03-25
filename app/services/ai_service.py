@@ -511,8 +511,11 @@ def generate_article_from_urls(
             sources_text += f"\n--- Source {i} — Article ({src['url']}) ---\n{src['text']}\n"
 
     # Ajouter les sous-titres complementaires si fournis
+    # Mistral Small supporte 32k tokens (~100k chars). On tronque a 20k chars de sous-titres
+    # pour laisser de la place au system prompt, aux sources web et a la generation.
     if subtitle_text and subtitle_text.strip():
-        sources_text += f"\n--- SOUS-TITRES COMPLEMENTAIRES ---\n{subtitle_text.strip()[:6000]}\n"
+        trimmed = subtitle_text.strip()[:20000]
+        sources_text += f"\n--- SOUS-TITRES COMPLEMENTAIRES ({len(trimmed)} car.) ---\n{trimmed}\n"
 
     # Prompts selon le mode
     mode_instructions = {

@@ -147,7 +147,7 @@ class GenerateArticleRequest(BaseModel):
     site: str = Field(..., description="Site cible: audacemagazine ou radioaudace")
     mode: str = Field("article_magazine", description="Mode: article_magazine, article_radio, article_libre, article_video")
     custom_instructions: Optional[str] = Field(None, max_length=500, description="Instructions supplementaires")
-    subtitle_text: Optional[str] = Field(None, max_length=10000, description="Texte de sous-titres fourni manuellement en complement des URLs")
+    subtitle_text: Optional[str] = Field(None, max_length=100000, description="Texte de sous-titres fourni manuellement en complement des URLs (jusqu'a 100k caracteres)")
 
 
 class GenerateArticleResponse(BaseModel):
