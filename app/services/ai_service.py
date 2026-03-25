@@ -294,14 +294,16 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
     mode_text = mode_instructions.get(mode, mode_instructions["post_engageant"])
 
     system_prompt = (
-        "Tu es le community manager d'une radio communautaire francophone. "
+        "Tu es le community manager de Radio Audace, une radio communautaire francophone "
+        "basee au Cameroun, en Afrique centrale. "
         "Ton role est de creer des publications pour les reseaux sociaux "
         "a partir " + ("de videos YouTube" if source_type == "youtube" else "d'articles web") + ". "
         "Regles generales :\n"
         "- Ecris en francais, ton amical et accessible\n"
         "- N'inclus PAS de hashtags (ils seront ajoutes separement)\n"
         "- N'inclus PAS l'URL (elle sera ajoutee automatiquement)\n"
-        "- Adapte le ton selon le sujet (info locale, culture, musique, evenement...)\n"
+        "- Adapte le contenu a notre audience africaine et francophone\n"
+        "- Privilegie les angles qui interessent notre communaute locale\n"
         "\n"
         "Mode de generation :\n"
         f"{mode_text}"
@@ -311,8 +313,8 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
         system_prompt += (
             "\nContexte de la source :\n"
             f"Cet article provient du flux RSS '{source_context.strip()}'. "
-            "Tu rediges pour Radio Audace, une radio communautaire francophone basee en Republique du Congo. "
-            "Adapte le contenu a notre audience locale et francophone.\n"
+            "Adapte le contenu pour qu'il resonne avec l'audience de Radio Audace au Cameroun "
+            "et en Afrique centrale francophone.\n"
         )
 
     if custom_instructions and custom_instructions.strip():
@@ -550,7 +552,8 @@ def generate_article_from_urls(
     mode_text = mode_instructions.get(mode, mode_instructions["article_magazine"])
 
     system_prompt = (
-        "Tu es un redacteur web professionnel francophone. "
+        "Tu es un redacteur web professionnel pour Radio Audace et Audace Magazine, "
+        "un media communautaire francophone base au Cameroun, en Afrique centrale. "
         "Tu rediges des articles pour des sites web WordPress. "
         "Regles generales :\n"
         "- Ecris en francais correct et fluide\n"
@@ -559,6 +562,7 @@ def generate_article_from_urls(
         "- Apres le titre, le contenu HTML commence\n"
         "- Ne copie pas mot a mot les sources, reformule et enrichis\n"
         "- Cite les sources si pertinent\n"
+        "- Adapte les sujets a l'audience africaine et francophone\n"
         "\nStyle d'ecriture :\n"
         f"{mode_text}"
     )
@@ -566,9 +570,9 @@ def generate_article_from_urls(
     if source_context and source_context.strip():
         system_prompt += (
             "\nContexte de la source :\n"
-            f"Cet article provient du flux RSS '{source_context.strip()}'. "
-            "Tu rediges pour Radio Audace / Audace Magazine, un media communautaire francophone "
-            "base en Republique du Congo. Adapte le contenu a notre audience.\n"
+            f"Cet article est base sur le flux RSS '{source_context.strip()}'. "
+            "Adapte le contenu pour qu'il resonne avec l'audience de Radio Audace / Audace Magazine "
+            "au Cameroun et en Afrique centrale francophone.\n"
         )
 
     if custom_instructions and custom_instructions.strip():

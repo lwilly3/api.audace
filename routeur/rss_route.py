@@ -212,25 +212,26 @@ def generate_post_from_rss(
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Erreur extraction contenu: {e}")
 
-    # Combiner ton + instructions utilisateur
+    # Construire instructions : ton en section separee + instructions utilisateur
     tone_map = {
-        "professionnel": "Adopte un ton professionnel, precis et factuel.",
-        "decontracte": "Adopte un ton decontracte, proche, comme si tu parlais a un ami.",
-        "informatif": "Adopte un ton neutre et informatif, axe sur les faits.",
-        "enthousiaste": "Adopte un ton enthousiaste et dynamique, avec de l'energie.",
+        "professionnel": "Ton impose : professionnel, precis et factuel.",
+        "decontracte": "Ton impose : decontracte et proche, comme si tu parlais a un ami.",
+        "informatif": "Ton impose : neutre et informatif, axe sur les faits.",
+        "enthousiaste": "Ton impose : enthousiaste et dynamique, avec de l'energie.",
     }
-    combined_instructions = ""
+    parts = []
     if tone and tone in tone_map:
-        combined_instructions += tone_map[tone] + "\n"
+        parts.append(tone_map[tone])
     if custom_instructions and custom_instructions.strip():
-        combined_instructions += custom_instructions.strip()
+        parts.append(custom_instructions.strip())
+    combined_instructions = "\n".join(parts) if parts else None
 
     try:
         generated = generate_post_from_article(
             content_data["text"],
             article["url"],
             mode,
-            combined_instructions or None,
+            combined_instructions,
             source_type=content_data["source_type"],
             source_context=article.get("feed_title"),
         )
@@ -265,25 +266,26 @@ def generate_article_from_rss(
     if not article:
         raise HTTPException(status_code=404, detail="Article RSS introuvable")
 
-    # Combiner ton + instructions utilisateur
+    # Construire instructions : ton en section separee + instructions utilisateur
     tone_map = {
-        "professionnel": "Adopte un ton professionnel, precis et factuel.",
-        "decontracte": "Adopte un ton decontracte, proche, comme si tu parlais a un ami.",
-        "informatif": "Adopte un ton neutre et informatif, axe sur les faits.",
-        "enthousiaste": "Adopte un ton enthousiaste et dynamique, avec de l'energie.",
+        "professionnel": "Ton impose : professionnel, precis et factuel.",
+        "decontracte": "Ton impose : decontracte et proche, comme si tu parlais a un ami.",
+        "informatif": "Ton impose : neutre et informatif, axe sur les faits.",
+        "enthousiaste": "Ton impose : enthousiaste et dynamique, avec de l'energie.",
     }
-    combined_instructions = ""
+    parts = []
     if tone and tone in tone_map:
-        combined_instructions += tone_map[tone] + "\n"
+        parts.append(tone_map[tone])
     if custom_instructions and custom_instructions.strip():
-        combined_instructions += custom_instructions.strip()
+        parts.append(custom_instructions.strip())
+    combined_instructions = "\n".join(parts) if parts else None
 
     try:
         result = generate_article_from_urls(
             urls=[article["url"]],
             site_key=site,
             mode=mode,
-            custom_instructions=combined_instructions or None,
+            custom_instructions=combined_instructions,
             source_context=article.get("feed_title"),
         )
     except Exception as e:
