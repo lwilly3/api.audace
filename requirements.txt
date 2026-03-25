@@ -65,6 +65,7 @@ gunicorn==21.2.0
 ovh>=1.1.0
 mistralai
 google-auth>=2.0.0
+google-analytics-data>=0.18.0
 pyotp>=2.9.0
 qrcode[pil]>=7.4
 yt-dlp

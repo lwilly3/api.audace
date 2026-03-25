@@ -49,6 +49,7 @@ from routeur import (
      inventory_maintenance_route,  # Routes pour la maintenance inventaire
      inventory_subscription_route,  # Routes pour les abonnements/services inventaire
      inventory_dashboard_route,  # Routes pour le dashboard inventaire (alertes, stats)
+     ga_analytics_route,  # Routes pour Google Analytics 4 (GA4 Web Analytics)
 
 
 
@@ -310,6 +311,7 @@ app.include_router(inventory_movement_route.router) # Routes pour les mouvements
 app.include_router(inventory_maintenance_route.router) # Routes pour la maintenance inventaire
 app.include_router(inventory_subscription_route.router) # Routes pour les abonnements inventaire
 app.include_router(inventory_dashboard_route.router) # Routes pour le dashboard inventaire
+app.include_router(ga_analytics_route.router) # Routes pour Google Analytics 4 (GA4 Web Analytics)
 
 
 
