@@ -225,7 +225,7 @@ def fetch_article_text(url: str) -> str:
         )
 
 
-def generate_post_from_article(article_text: str, url: str, mode: str = "post_engageant", custom_instructions: str | None = None, source_type: str = "article", subtitle_text: str | None = None) -> str:
+def generate_post_from_article(article_text: str, url: str, mode: str = "post_engageant", custom_instructions: str | None = None, source_type: str = "article", subtitle_text: str | None = None, source_context: str | None = None) -> str:
     """
     Genere un post a partir du texte d'un article ou d'une transcription YouTube.
 
@@ -280,6 +280,15 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
             "- Commence par une phrase d'introduction\n"
             "- Termine par un appel a regarder la video complete\n"
         ),
+        "post_thread": (
+            "Genere un thread de 3 a 5 publications courtes et enchaines.\n"
+            "- Chaque publication fait 1 a 2 phrases maximum\n"
+            "- Numerate chaque publication (1/, 2/, 3/...)\n"
+            "- Le premier post est une accroche forte\n"
+            "- Les posts suivants developpent les points cles\n"
+            "- Le dernier post est un appel a l'action ou une conclusion\n"
+            "- Le tout doit former un recit coherent et engageant\n"
+        ),
     }
 
     mode_text = mode_instructions.get(mode, mode_instructions["post_engageant"])
@@ -297,6 +306,14 @@ def generate_post_from_article(article_text: str, url: str, mode: str = "post_en
         "Mode de generation :\n"
         f"{mode_text}"
     )
+
+    if source_context and source_context.strip():
+        system_prompt += (
+            "\nContexte de la source :\n"
+            f"Cet article provient du flux RSS '{source_context.strip()}'. "
+            "Tu rediges pour Radio Audace, une radio communautaire francophone basee en Republique du Congo. "
+            "Adapte le contenu a notre audience locale et francophone.\n"
+        )
 
     if custom_instructions and custom_instructions.strip():
         system_prompt += (
@@ -446,6 +463,7 @@ def generate_article_from_urls(
     mode: str = "article_magazine",
     custom_instructions: str | None = None,
     subtitle_text: str | None = None,
+    source_context: str | None = None,
 ) -> dict:
     """
     Genere un article HTML complet a partir d'une ou plusieurs URLs source.
@@ -544,6 +562,14 @@ def generate_article_from_urls(
         "\nStyle d'ecriture :\n"
         f"{mode_text}"
     )
+
+    if source_context and source_context.strip():
+        system_prompt += (
+            "\nContexte de la source :\n"
+            f"Cet article provient du flux RSS '{source_context.strip()}'. "
+            "Tu rediges pour Radio Audace / Audace Magazine, un media communautaire francophone "
+            "base en Republique du Congo. Adapte le contenu a notre audience.\n"
+        )
 
     if custom_instructions and custom_instructions.strip():
         system_prompt += (

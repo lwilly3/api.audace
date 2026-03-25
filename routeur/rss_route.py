@@ -195,6 +195,7 @@ def mark_used(
 def generate_post_from_rss(
     article_id: int,
     mode: str = Query("post_engageant"),
+    tone: Optional[str] = Query(None),
     custom_instructions: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
@@ -211,13 +212,27 @@ def generate_post_from_rss(
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Erreur extraction contenu: {e}")
 
+    # Combiner ton + instructions utilisateur
+    tone_map = {
+        "professionnel": "Adopte un ton professionnel, precis et factuel.",
+        "decontracte": "Adopte un ton decontracte, proche, comme si tu parlais a un ami.",
+        "informatif": "Adopte un ton neutre et informatif, axe sur les faits.",
+        "enthousiaste": "Adopte un ton enthousiaste et dynamique, avec de l'energie.",
+    }
+    combined_instructions = ""
+    if tone and tone in tone_map:
+        combined_instructions += tone_map[tone] + "\n"
+    if custom_instructions and custom_instructions.strip():
+        combined_instructions += custom_instructions.strip()
+
     try:
         generated = generate_post_from_article(
             content_data["text"],
             article["url"],
             mode,
-            custom_instructions,
+            combined_instructions or None,
             source_type=content_data["source_type"],
+            source_context=article.get("feed_title"),
         )
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Erreur generation IA: {e}")
@@ -238,6 +253,7 @@ def generate_article_from_rss(
     article_id: int,
     site: str = Query("audacemagazine"),
     mode: str = Query("article_magazine"),
+    tone: Optional[str] = Query(None),
     custom_instructions: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
@@ -249,12 +265,26 @@ def generate_article_from_rss(
     if not article:
         raise HTTPException(status_code=404, detail="Article RSS introuvable")
 
+    # Combiner ton + instructions utilisateur
+    tone_map = {
+        "professionnel": "Adopte un ton professionnel, precis et factuel.",
+        "decontracte": "Adopte un ton decontracte, proche, comme si tu parlais a un ami.",
+        "informatif": "Adopte un ton neutre et informatif, axe sur les faits.",
+        "enthousiaste": "Adopte un ton enthousiaste et dynamique, avec de l'energie.",
+    }
+    combined_instructions = ""
+    if tone and tone in tone_map:
+        combined_instructions += tone_map[tone] + "\n"
+    if custom_instructions and custom_instructions.strip():
+        combined_instructions += custom_instructions.strip()
+
     try:
         result = generate_article_from_urls(
             urls=[article["url"]],
             site_key=site,
             mode=mode,
-            custom_instructions=custom_instructions,
+            custom_instructions=combined_instructions or None,
+            source_context=article.get("feed_title"),
         )
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Erreur generation IA: {e}")
