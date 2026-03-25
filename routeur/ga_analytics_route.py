@@ -48,6 +48,42 @@ logger = logging.getLogger("hapson-api")
 router = APIRouter(prefix="/ga", tags=["ga-analytics"])
 
 
+# ═══ DIAGNOSTIC ═══
+
+@router.get("/diagnostic")
+def ga_diagnostic(
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Diagnostic de la configuration GA4 — affiche l'email du Service Account et teste la connexion."""
+    import json
+    from app.config.config import settings
+
+    result: dict = {"configured": False, "client_email": None, "error": None}
+
+    if not settings.GA_SERVICE_ACCOUNT_JSON:
+        result["error"] = "GA_SERVICE_ACCOUNT_JSON est vide"
+        return result
+
+    try:
+        info = json.loads(settings.GA_SERVICE_ACCOUNT_JSON)
+        result["configured"] = True
+        result["client_email"] = info.get("client_email", "non trouve dans le JSON")
+        result["project_id"] = info.get("project_id", "non trouve")
+    except json.JSONDecodeError as e:
+        result["error"] = f"JSON invalide : {e}"
+        return result
+
+    # Tester l'initialisation du client
+    try:
+        ga_analytics_service._get_client()
+        result["client_initialized"] = True
+    except Exception as e:
+        result["client_initialized"] = False
+        result["client_error"] = str(e)
+
+    return result
+
+
 # ═══ SITES (GA4 Properties CRUD) ═══
 
 @router.get("/sites", response_model=list[GaPropertyResponse])

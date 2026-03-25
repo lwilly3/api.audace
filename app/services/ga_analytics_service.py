@@ -208,6 +208,10 @@ def get_realtime(property_id: str) -> dict:
         active_users = _safe_int(resp_total.rows[0].metric_values[0].value)
         pageviews = _safe_int(resp_total.rows[0].metric_values[1].value)
         events = _safe_int(resp_total.rows[0].metric_values[2].value)
+    else:
+        logger.warning(f"GA4 realtime: aucune donnee pour {property_id} — "
+                       f"row_count={resp_total.row_count}, "
+                       f"verifier que le Service Account a l'acces Lecteur sur cette propriete")
 
     result = {
         "active_users": active_users,
@@ -267,6 +271,9 @@ def get_overview(property_id: str, period: str = "28d") -> dict:
     def _extract(resp: Any) -> list[float]:
         if resp.rows:
             return [_safe_float(v.value) for v in resp.rows[0].metric_values]
+        logger.warning(f"GA4 overview: aucune donnee pour {property_id} (period={period}) — "
+                       f"row_count={resp.row_count}, "
+                       f"verifier que le Service Account a l'acces Lecteur")
         return [0.0] * 9
 
     cur = _extract(resp_current)
