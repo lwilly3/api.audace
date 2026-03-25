@@ -57,6 +57,9 @@ from .model_inventory_movement import InventoryMovement
 from .model_inventory_maintenance import InventoryMaintenance
 from .model_inventory_subscription import InventorySubscription
 
+# Module Google Analytics
+from .model_ga_property import GaProperty
+
 # from .model_show_segment import ShowSegment
 # from .model_show_presenter import ShowPresenter
 
