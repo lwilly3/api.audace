@@ -4,13 +4,14 @@ Service Google Analytics Data API v1 (GA4).
 Wrappe le client BetaAnalyticsDataClient pour fournir des fonctions
 de haut niveau renvoyant les donnees formatees pour le frontend.
 
-- Authentification via Service Account (fichier JSON sur le serveur)
+- Authentification via Service Account (JSON dans variable d'environnement)
 - Cache en memoire avec TTL configurable (5 min standard, 30s realtime)
 - Realtime : pas de cache long (30s seulement)
 
 Quotas : 10 000 requetes/jour/propriete (avec cache 5 min, largement suffisant)
 """
 
+import json
 import logging
 import time
 from datetime import datetime, timedelta
@@ -63,10 +64,11 @@ def _get_client() -> BetaAnalyticsDataClient:
     """Initialise le client GA4 avec le Service Account (singleton)."""
     global _client
     if _client is None:
-        if not settings.GA_SERVICE_ACCOUNT_PATH:
-            raise RuntimeError("GA_SERVICE_ACCOUNT_PATH non configure — impossible d'acceder a Google Analytics")
-        creds = service_account.Credentials.from_service_account_file(
-            settings.GA_SERVICE_ACCOUNT_PATH,
+        if not settings.GA_SERVICE_ACCOUNT_JSON:
+            raise RuntimeError("GA_SERVICE_ACCOUNT_JSON non configure — impossible d'acceder a Google Analytics")
+        info = json.loads(settings.GA_SERVICE_ACCOUNT_JSON)
+        creds = service_account.Credentials.from_service_account_info(
+            info,
             scopes=["https://www.googleapis.com/auth/analytics.readonly"],
         )
         _client = BetaAnalyticsDataClient(credentials=creds)

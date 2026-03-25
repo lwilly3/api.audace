@@ -88,9 +88,9 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET:str = ""
 
     # Google Analytics Data API v1 (GA4)
-    # Chemin vers le fichier JSON du Service Account sur le serveur
+    # Contenu JSON du Service Account (coller le JSON complet dans la variable)
     # Le Service Account doit avoir l'acces "Lecteur" dans chaque propriete GA4
-    GA_SERVICE_ACCOUNT_PATH:str = ""
+    GA_SERVICE_ACCOUNT_JSON:str = ""
 
     model_config = SettingsConfigDict(env_file=".env")
    
