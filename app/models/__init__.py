@@ -60,6 +60,9 @@ from .model_inventory_subscription import InventorySubscription
 # Module Google Analytics
 from .model_ga_property import GaProperty
 
+# Module RSS
+from .model_rss import RssFeed, RssArticle
+
 # from .model_show_segment import ShowSegment
 # from .model_show_presenter import ShowPresenter
 

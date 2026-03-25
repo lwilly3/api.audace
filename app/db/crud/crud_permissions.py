@@ -207,6 +207,10 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "social_edit_pinned": permissions.social_edit_pinned,
     "social_delete_pinned": permissions.social_delete_pinned,
 
+    # Permissions pour les flux RSS (Social)
+    "social_view_rss": permissions.social_view_rss,
+    "social_manage_rss": permissions.social_manage_rss,
+
     # Permissions pour la securite (2FA)
     "can_enforce_2fa": permissions.can_enforce_2fa,
     "can_reset_user_2fa": permissions.can_reset_user_2fa,
@@ -392,6 +396,10 @@ def initialize_user_permissions(db: Session, user_id: int):
     social_create_pinned=False,
     social_edit_pinned=False,
     social_delete_pinned=False,
+
+    # Flux RSS (Social)
+    social_view_rss=False,
+    social_manage_rss=False,
 
     # Securite (2FA)
     can_enforce_2fa=False,
@@ -707,6 +715,10 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'social_create_pinned',
     'social_edit_pinned',
     'social_delete_pinned',
+
+    # Flux RSS (Social)
+    'social_view_rss',
+    'social_manage_rss',
 
     # Securite (2FA)
     'can_enforce_2fa',

@@ -66,6 +66,8 @@ class SocialScheduler:
         self._last_optimize_result: Optional[dict] = None
         self._last_auto_publish: Optional[str] = None
         self._last_auto_publish_result: Optional[dict] = None
+        self._last_rss_refresh: Optional[str] = None
+        self._last_rss_refresh_result: Optional[dict] = None
 
     # ── Settings ────────────────────────
 
@@ -81,6 +83,8 @@ class SocialScheduler:
                 "last_optimize_result": self._last_optimize_result,
                 "last_auto_publish_at": self._last_auto_publish,
                 "last_auto_publish_result": self._last_auto_publish_result,
+                "last_rss_refresh_at": self._last_rss_refresh,
+                "last_rss_refresh_result": self._last_rss_refresh_result,
             }
 
     def update_settings(self, new_settings: dict) -> dict:
@@ -128,6 +132,7 @@ class SocialScheduler:
         """Boucle principale du scheduler. Vérifie toutes les 30 secondes."""
         last_sync_time = 0.0
         last_optimize_time = 0.0
+        last_rss_time = 0.0
 
         while not self._stop_event.is_set():
             now = time.time()
@@ -149,6 +154,12 @@ class SocialScheduler:
             if opt_enabled and (now - last_optimize_time) >= opt_interval:
                 self._run_optimize(opt_purge_days)
                 last_optimize_time = now
+
+            # RSS auto-refresh (toutes les 30 min)
+            rss_interval = 30 * 60  # 30 minutes
+            if (now - last_rss_time) >= rss_interval:
+                self._run_rss_refresh()
+                last_rss_time = now
 
             # Auto-publish (toujours actif — les posts planifiés doivent être publiés)
             self._run_auto_publish()
@@ -242,6 +253,30 @@ class SocialScheduler:
             with self._lock:
                 self._last_auto_publish = datetime.now(timezone.utc).isoformat()
                 self._last_auto_publish_result = {"error": str(e)}
+        finally:
+            session.close()
+
+    def _run_rss_refresh(self):
+        """Rafraichir tous les flux RSS actifs."""
+        from app.db.database import SessionLocal
+        from app.services.rss_service import refresh_all_feeds
+
+        session = SessionLocal()
+        try:
+            results = refresh_all_feeds(session)
+            total_new = sum(r.get("new_articles", 0) for r in results)
+            errors = sum(1 for r in results if r.get("error"))
+            result = {"feeds": len(results), "new_articles": total_new, "errors": errors}
+            with self._lock:
+                self._last_rss_refresh = datetime.now(timezone.utc).isoformat()
+                self._last_rss_refresh_result = result
+            if total_new > 0 or errors > 0:
+                logger.info(f"RSS refresh: {total_new} new articles, {errors} errors across {len(results)} feeds")
+        except Exception as e:
+            logger.error(f"RSS refresh echoue: {e}")
+            with self._lock:
+                self._last_rss_refresh = datetime.now(timezone.utc).isoformat()
+                self._last_rss_refresh_result = {"error": str(e)}
         finally:
             session.close()
 
