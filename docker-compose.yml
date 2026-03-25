@@ -16,6 +16,7 @@
 # VARIABLES RECOMMANDEES :
 #   GOOGLE_CLIENT_ID         OAuth Google Drive (backups)
 #   GOOGLE_CLIENT_SECRET     OAuth Google Drive (backups)
+#   GA_SERVICE_ACCOUNT_PATH  Chemin vers le fichier JSON du Service Account GA4 (defaut: /app/data/ga-service-account.json)
 #   FRONTEND_URL             https://app.cloud.audace.ovh (default)
 #   BACKEND_URL              https://api.cloud.audace.ovh (default)
 #
@@ -209,6 +210,9 @@ services:
       # Google OAuth (Backup Management — Google Drive)
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+
+      # Google Analytics 4 — Service Account JSON
+      GA_SERVICE_ACCOUNT_PATH: ${GA_SERVICE_ACCOUNT_PATH:-/app/data/ga-service-account.json}
 
       # Uvicorn/Gunicorn
       HOST: 0.0.0.0
