@@ -131,20 +131,26 @@ def refresh_all_feeds(db: Session) -> list[dict]:
     logger.info(f"refresh_all_feeds: Starting refresh for {len(feeds)} active feeds")
     results = []
     for i, feed in enumerate(feeds, 1):
+        # Capturer feed.id et feed.title AVANT d'appeler fetch_single_feed()
+        # pour eviter d'acceder aux attributs si la session est en rollback
+        feed_id = feed.id
+        feed_title = feed.title
         try:
-            logger.debug(f"refresh_all_feeds: Processing feed {i}/{len(feeds)}: {feed.title} (ID: {feed.id})")
+            logger.debug(f"refresh_all_feeds: Processing feed {i}/{len(feeds)}: {feed_title} (ID: {feed_id})")
             result = fetch_single_feed(db, feed)
             results.append({
-                "feed_id": feed.id,
-                "feed_title": feed.title,
+                "feed_id": feed_id,
+                "feed_title": feed_title,
                 **result,
             })
-            logger.debug(f"refresh_all_feeds: Feed {feed.id} completed - {result.get('new_articles', 0)} new articles")
+            logger.debug(f"refresh_all_feeds: Feed {feed_id} completed - {result.get('new_articles', 0)} new articles")
         except Exception as e:
-            logger.error(f"refresh_all_feeds: Unexpected error on feed {feed.id} ({feed.title}): {e}", exc_info=True)
+            logger.error(f"refresh_all_feeds: Unexpected error on feed {feed_id} ({feed_title}): {e}", exc_info=True)
+            # Rollback explicite pour reinitialiser la session
+            db.rollback()
             results.append({
-                "feed_id": feed.id,
-                "feed_title": feed.title,
+                "feed_id": feed_id,
+                "feed_title": feed_title,
                 "new_articles": 0,
                 "error": f"Erreur inattendue: {str(e)[:200]}",
             })
