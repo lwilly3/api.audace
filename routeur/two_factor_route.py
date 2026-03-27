@@ -28,6 +28,10 @@ from app.db.crud.crud_2fa import (
 from app.db.crud.crud_permissions import get_user_permissions
 from core.auth.oauth2 import create_acces_token
 from app.db.crud.crud_audit_logs import log_action
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 
 router = APIRouter(
@@ -113,6 +117,7 @@ def two_factor_regenerate_backup_codes(
 # --- Endpoint verification login (temp token) ---
 
 @router.post('/verify')
+@limiter.limit("5/minute")
 def two_factor_verify_login(
     request: VerifyLoginRequest,
     http_request: Request,
@@ -148,6 +153,7 @@ def two_factor_verify_login(
 
 
 @router.post('/verify-backup')
+@limiter.limit("3/minute")
 def two_factor_verify_backup(
     request: BackupCodeLoginRequest,
     http_request: Request,

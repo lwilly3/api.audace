@@ -4,6 +4,9 @@ from fastapi import FastAPI, Request  # Classe principale pour créer une applic
 from fastapi.middleware.cors import CORSMiddleware  # Middleware pour la gestion des CORS
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.__version__ import get_version, get_version_info, API_V1_PREFIX
 # from db.init_db_rolePermissions import create_default_role_and_permission
 # from app.db.init_db_rolePermissions import create_default_role_and_permission
@@ -159,6 +162,8 @@ async def lifespan(app: FastAPI):
     from app.db.init_admin import create_default_admin
     from app.services.social_scheduler import scheduler as social_scheduler
     from app.services.backup_scheduler import backup_scheduler
+    from app.db.crud.crud_auth import delete_expired_tokens
+    from datetime import datetime, timezone
     
     logger.info("🚀 Démarrage de l'application - Vérification de l'admin par défaut...")
     
@@ -183,13 +188,44 @@ async def lifespan(app: FastAPI):
     backup_scheduler.start()
     logger.info("✅ Backup scheduler demarre")
 
+    # Nettoyage initial des tokens revoques expires
+    try:
+        cleanup_db = SessionLocal()
+        delete_expired_tokens(cleanup_db, datetime.now(timezone.utc))
+        cleanup_db.close()
+        logger.info("✅ Nettoyage initial des tokens revoques termine")
+    except Exception as e:
+        logger.warning(f"⚠️ Echec nettoyage initial tokens: {e}")
+
+    # Scheduler periodique pour le nettoyage des tokens revoques (toutes les heures)
+    from apscheduler.schedulers.background import BackgroundScheduler
+    token_cleanup_scheduler = BackgroundScheduler()
+
+    def cleanup_revoked_tokens_job():
+        """Supprime les tokens revoques expires de la base."""
+        try:
+            job_db = SessionLocal()
+            delete_expired_tokens(job_db, datetime.now(timezone.utc))
+            job_db.close()
+            logger.info("🧹 Nettoyage periodique des tokens revoques termine")
+        except Exception as e:
+            logger.warning(f"⚠️ Echec nettoyage tokens: {e}")
+
+    token_cleanup_scheduler.add_job(cleanup_revoked_tokens_job, 'interval', hours=1)
+    token_cleanup_scheduler.start()
+    logger.info("✅ Token cleanup scheduler demarre (toutes les heures)")
+
     yield  # L'application s'exécute ici
 
     # Shutdown
+    token_cleanup_scheduler.shutdown()
     backup_scheduler.stop()
     social_scheduler.stop()
     logger.info("🛑 Arrêt de l'application...")
 
+
+# Rate limiter global (protection brute force sur les routes auth)
+limiter = Limiter(key_func=get_remote_address)
 
 # Initialisation de l'application FastAPI avec lifespan
 app = FastAPI(
@@ -219,6 +255,10 @@ app = FastAPI(
         "name": "Proprietary",
     }
 )
+
+# Attacher le rate limiter a l'app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # Handler custom pour RequestValidationError — evite UnicodeDecodeError

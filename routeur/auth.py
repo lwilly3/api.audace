@@ -30,6 +30,10 @@ from app.db.crud.crud_password_reset_token import create_reset_token, get_reset_
 from app.db.crud.crud_audit_logs import log_action
 from app.config.config import settings
 from app.db.crud.crud_2fa import verify_trusted_device, create_trusted_device, get_trusted_devices, revoke_trusted_device, revoke_trusted_devices
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 # pour la creation du token, intallation du package  pip install python-jose[cryptography]  7h01
 # 6h05 installation des librairie pour hacher le pass pip install passlib[bcrypt]
@@ -41,6 +45,7 @@ router=APIRouter(
 
 # response_model=schemas.Token
 @router.post('/login')
+@limiter.limit("10/minute")
 # 7h10
 # def login(user_credentials: schemas.UserLogin, db: Session = Depends(database.get_db)):
 # sur la solution au on accede par user_credentials.email ..  pour la deuxieme solution il retourne un dict avec username et password
@@ -59,6 +64,10 @@ def login(request: Request, user_credentials_receved: OAuth2PasswordRequestForm=
    # Si le mot de passe en DB ne commence pas par prefixe bcrypt, comparer en clair
    if not stored_pw.startswith("$2"):
        valid = (user_credentials_receved.password == stored_pw)
+       # Auto-migration : re-hasher le mot de passe en bcrypt pour supprimer le stockage en clair
+       if valid:
+           user_to_log_on_db.password = utils.hash(user_credentials_receved.password)
+           db.commit()
    else:
        from passlib.exc import UnknownHashError
        try:
@@ -136,6 +145,7 @@ def logout(token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get
 
 
 @router.post('/refresh')
+@limiter.limit("30/minute")
 def refresh_token(request: Request, token: str = Depends(oauth2.oauth2_scheme), db: Session = Depends(get_db)):
     """Renouvelle un token d'acces. Accepte les tokens valides ou recemment expires (fenetre de grace).
     Si un appareil de confiance est presente via X-Trusted-Device, la fenetre de grace est etendue."""
@@ -206,6 +216,7 @@ class SignupRequest(BaseModel):
     password: str
 
 @router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=UserInDB)
+@limiter.limit("5/minute")
 def signup(request: SignupRequest, db: Session = Depends(get_db)):
     # Créer un utilisateur minimal avec email comme username
     # Hasher le mot de passe avant stockage
@@ -302,6 +313,7 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 @router.post('/generate-reset-token', status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 def generate_reset_token(request: ResetTokenRequest, db: Session = Depends(get_db)):
     """
     Génère un token temporaire pour réinitialiser le mot de passe à partir de l'ID utilisateur.
@@ -322,6 +334,7 @@ def validate_reset_token(token: str = Query(...), db: Session = Depends(get_db))
     return {"valid": True, "user_id": reset.user_id}
 
 @router.post('/reset-password', status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
 def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
     """
     Réinitialise le mot de passe à partir d'un token de réinitialisation.

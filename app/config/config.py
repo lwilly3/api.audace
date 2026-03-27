@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     TOTP_ENCRYPTION_KEY:str = ""
 
     # Delai de grace (en minutes) pour le refresh de token apres expiration
-    REFRESH_GRACE_MINUTES:int = 5
+    REFRESH_GRACE_MINUTES:int = 15
 
     # Grace etendue pour appareils de confiance (7 jours = 10080 min)
     TRUSTED_DEVICE_REFRESH_GRACE_MINUTES:int = 10080
