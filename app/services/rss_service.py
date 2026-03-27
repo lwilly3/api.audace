@@ -128,14 +128,27 @@ def fetch_single_feed(db: Session, feed: RssFeed) -> dict:
 def refresh_all_feeds(db: Session) -> list[dict]:
     """Rafraichit tous les flux actifs. Retourne une liste de resultats."""
     feeds = db.query(RssFeed).filter(RssFeed.is_active == True).all()
+    logger.info(f"refresh_all_feeds: Starting refresh for {len(feeds)} active feeds")
     results = []
-    for feed in feeds:
-        result = fetch_single_feed(db, feed)
-        results.append({
-            "feed_id": feed.id,
-            "feed_title": feed.title,
-            **result,
-        })
+    for i, feed in enumerate(feeds, 1):
+        try:
+            logger.debug(f"refresh_all_feeds: Processing feed {i}/{len(feeds)}: {feed.title} (ID: {feed.id})")
+            result = fetch_single_feed(db, feed)
+            results.append({
+                "feed_id": feed.id,
+                "feed_title": feed.title,
+                **result,
+            })
+            logger.debug(f"refresh_all_feeds: Feed {feed.id} completed - {result.get('new_articles', 0)} new articles")
+        except Exception as e:
+            logger.error(f"refresh_all_feeds: Unexpected error on feed {feed.id} ({feed.title}): {e}", exc_info=True)
+            results.append({
+                "feed_id": feed.id,
+                "feed_title": feed.title,
+                "new_articles": 0,
+                "error": f"Erreur inattendue: {str(e)[:200]}",
+            })
+    logger.info(f"refresh_all_feeds: Completed - {len(results)} results returned")
     return results
 
 
