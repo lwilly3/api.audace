@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import feedparser
 import httpx
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.models.model_rss import RssFeed, RssArticle
 
@@ -19,6 +20,41 @@ logger = logging.getLogger("hapson-api")
 
 FETCH_TIMEOUT = 15.0
 USER_AGENT = "RadioManager/1.0 (RSS Aggregator)"
+DEFAULT_MAX_ARTICLES_PER_FEED = 100  # Limite par defaut de conservation par flux
+
+
+def cleanup_old_articles(db: Session, feed: RssFeed) -> int:
+    """
+    Supprime les articles les plus anciens si le flux depasse sa limite.
+    Retourne le nombre d'articles supprimes.
+    """
+    max_articles = feed.max_articles or DEFAULT_MAX_ARTICLES_PER_FEED
+    article_count = db.query(func.count(RssArticle.id)).filter(RssArticle.feed_id == feed.id).scalar() or 0
+
+    if article_count <= max_articles:
+        return 0
+
+    # Calculer le nombre d'articles a supprimer
+    to_delete = article_count - max_articles
+
+    # Recuperer les IDs des articles les plus anciens (ordonne par created_at ASC)
+    old_articles = (
+        db.query(RssArticle.id)
+        .filter(RssArticle.feed_id == feed.id)
+        .order_by(RssArticle.created_at.asc())
+        .limit(to_delete)
+        .all()
+    )
+
+    old_article_ids = [a[0] for a in old_articles]
+
+    if old_article_ids:
+        deleted_count = db.query(RssArticle).filter(RssArticle.id.in_(old_article_ids)).delete()
+        db.commit()
+        logger.info(f"Cleaned up {deleted_count} old articles from feed {feed.id} (kept max {max_articles})")
+        return deleted_count
+
+    return 0
 
 
 def fetch_single_feed(db: Session, feed: RssFeed) -> dict:
@@ -108,7 +144,10 @@ def fetch_single_feed(db: Session, feed: RssFeed) -> dict:
         feed.last_error = None
         db.commit()
 
-        logger.info(f"RSS feed '{feed.title}' refreshed: {new_count} new articles")
+        # Nettoyer les articles trop anciens
+        deleted = cleanup_old_articles(db, feed)
+
+        logger.info(f"RSS feed '{feed.title}' refreshed: {new_count} new articles, {deleted} old articles removed")
         return {"new_articles": new_count, "error": None}
 
     except httpx.HTTPStatusError as e:

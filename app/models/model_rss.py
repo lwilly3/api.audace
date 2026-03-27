@@ -28,6 +28,7 @@ class RssFeed(Base):
     site_url = Column(Text, nullable=True)
     favicon_url = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    max_articles = Column(Integer, default=100, nullable=False)  # Limite d'articles a conserver
     last_fetched_at = Column(DateTime(timezone=True), nullable=True)
     last_error = Column(Text, nullable=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)

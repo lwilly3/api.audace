@@ -36,6 +36,7 @@ def get_rss_feeds(db: Session, active_only: bool = True) -> list[dict]:
             "site_url": feed.site_url,
             "favicon_url": feed.favicon_url,
             "is_active": feed.is_active,
+            "max_articles": feed.max_articles,
             "last_fetched_at": feed.last_fetched_at,
             "last_error": feed.last_error,
             "article_count": article_count,

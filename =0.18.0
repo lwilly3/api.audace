@@ -1,0 +1,37 @@
+Collecting google-analytics-data
+  Downloading google_analytics_data-0.20.0-py3-none-any.whl (192 kB)
+Collecting google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1
+  Downloading google_api_core-2.30.0-py3-none-any.whl (173 kB)
+Collecting proto-plus<2.0.0,>=1.22.3
+  Downloading proto_plus-1.27.1-py3-none-any.whl (50 kB)
+Collecting google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1
+  Downloading google_auth-2.49.1-py3-none-any.whl (240 kB)
+Collecting grpcio<2.0.0,>=1.33.2
+  Downloading grpcio-1.78.0-cp39-cp39-macosx_11_0_universal2.whl (11.8 MB)
+Collecting protobuf!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<7.0.0,>=3.20.2
+  Downloading protobuf-6.33.6-cp39-abi3-macosx_10_9_universal2.whl (427 kB)
+Collecting googleapis-common-protos<2.0.0,>=1.56.3
+  Downloading googleapis_common_protos-1.73.0-py3-none-any.whl (297 kB)
+Requirement already satisfied: requests<3.0.0,>=2.20.0 in ./venv/lib/python3.9/site-packages (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-analytics-data) (2.32.5)
+Collecting grpcio-status<2.0.0,>=1.33.2
+  Downloading grpcio_status-1.78.0-py3-none-any.whl (14 kB)
+Collecting pyasn1-modules>=0.2.1
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Requirement already satisfied: cryptography>=38.0.3 in ./venv/lib/python3.9/site-packages (from google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1->google-analytics-data) (42.0.5)
+Requirement already satisfied: cffi>=1.12 in ./venv/lib/python3.9/site-packages (from cryptography>=38.0.3->google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1->google-analytics-data) (1.16.0)
+Requirement already satisfied: pycparser in ./venv/lib/python3.9/site-packages (from cffi>=1.12->cryptography>=38.0.3->google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1->google-analytics-data) (2.21)
+Requirement already satisfied: typing-extensions~=4.12 in ./venv/lib/python3.9/site-packages (from grpcio<2.0.0,>=1.33.2->google-analytics-data) (4.13.2)
+Collecting pyasn1<0.7.0,>=0.6.1
+  Downloading pyasn1-0.6.3-py3-none-any.whl (83 kB)
+Requirement already satisfied: certifi>=2017.4.17 in ./venv/lib/python3.9/site-packages (from requests<3.0.0,>=2.20.0->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-analytics-data) (2023.11.17)
+Requirement already satisfied: idna<4,>=2.5 in ./venv/lib/python3.9/site-packages (from requests<3.0.0,>=2.20.0->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-analytics-data) (3.6)
+Requirement already satisfied: charset_normalizer<4,>=2 in ./venv/lib/python3.9/site-packages (from requests<3.0.0,>=2.20.0->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-analytics-data) (3.4.4)
+Requirement already satisfied: urllib3<3,>=1.21.1 in ./venv/lib/python3.9/site-packages (from requests<3.0.0,>=2.20.0->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-analytics-data) (2.6.3)
+Installing collected packages: pyasn1, pyasn1-modules, protobuf, proto-plus, grpcio, googleapis-common-protos, google-auth, grpcio-status, google-api-core, google-analytics-data
+  Attempting uninstall: pyasn1
+    Found existing installation: pyasn1 0.5.1
+    Uninstalling pyasn1-0.5.1:
+      Successfully uninstalled pyasn1-0.5.1
+Successfully installed google-analytics-data-0.20.0 google-api-core-2.30.0 google-auth-2.49.1 googleapis-common-protos-1.73.0 grpcio-1.78.0 grpcio-status-1.78.0 proto-plus-1.27.1 protobuf-6.33.6 pyasn1-0.6.3 pyasn1-modules-0.4.2
+WARNING: You are using pip version 21.2.4; however, version 26.0.1 is available.
+You should consider upgrading via the '/Users/happi/App/API/FASTAPI/venv/bin/python3 -m pip install --upgrade pip' command.
