@@ -93,9 +93,16 @@ def fetch_single_feed(db: Session, feed: RssFeed) -> dict:
                 published_at=published,
                 image_url=image_url,
             )
-            db.add(article)
-            new_count += 1
-            existing_guids.add(guid)
+            try:
+                db.add(article)
+                db.commit()  # Commit immédiat pour chaque article
+                new_count += 1
+                existing_guids.add(guid)
+                logger.debug(f"RSS article inserted: feed_id={feed.id}, guid_hash={hash(guid)}")
+            except Exception as e:
+                db.rollback()  # Rollback local si doublon
+                logger.debug(f"RSS article skipped (duplicate or error): feed_id={feed.id}, error={str(e)[:100]}")
+                continue
 
         feed.last_fetched_at = datetime.now(timezone.utc)
         feed.last_error = None
