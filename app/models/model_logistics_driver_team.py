@@ -109,7 +109,7 @@ class LogisticsTeam(BaseModel):
     updated_by = Column(Integer, nullable=True)
 
     # Relations
-    leader = relationship('LogisticsDriver', foreign_keys=[leader_id], back_populates='team')
+    leader = relationship('LogisticsDriver', foreign_keys=[leader_id])
     default_vehicle = relationship('LogisticsVehicle', foreign_keys=[default_vehicle_id])
     company = relationship('InventoryCompany', foreign_keys=[company_id])
     members = relationship('LogisticsDriver', foreign_keys=[LogisticsDriver.team_id], back_populates='team')
