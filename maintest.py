@@ -23,7 +23,7 @@ from routeur import (
 
        auth,
         #  votes,
-       audit_log_route,
+    audit_log_route,
        guest_route,
          notification_route,
      permissions_route,
@@ -55,6 +55,7 @@ from routeur import (
      ga_analytics_route,  # Routes pour Google Analytics 4 (GA4 Web Analytics)
      rss_route,  # Routes pour l'agregateur RSS (Social)
 
+    logistics_route,  # Routes pour le module Logistique (gestion de flotte)
 
 
 )  # Importation des routeurs de l'appication
@@ -158,13 +159,14 @@ async def lifespan(app: FastAPI):
         - Nettoyage des ressources si nécessaire
     """
     # Startup
+    
     from app.db.database import SessionLocal
     from app.db.init_admin import create_default_admin
+    from app.db.init_logistics import initialize_logistics_config
     from app.services.social_scheduler import scheduler as social_scheduler
     from app.services.backup_scheduler import backup_scheduler
     from app.db.crud.crud_auth import delete_expired_tokens
     from datetime import datetime, timezone
-    
     logger.info("🚀 Démarrage de l'application - Vérification de l'admin par défaut...")
     
     db = SessionLocal()
@@ -175,6 +177,8 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Verification schema users 2FA terminee")
         create_default_admin(db)
         logger.info("✅ Initialisation de l'admin terminée")
+        initialize_logistics_config(db)
+        logger.info("✅ Initialisation de la configuration logistique terminée")
     except Exception as e:
         logger.error(f"❌ Erreur lors de l'initialisation de l'admin: {e}")
     finally:
@@ -353,9 +357,11 @@ app.include_router(inventory_maintenance_route.router) # Routes pour la maintena
 app.include_router(inventory_subscription_route.router) # Routes pour les abonnements inventaire
 app.include_router(inventory_dashboard_route.router) # Routes pour le dashboard inventaire
 app.include_router(ga_analytics_route.router) # Routes pour Google Analytics 4 (GA4 Web Analytics)
+
+
+
 app.include_router(rss_route.router) # Routes pour l'agregateur RSS (Social)
-
-
+app.include_router(logistics_route.router) # Routes pour le module Logistique (gestion de flotte)
 
 # Endpoint par défaut pour vérifier que l'API est opérationnelle
 @app.get("/")
