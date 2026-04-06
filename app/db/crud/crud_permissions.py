@@ -48,6 +48,15 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
         if not permissions:
             return {"error": f"Aucune permission trouvée pour l'utilisateur avec l'ID {user_id}"}
 
+        # Verifier si l'utilisateur est super_admin (bypass: toutes les permissions a True)
+        user = db.query(User).filter(User.id == user_id).first()
+        is_super_admin = False
+        if user:
+            for role in user.roles:
+                if role.name == 'super_admin':
+                    is_super_admin = True
+                    break
+
        # Retourner toutes les permissions sous forme de dictionnaire
         result = {
     "user_id": permissions.user_id,
@@ -218,12 +227,52 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     # Permissions pour les sauvegardes
     "can_manage_backups": permissions.can_manage_backups,
 
+    # Permissions pour le module Logistique
+    "logistics_access_section": permissions.logistics_access_section,
+    "logistics_view": permissions.logistics_view,
+    "logistics_view_all_companies": permissions.logistics_view_all_companies,
+    "logistics_vehicles_view": permissions.logistics_vehicles_view,
+    "logistics_vehicles_create": permissions.logistics_vehicles_create,
+    "logistics_vehicles_edit": permissions.logistics_vehicles_edit,
+    "logistics_vehicles_delete": permissions.logistics_vehicles_delete,
+    "logistics_drivers_view": permissions.logistics_drivers_view,
+    "logistics_drivers_create": permissions.logistics_drivers_create,
+    "logistics_drivers_edit": permissions.logistics_drivers_edit,
+    "logistics_drivers_delete": permissions.logistics_drivers_delete,
+    "logistics_teams_view": permissions.logistics_teams_view,
+    "logistics_teams_create": permissions.logistics_teams_create,
+    "logistics_teams_edit": permissions.logistics_teams_edit,
+    "logistics_teams_delete": permissions.logistics_teams_delete,
+    "logistics_missions_view": permissions.logistics_missions_view,
+    "logistics_missions_view_own": permissions.logistics_missions_view_own,
+    "logistics_missions_create": permissions.logistics_missions_create,
+    "logistics_missions_edit": permissions.logistics_missions_edit,
+    "logistics_missions_submit": permissions.logistics_missions_submit,
+    "logistics_missions_add_photos": permissions.logistics_missions_add_photos,
+    "logistics_missions_approve": permissions.logistics_missions_approve,
+    "logistics_missions_delete": permissions.logistics_missions_delete,
+    "logistics_fuel_view": permissions.logistics_fuel_view,
+    "logistics_fuel_create": permissions.logistics_fuel_create,
+    "logistics_fuel_edit": permissions.logistics_fuel_edit,
+    "logistics_fuel_alerts": permissions.logistics_fuel_alerts,
+    "logistics_maintenance_view": permissions.logistics_maintenance_view,
+    "logistics_maintenance_create": permissions.logistics_maintenance_create,
+    "logistics_maintenance_edit": permissions.logistics_maintenance_edit,
+    "logistics_maintenance_delete": permissions.logistics_maintenance_delete,
+    "logistics_tires_view": permissions.logistics_tires_view,
+    "logistics_tires_manage": permissions.logistics_tires_manage,
+    "logistics_documents_manage": permissions.logistics_documents_manage,
+    "logistics_financial_view": permissions.logistics_financial_view,
+    "logistics_kpi_view": permissions.logistics_kpi_view,
+    "logistics_reports_export": permissions.logistics_reports_export,
+    "logistics_manage_settings": permissions.logistics_settings_manage,
+
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
 }
 
         # Enforcement 2FA par role : verifier si les roles de l'utilisateur exigent le 2FA
-        user = db.query(User).filter(User.id == user_id).first()
+        # (user deja charge plus haut pour le bypass super_admin)
         role_requires_2fa = False
         if user:
             for role in user.roles:
@@ -232,6 +281,13 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
                     break
         result["needs_2fa_setup"] = role_requires_2fa and not getattr(user, 'two_factor_enabled', False)
         result["role_requires_2fa"] = role_requires_2fa
+
+        # Bypass super_admin : toutes les permissions boolean a True
+        if is_super_admin:
+            for key in result:
+                if key not in ("user_id", "granted_at", "needs_2fa_setup", "role_requires_2fa"):
+                    if isinstance(result[key], bool):
+                        result[key] = True
 
         return result
 
@@ -403,7 +459,13 @@ def initialize_user_permissions(db: Session, user_id: int):
 
     # Securite (2FA)
     can_enforce_2fa=False,
-    can_reset_user_2fa=False
+    can_reset_user_2fa=False,
+
+    # Logistique
+    logistics_access_section=False,
+    logistics_view=False,
+    logistics_view_all_companies=False,
+    logistics_settings_manage=False,
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -725,7 +787,47 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'can_reset_user_2fa',
 
     # Sauvegardes
-    'can_manage_backups'
+    'can_manage_backups',
+
+    # Logistique
+    'logistics_access_section',
+    'logistics_view',
+    'logistics_view_all_companies',
+    'logistics_vehicles_view',
+    'logistics_vehicles_create',
+    'logistics_vehicles_edit',
+    'logistics_vehicles_delete',
+    'logistics_drivers_view',
+    'logistics_drivers_create',
+    'logistics_drivers_edit',
+    'logistics_drivers_delete',
+    'logistics_teams_view',
+    'logistics_teams_create',
+    'logistics_teams_edit',
+    'logistics_teams_delete',
+    'logistics_missions_view',
+    'logistics_missions_view_own',
+    'logistics_missions_create',
+    'logistics_missions_edit',
+    'logistics_missions_submit',
+    'logistics_missions_add_photos',
+    'logistics_missions_approve',
+    'logistics_missions_delete',
+    'logistics_fuel_view',
+    'logistics_fuel_create',
+    'logistics_fuel_edit',
+    'logistics_fuel_alerts',
+    'logistics_maintenance_view',
+    'logistics_maintenance_create',
+    'logistics_maintenance_edit',
+    'logistics_maintenance_delete',
+    'logistics_tires_view',
+    'logistics_tires_manage',
+    'logistics_documents_manage',
+    'logistics_financial_view',
+    'logistics_kpi_view',
+    'logistics_reports_export',
+    'logistics_manage_settings',
 }
 
         # Vérifier les permissions fournies
@@ -734,10 +836,15 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
         if invalid_permissions:
             raise ValueError(f"Permissions invalides : {', '.join(invalid_permissions)}")
 
+        # Mapping des noms frontend vers les noms de colonnes DB (si different)
+        PERM_ALIAS = {
+            'logistics_manage_settings': 'logistics_settings_manage',
+        }
+
         # Mettre à jour les permissions
         for perm, value in permissions.items():
-
-            setattr(user_permission, perm, value)
+            col_name = PERM_ALIAS.get(perm, perm)
+            setattr(user_permission, col_name, value)
 
         db.commit()
         return {"message": f"Permissions mises à jour avec succès pour l'utilisateur {user_id}", "success": True}

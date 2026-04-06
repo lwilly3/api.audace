@@ -199,10 +199,12 @@ class UserPermissions(Base):
     # ════════════════════════════════════════════════════════════════
     # Permissions pour le module Logistique (transport terrestre)
     # ════════════════════════════════════════════════════════════════
-    
+
     # Accès au module
+    logistics_access_section = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Accéder à la section Logistique
     logistics_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Accéder au module
     logistics_view_all_companies = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir toutes les entreprises
+    logistics_manage_settings = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Gérer les paramètres du module
 
     # Gestion des véhicules
     logistics_vehicles_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
@@ -257,7 +259,7 @@ class UserPermissions(Base):
     logistics_reports_export = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Rapports
 
     # Administration
-    logistics_settings_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Paramètres
+    logistics_settings_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Paramètres (frontend: logistics_manage_settings)
 
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
