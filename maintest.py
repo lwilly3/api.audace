@@ -202,27 +202,32 @@ async def lifespan(app: FastAPI):
         logger.warning(f"⚠️ Echec nettoyage initial tokens: {e}")
 
     # Scheduler periodique pour le nettoyage des tokens revoques (toutes les heures)
-    from apscheduler.schedulers.background import BackgroundScheduler
-    token_cleanup_scheduler = BackgroundScheduler()
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        token_cleanup_scheduler = BackgroundScheduler()
 
-    def cleanup_revoked_tokens_job():
-        """Supprime les tokens revoques expires de la base."""
-        try:
-            job_db = SessionLocal()
-            delete_expired_tokens(job_db, datetime.now(timezone.utc))
-            job_db.close()
-            logger.info("🧹 Nettoyage periodique des tokens revoques termine")
-        except Exception as e:
-            logger.warning(f"⚠️ Echec nettoyage tokens: {e}")
+        def cleanup_revoked_tokens_job():
+            """Supprime les tokens revoques expires de la base."""
+            try:
+                job_db = SessionLocal()
+                delete_expired_tokens(job_db, datetime.now(timezone.utc))
+                job_db.close()
+                logger.info("🧹 Nettoyage periodique des tokens revoques termine")
+            except Exception as e:
+                logger.warning(f"⚠️ Echec nettoyage tokens: {e}")
 
-    token_cleanup_scheduler.add_job(cleanup_revoked_tokens_job, 'interval', hours=1)
-    token_cleanup_scheduler.start()
-    logger.info("✅ Token cleanup scheduler demarre (toutes les heures)")
+        token_cleanup_scheduler.add_job(cleanup_revoked_tokens_job, 'interval', hours=1)
+        token_cleanup_scheduler.start()
+        logger.info("✅ Token cleanup scheduler demarre (toutes les heures)")
+    except ImportError:
+        token_cleanup_scheduler = None
+        logger.warning("⚠️ apscheduler non installe — nettoyage periodique des tokens desactive")
 
     yield  # L'application s'exécute ici
 
     # Shutdown
-    token_cleanup_scheduler.shutdown()
+    if token_cleanup_scheduler:
+        token_cleanup_scheduler.shutdown()
     backup_scheduler.stop()
     social_scheduler.stop()
     logger.info("🛑 Arrêt de l'application...")

@@ -79,7 +79,12 @@ class LogisticsVehicle(BaseModel):
     type_option = relationship('LogisticsConfigOption', foreign_keys=[type_id])
     fuel_type_option = relationship('LogisticsConfigOption', foreign_keys=[fuel_type_id])
     status_option = relationship('LogisticsConfigOption', foreign_keys=[status_id])
-    documents = relationship('LogisticsDocument', back_populates='vehicle', cascade='all, delete-orphan')
+    documents = relationship(
+        'LogisticsDocument',
+        primaryjoin="and_(LogisticsDocument.entity_type=='vehicle', foreign(LogisticsDocument.entity_id)==LogisticsVehicle.id)",
+        viewonly=True,
+        cascade='none'
+    )
     missions = relationship('LogisticsMission', back_populates='vehicle', cascade='all, delete-orphan')
     fuel_logs = relationship('LogisticsFuelLog', back_populates='vehicle', cascade='all, delete-orphan')
     maintenance_records = relationship('LogisticsMaintenance', back_populates='vehicle', cascade='all, delete-orphan')
