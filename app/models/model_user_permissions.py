@@ -196,6 +196,69 @@ class UserPermissions(Base):
     # Permissions pour les sauvegardes (Backup management)
     can_manage_backups = Column(Boolean, default=False, server_default=text('false'), nullable=False)
 
+    # ════════════════════════════════════════════════════════════════
+    # Permissions pour le module Logistique (transport terrestre)
+    # ════════════════════════════════════════════════════════════════
+    
+    # Accès au module
+    logistics_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Accéder au module
+    logistics_view_all_companies = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir toutes les entreprises
+
+    # Gestion des véhicules
+    logistics_vehicles_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_vehicles_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_vehicles_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_vehicles_delete = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
+    # Gestion des chauffeurs
+    logistics_drivers_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_drivers_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_drivers_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_drivers_delete = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
+    # Gestion des équipes
+    logistics_teams_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_teams_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_teams_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_teams_delete = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
+    # Gestion des missions
+    logistics_missions_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_missions_view_own = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Chauffeur: ses missions
+    logistics_missions_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_missions_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_missions_submit = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Chauffeur: soumettre
+    logistics_missions_add_photos = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Photos/observations
+    logistics_missions_approve = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Superviseur: valider
+    logistics_missions_delete = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
+    # Gestion du carburant
+    logistics_fuel_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_fuel_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Chauffeur: saisir
+    logistics_fuel_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_fuel_alerts = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Superviseur: alertes
+
+    # Gestion de la maintenance
+    logistics_maintenance_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_maintenance_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_maintenance_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_maintenance_delete = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
+    # Gestion des pneumatiques
+    logistics_tires_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_tires_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
+    # Gestion des documents
+    logistics_documents_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+
+    # Financier & KPIs
+    logistics_financial_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Montants et marges
+    logistics_kpi_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # KPIs
+    logistics_reports_export = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Rapports
+
+    # Administration
+    logistics_settings_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Paramètres
+
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
 

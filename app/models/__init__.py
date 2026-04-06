@@ -57,6 +57,16 @@ from .model_inventory_movement import InventoryMovement
 from .model_inventory_maintenance import InventoryMaintenance
 from .model_inventory_subscription import InventorySubscription
 
+# Module Logistique
+from .model_logistics_vehicle import LogisticsVehicle
+from .model_logistics_driver_team import LogisticsDriver, LogisticsTeam
+from .model_logistics_operations import (
+    LogisticsMission, LogisticsMissionCheckpoint,
+    LogisticsFuelLog, LogisticsMaintenance,
+    LogisticsTire, LogisticsDocument
+)
+from .model_logistics_settings import LogisticsConfigOption, LogisticsGlobalSettings
+
 # Module Google Analytics
 from .model_ga_property import GaProperty
 
