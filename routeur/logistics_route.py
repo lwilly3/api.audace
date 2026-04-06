@@ -7,8 +7,8 @@ Implements authorization checks and request validation via Pydantic schemas.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from core.auth import oauth2
-from db.database import get_db
-from db.crud.crud_logistics import (
+from app.db.database import get_db
+from app.db.crud.crud_logistics import (
     get_next_vehicle_reference,
     peek_next_vehicle_reference,
     create_vehicle,
@@ -29,8 +29,8 @@ from db.crud.crud_logistics import (
     delete_team,
     get_logistics_dashboard,
 )
-from models.model_user import User
-from schemas.schema_logistics import (
+from app.models.model_user import User
+from app.schemas.schema_logistics import (
     VehicleCreate,
     VehicleUpdate,
     VehicleResponse,
