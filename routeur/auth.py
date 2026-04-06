@@ -217,15 +217,15 @@ class SignupRequest(BaseModel):
 
 @router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=UserInDB)
 @limiter.limit("5/minute")
-def signup(request: SignupRequest, db: Session = Depends(get_db)):
+def signup(request: Request, payload: SignupRequest, db: Session = Depends(get_db)):
     # Créer un utilisateur minimal avec email comme username
     # Hasher le mot de passe avant stockage
-    hashed_pw = utils.hash(request.password)
+    hashed_pw = utils.hash(payload.password)
     user_data = {
-        'username': request.email,
+        'username': payload.email,
         'name': '',
         'family_name': '',
-        'email': request.email,
+        'email': payload.email,
         'password': hashed_pw,
         'phone_number': ''
     }
@@ -314,12 +314,12 @@ class ResetPasswordRequest(BaseModel):
 
 @router.post('/generate-reset-token', status_code=status.HTTP_200_OK)
 @limiter.limit("5/minute")
-def generate_reset_token(request: ResetTokenRequest, db: Session = Depends(get_db)):
+def generate_reset_token(request: Request, payload: ResetTokenRequest, db: Session = Depends(get_db)):
     """
     Génère un token temporaire pour réinitialiser le mot de passe à partir de l'ID utilisateur.
     """
     # Création et enregistrement du token en base
-    reset = create_reset_token(db, request.user_id)
+    reset = create_reset_token(db, payload.user_id)
     return {"reset_token": reset.token, "expires_at": reset.expires_at.isoformat()}
 
 # Validation d'un token de réinitialisation
@@ -335,23 +335,23 @@ def validate_reset_token(token: str = Query(...), db: Session = Depends(get_db))
 
 @router.post('/reset-password', status_code=status.HTTP_200_OK)
 @limiter.limit("5/minute")
-def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+def reset_password(request: Request, payload: ResetPasswordRequest, db: Session = Depends(get_db)):
     """
     Réinitialise le mot de passe à partir d'un token de réinitialisation.
     """
     # Récupérer le token en base
-    reset = get_reset_token(db, request.token)
+    reset = get_reset_token(db, payload.token)
     if not reset:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Token non trouvé")
     if reset.used or reset.expires_at < datetime.utcnow():
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Token expiré ou déjà utilisé")
     # Marquer comme utilisé
-    mark_reset_token_used(db, request.token)
+    mark_reset_token_used(db, payload.token)
     # Mettre à jour le mot de passe de l'utilisateur
     user = db.query(model_user.User).filter(model_user.User.id == reset.user_id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
-    user.password = utils.hash(request.new_password)
+    user.password = utils.hash(payload.new_password)
     db.commit()
     log_action(db, user.id, "reset_password", "users", user.id)
     return {"message": "Mot de passe réinitialisé avec succès"}

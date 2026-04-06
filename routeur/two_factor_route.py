@@ -119,8 +119,8 @@ def two_factor_regenerate_backup_codes(
 @router.post('/verify')
 @limiter.limit("5/minute")
 def two_factor_verify_login(
-    request: VerifyLoginRequest,
-    http_request: Request,
+    request: Request,
+    payload: VerifyLoginRequest,
     db: Session = Depends(get_db),
 ):
     """
@@ -130,10 +130,10 @@ def two_factor_verify_login(
     Si trust_browser=True, genere un device token pour les connexions futures.
     """
     # Valider le temp token et extraire le user_id
-    user_data = get_2fa_temp_user(request.temp_token, db)
+    user_data = get_2fa_temp_user(payload.temp_token, db)
 
     # Verifier le code OTP
-    if not verify_totp(db, user_data.id, request.otp_code):
+    if not verify_totp(db, user_data.id, payload.otp_code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Code OTP invalide"
@@ -143,8 +143,8 @@ def two_factor_verify_login(
     response = _build_login_response(db, user_data)
 
     # Si trust_browser, generer un device token
-    if request.trust_browser:
-        user_agent = http_request.headers.get("User-Agent", "")
+    if payload.trust_browser:
+        user_agent = request.headers.get("User-Agent", "")
         device_token = create_trusted_device(db, user_data.id, user_agent)
         response["trusted_device_token"] = device_token
         log_action(db, user_data.id, "trusted_device_created", "users", user_data.id)
@@ -155,16 +155,16 @@ def two_factor_verify_login(
 @router.post('/verify-backup')
 @limiter.limit("3/minute")
 def two_factor_verify_backup(
-    request: BackupCodeLoginRequest,
-    http_request: Request,
+    request: Request,
+    payload: BackupCodeLoginRequest,
     db: Session = Depends(get_db),
 ):
     """
     Verifie un code de secours pendant le login (alternative au TOTP).
     """
-    user_data = get_2fa_temp_user(request.temp_token, db)
+    user_data = get_2fa_temp_user(payload.temp_token, db)
 
-    if not verify_and_consume_backup_code(db, user_data.id, request.backup_code):
+    if not verify_and_consume_backup_code(db, user_data.id, payload.backup_code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Code de secours invalide"
@@ -174,8 +174,8 @@ def two_factor_verify_backup(
     response = _build_login_response(db, user_data)
 
     # Si trust_browser, generer un device token
-    if request.trust_browser:
-        user_agent = http_request.headers.get("User-Agent", "")
+    if payload.trust_browser:
+        user_agent = request.headers.get("User-Agent", "")
         device_token = create_trusted_device(db, user_data.id, user_agent)
         response["trusted_device_token"] = device_token
         log_action(db, user_data.id, "trusted_device_created", "users", user_data.id)
