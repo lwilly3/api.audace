@@ -1,7 +1,7 @@
 # Module Logistique — Guide Complet
 
-**Version**: 0.16.0  
-**Statut**: Implémentation Backend complète  
+**Version**: 0.17.0  
+**Statut**: Implémentation Backend complète + Driver User Management  
 **Couleur**: Purple `#7C3AED`  
 **Base URL**: `/api/logistics` ou `/logistics`
 
@@ -61,9 +61,9 @@ PARAMÉTRAGE
 | **Mission** | `logistics_mission` | vehicle_id, team_id, status, origin, destination, cargo_type | 1 véhicule, 1 équipe, N checkpoints |
 | **Checkpoint** | `logistics_mission_checkpoint` | mission_id, type, location, arrival_time, departure_time | 1 mission |
 | **Carburant** | `logistics_fuel_log` | vehicle_id, liters, cost, km, consumption_l_per_100km | Alerte surconsommation |
-| **Maintenance** | `logistics_maintenance` | vehicle_id, type, description, cost, labor_hours, status | Historique entretien |
-| **Pneus** | `logistics_tire` | vehicle_id, position, installed_km, current_km, max_km | Wear % detection |
-| **Documents** | `logistics_document` | entity_type, entity_id, doc_type, expiry_date, file_url | Polymorphe (vehicle\|driver\|mission) |
+| **Maintenance** | `logistics_maintenance` | vehicle_id, type, description, cost, labor_hours, status | ⚠️ Planifié v1.1 |
+| **Pneus** | `logistics_tire` | vehicle_id, position, installed_km, current_km, max_km | ⚠️ Planifié v1.1 |
+| **Documents** | `logistics_document` | entity_type, entity_id, doc_type, expiry_date, file_url | ⚠️ Planifié v1.1 |
 | **Config Option** | `logistics_config_option` | list_type, name, label, description | Listes déroulantes |
 | **Paramètres Globaux** | `logistics_global_settings` | reference_prefix_vehicle, fuel_alert_threshold, ... | Singleton de config |
 
@@ -234,7 +234,150 @@ DELETE /logistics/teams/{team_id}                 → { "message": "..." }
 }
 ```
 
-### 3.4 Dashboard
+### 3.4 Missions
+
+```http
+# RÉFÉRENCE MISSIONS
+GET    /logistics/missions/reference/peek          → { "reference": "MIS-0001" }
+GET    /logistics/missions/reference/next          → { "reference": "MIS-0001" } (incrémente)
+
+# CRUD MISSIONS
+POST   /logistics/missions                         → MissionResponse
+GET    /logistics/missions                         → MissionListResponse (avec pagination)
+GET    /logistics/missions/{mission_id}           → MissionResponse
+PUT    /logistics/missions/{mission_id}           → MissionResponse
+DELETE /logistics/missions/{mission_id}           → { "message": "..." }
+
+# WORKFLOWS MISSION
+PUT    /logistics/missions/{mission_id}/start     → MissionResponse (planned → in_progress)
+PUT    /logistics/missions/{mission_id}/complete  → MissionResponse (in_progress → completed)
+PUT    /logistics/missions/{mission_id}/cancel    → MissionResponse (planned|in_progress → cancelled)
+PUT    /logistics/missions/{mission_id}/submit    → MissionResponse (completed → submitted)
+PUT    /logistics/missions/{mission_id}/approve   → MissionResponse (submitted → approved)
+PUT    /logistics/missions/{mission_id}/reject    → MissionResponse (submitted → rejected, nécessite motif)
+
+# MISSIONS PAR CONDUCTEUR
+GET    /logistics/missions/driver/{driver_id}     → MissionListResponse ("Mes missions")
+
+# CHECKPOINTS (attachés aux missions)
+POST   /logistics/missions/{mission_id}/checkpoints        → CheckpointResponse
+GET    /logistics/missions/{mission_id}/checkpoints        → list[CheckpointResponse]
+DELETE /logistics/checkpoints/{checkpoint_id}             → { "message": "..." }
+```
+
+**Exemple de requête `POST /logistics/missions`** :
+```json
+{
+  "company_id": 1,
+  "vehicle_id": 5,
+  "team_id": 2,
+  "cargo_type": "wood",
+  "origin": "Forêt Nord",
+  "destination": "Scierie Sud",
+  "status": "planned",
+  "wood_species": "Teak"
+}
+```
+
+**Cycle de vie d'une mission** :
+```
+┌─────────┐
+│ planned │ ←─ Créée par superviseur
+└────┬────┘
+     │ start()
+     ↓
+┌────────────┐
+│ in_progress│ ←─ Mission en cours d'exécution
+└────┬────────┘
+     │ complete()
+     ↓
+┌───────────┐
+│ completed │ ←─ Livrée (carburant, km enregistré)
+└────┬──────┘
+     │ submit()
+     ↓
+┌──────────┐
+│ submitted│ ←─ En attente d'approbation superviseur
+└────┬─────┘
+     │ approve() ou reject()
+     ↓
+┌──────────┐ ou ┌──────────┐
+│ approved │     │ rejected │
+└──────────┘     └──────────┘
+```
+
+**Statuts des checkpoints** :
+- `pickup` — Chargement
+- `dropoff` — Déchargement
+- `rest_stop` — Arrêt repos
+- `fuel_stop` — Ravitaillement carburant
+- `other` — Autre
+
+**Filtres sur `GET /logistics/missions`** :
+- `company_id` : Par entreprise
+- `segment` : Par type cargo (wood, fuel, containers)
+- `status` : Par statut (planned, in_progress, completed, submitted, approved, rejected, cancelled)
+- `driver_id` : Par conducteur/équipe
+- `vehicle_id` : Par véhicule
+- `date_from`, `date_to` : Par plage de dates
+- `search` : Recherche par destination
+- `skip`, `limit` : Pagination
+
+### 3.5 Gestion des utilisateurs conducteurs (Driver User Management)
+
+Permet de créer un compte utilisateur système + enregistrement conducteur en une seule opération, utile pour la gestion superviseur.
+
+```http
+# CRÉER CONDUCTEUR + UTILISATEUR
+POST   /logistics/users                           → DriverUserResponse (201 Created)
+
+# LISTER CONDUCTEURS AVEC COMPTES UTILISATEUR
+GET    /logistics/users                           → DriverUserListResponse
+
+# ACTIVER/DÉSACTIVER COMPTE CONDUCTEUR
+PUT    /logistics/users/{driver_id}/toggle-active → DriverUserResponse
+```
+
+**Exemple de requête `POST /logistics/users`** :
+```json
+{
+  "company_id": 1,
+  "first_name": "Jean",
+  "last_name": "Dupont",
+  "email": "jean.dupont@example.com",
+  "phone": "+242123456789",
+  "username": "jean.dupont",
+  "password": "SecurePassword123!",
+  "role": "driver",
+  "license_number": "BJ-123456789",
+  "license_expiry": "2025-12-31",
+  "license_types": ["HE", "HC", "HD"],
+  "status": "active"
+}
+```
+
+**Réponse** :
+```json
+{
+  "driver_id": 5,
+  "user_id": 42,
+  "first_name": "Jean",
+  "last_name": "Dupont",
+  "email": "jean.dupont@example.com",
+  "username": "jean.dupont",
+  "driver_status": "active",
+  "user_status": "active",
+  "created_at": "2024-01-15T10:00:00Z"
+}
+```
+
+**Filtres sur `GET /logistics/users`** :
+- `company_id` : Par entreprise
+- `role` : driver, motor_boy
+- `search` : Par nom ou email
+- `skip`, `limit` : Pagination
+
+### 3.6 Dashboard
 
 ```http
 GET    /logistics/dashboard                       → LogisticsDashboardResponse
@@ -253,8 +396,8 @@ GET    /logistics/dashboard                       → LogisticsDashboardResponse
     "alerts_count": 5
   },
   "alerts": [
-    { "type": "document_expiry", "entity_id": 1, "entity_type": "vehicle", "message": "Assurance expire dans 7 jours" },
-    { "type": "maintenance_due", "entity_id": 2, "entity_type": "vehicle", "message": "Maintenance prévue demain" },
+    { "type": "mission_pending_approval", "entity_id": 1, "entity_type": "mission", "message": "Mission MIS-0001 en attente d'approbation" },
+    { "type": "fuel_overconsumption", "entity_id": 5, "entity_type": "vehicle", "message": "Véhicule LOG-0005 surconsomme" },
     ...
   ]
 }
@@ -264,7 +407,7 @@ GET    /logistics/dashboard                       → LogisticsDashboardResponse
 
 ## 4. Permissions (granulaires)
 
-Le module logistique utilise **50+ permissions** stockées en booléens dans la table `user_permissions` :
+Le module logistique utilise **60+ permissions** stockées en booléens dans la table `user_permissions` :
 
 ### Catégories de permissions
 
@@ -277,7 +420,7 @@ Le module logistique utilise **50+ permissions** stockées en booléens dans la 
 | | `logistics_vehicles_edit` | Modifier / archiver un véhicule |
 | | `logistics_vehicles_delete` | Supprimer définitivement un véhicule |
 | **Conducteurs** | `logistics_drivers_view` | Voir la liste des conducteurs |
-| | `logistics_drivers_create` | Créer un conducteur |
+| | `logistics_drivers_create` | Créer un conducteur (+ utilisateur système) |
 | | `logistics_drivers_edit` | Modifier un conducteur |
 | | `logistics_drivers_delete` | Supprimer un conducteur |
 | **Équipes** | `logistics_teams_view` | Voir la liste des équipes |
@@ -285,9 +428,17 @@ Le module logistique utilise **50+ permissions** stockées en booléens dans la 
 | | `logistics_teams_edit` | Modifier une équipe |
 | | `logistics_teams_delete` | Supprimer une équipe |
 | **Missions** | `logistics_missions_view` | Voir les missions |
+| | `logistics_missions_view_own` | Voir seulement ses missions (conducteur) |
 | | `logistics_missions_create` | Créer une mission |
-| | `logistics_missions_edit` | Modifier une mission |
-| ... | ... (carburant, maintenance, pneus, documents, financier, rapports) | ... |
+| | `logistics_missions_edit` | Modifier/annuler une mission |
+| | `logistics_missions_delete` | Supprimer une mission |
+| | `logistics_missions_submit` | Soumettre ou compléter une mission |
+| | `logistics_missions_approve` | Approuver / rejeter une mission |
+| **Carburant** | `logistics_fuel_view` | Voir les logs carburant |
+| | `logistics_fuel_create` | Créer un log carburant |
+| | `logistics_fuel_edit` | Modifier/supprimer un log |
+| | `logistics_fuel_alerts` | Voir les alertes surconsommation |
+| ... | ... (autres) | ... |
 
 ### Exemple d'utilisation en code
 
@@ -388,8 +539,16 @@ Voir `app/schemas/schema_logistics.py` pour les modèles complets.
 - `VehicleUpdate` — Modifier un véhicule (tous champs optionnels)
 - `DriverCreate` — Créer un conducteur
 - `DriverUpdate` — Modifier un conducteur
+- `DriverUserCreate` — Créer conducteur + utilisateur système
 - `TeamCreate` — Créer une équipe
 - `TeamUpdate` — Modifier une équipe
+- `MissionCreate` — Créer une mission
+- `MissionUpdate` — Modifier une mission
+- `MissionCompleteRequest` — Compléter mission (km, carburant)
+- `MissionRejectRequest` — Rejeter mission (motif)
+- `CheckpointCreate` — Ajouter checkpoint
+- `FuelLogCreate` — Enregistrer log carburant
+- `FuelLogUpdate` — Modifier log carburant
 
 ### Modèles de réponse
 
@@ -397,8 +556,16 @@ Voir `app/schemas/schema_logistics.py` pour les modèles complets.
 - `VehicleListResponse` — Liste paginée de véhicules
 - `DriverResponse` — Conducteur (détail complet)
 - `DriverListResponse` — Liste paginée de conducteurs
+- `DriverUserResponse` — Conducteur + utilisateur système
+- `DriverUserListResponse` — Liste conducteurs avec comptes
 - `TeamDetailResponse` — Équipe avec membres embedés
-- `LogisticsDashboardResponse` — Statistiques +  alertes
+- `MissionResponse` — Mission (détail complet)
+- `MissionListResponse` — Liste paginée de missions
+- `CheckpointResponse` — Checkpoint de mission
+- `FuelLogResponse` — Log carburant
+- `FuelLogListResponse` — Liste logs carburant
+- `FuelAlertListResponse` — Alertes surconsommation
+- `LogisticsDashboardResponse` — Statistiques + alertes
 - `NextReferenceResponse` — Prochaine référence générée
 
 ---
@@ -444,25 +611,30 @@ async function getDashboard() {
 
 ---
 
-## 11. Roadmap v1.0+
+## 11. Statut des fonctionnalités
 
-- [ ] **Missions avancées**
-  - [ ] Planification d'itinéraires (intégration Google Maps)
-  - [ ] Real-time GPS tracking des véhicules
-  - [ ] Notifications push pour les checkpoints
-  
-- [ ] **Rapports et Analytics**
-  - [ ] Export Excel missions / carburant / maintenance
-  - [ ] KPIs : consommation moyenne, temps moyen par trajet, rentabilité
-  - [ ] Comparaison par conducteur / équipe / véhicule
-  
-- [ ] **Maintenance prédictive**
-  - [ ] Alertes basées sur l'état général (mileage, age)
-  - [ ] Intégration historique maintenance pour prédiction
-  
-- [ ] **Intégration OBD**
-  - [ ] Lecture capteurs véhicules (consommation real-time, température moteur)
-  - [ ] Alertes instantanées surconsommation
+### ✅ Implémentées (v0.17.0)
+- Gestion véhicules (CRUD, archivage, références auto)
+- Gestion conducteurs (CRUD, comptes utilisateur liés)
+- Gestion équipes (CRUD, composition dynamique)
+- Gestion missions (CRUD, workflows complets, checkpoints)
+- Logs carburant (CRUD, alertes surconsommation)
+- Dashboard logistique (statistiques, alertes)
+- Permissions granulaires (60+)
+- Multi-entreprises scopé
+- Audit logging sur toutes les actions
+
+### ⚠️ Planifiées (v1.1+)
+- Maintenance préventive (CRUD, historique, alertes)
+- Gestion pneus (usure %, changements, alertes)
+- Documents administratifs (permis, assurance, inspection)
+- Rapports & Analytics (Excel, KPIs, comparaisons)
+- GPS real-time tracking des véhicules
+- Planification itinéraires (intégration Google Maps)
+- Prédiction maintenance basée sur ML
+- Intégration OBD (capteurs véhicules)
+- Notifications push checkpoints
+- Export données (missions, carburant, rapports)
 
 ---
 
@@ -479,6 +651,20 @@ A: Voir table `LogisticsTire` : colonne `current_km` + `max_km` = wear %. Chaque
 
 ---
 
+## 13. Migration depuis v0.16.0 → v0.17.0
+
+Aucune migration base de données requise. Les nouvelles fonctionnalités (Driver User Management) utilisent les tables existantes.
+
+**Changes API** :
+- Nouveaux endpoints `/logistics/users/*` pour gestion conducteurs + comptes utilisateur
+- Missions : cycles de vie enrichis (submit, approve, reject)
+- Checkpoints : API complète (POST, GET, DELETE)
+- Permissions : +10 (~60 total)
+
+Tous les anciens endpoints v0.16.0 restent compatibles (backward-compatible).
+
+---
+
 **Auteur**: Audace API Team  
-**Dernière mise à jour**: 2024-01-20  
+**Dernière mise à jour**: 2026-04-09  
 **Licence**: Propriétaire

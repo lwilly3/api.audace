@@ -28,6 +28,33 @@ from app.db.crud.crud_logistics import (
     update_team,
     delete_team,
     get_logistics_dashboard,
+    get_next_mission_reference,
+    peek_next_mission_reference,
+    create_mission,
+    get_missions,
+    get_mission,
+    update_mission,
+    delete_mission,
+    get_driver_missions,
+    start_mission,
+    complete_mission,
+    cancel_mission,
+    submit_mission,
+    approve_mission,
+    reject_mission,
+    add_checkpoint,
+    get_mission_checkpoints,
+    delete_checkpoint,
+    create_fuel_log,
+    get_fuel_logs,
+    get_fuel_log,
+    update_fuel_log,
+    delete_fuel_log,
+    get_vehicle_fuel_logs,
+    get_fuel_alerts,
+    create_driver_user,
+    get_driver_users,
+    toggle_driver_user_active,
 )
 from app.models.model_user import User
 from app.schemas.schema_logistics import (
@@ -46,6 +73,22 @@ from app.schemas.schema_logistics import (
     TeamListResponse,
     NextReferenceResponse,
     LogisticsDashboardResponse,
+    MissionCreate,
+    MissionUpdate,
+    MissionResponse,
+    MissionListResponse,
+    MissionCompleteRequest,
+    MissionRejectRequest,
+    CheckpointCreate,
+    CheckpointResponse,
+    FuelLogCreate,
+    FuelLogUpdate,
+    FuelLogResponse,
+    FuelLogListResponse,
+    FuelAlertListResponse,
+    DriverUserCreate,
+    DriverUserResponse,
+    DriverUserListResponse,
 )
 
 router = APIRouter(prefix="/logistics", tags=["logistics"])
@@ -119,12 +162,12 @@ def list_vehicles(
 
     result = get_vehicles(
         db,
-        skip=skip,
-        limit=limit,
+        page=(skip // limit) + 1,
+        page_size=limit,
         company_id=company_id,
         search=search,
         segment=segment,
-        status=status,
+        status_id=None,
         is_archived=is_archived,
     )
     return result
@@ -235,12 +278,11 @@ def list_drivers(
 
     result = get_drivers(
         db,
-        skip=skip,
-        limit=limit,
+        page=(skip // limit) + 1,
+        page_size=limit,
         company_id=company_id,
         role=role,
         status=status,
-        search=search,
     )
     return result
 
@@ -333,11 +375,10 @@ def list_teams(
 
     result = get_teams(
         db,
-        skip=skip,
-        limit=limit,
+        page=(skip // limit) + 1,
+        page_size=limit,
         company_id=company_id,
         status=status,
-        segment=segment,
     )
     return result
 
@@ -392,6 +433,64 @@ def delete_team_endpoint(
 
 
 # ============================================================================
+# DRIVER USER MANAGEMENT ENDPOINTS (gestion par superviseur)
+# ============================================================================
+
+@router.post("/users", response_model=DriverUserResponse, status_code=201)
+def create_driver_user_endpoint(
+    data: DriverUserCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Create a user account + driver record in one operation."""
+    if not current_user.permissions.logistics_drivers_create:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return create_driver_user(db, data, current_user.id, current_user.username)
+
+
+@router.get("/users", response_model=DriverUserListResponse)
+def list_driver_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    company_id: int = Query(None),
+    role: str = Query(None),
+    search: str = Query(None),
+):
+    """List drivers with user accounts."""
+    if not current_user.permissions.logistics_drivers_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    if not current_user.permissions.logistics_view_all_companies:
+        if hasattr(current_user, 'company_id'):
+            company_id = current_user.company_id
+
+    return get_driver_users(
+        db,
+        page=(skip // limit) + 1,
+        page_size=limit,
+        company_id=company_id,
+        role=role,
+        search=search,
+    )
+
+
+@router.put("/users/{driver_id}/toggle-active", response_model=DriverUserResponse)
+def toggle_driver_active_endpoint(
+    driver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Activate/deactivate a driver's user account."""
+    if not current_user.permissions.logistics_drivers_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return toggle_driver_user_active(db, driver_id)
+
+
+# ============================================================================
 # DASHBOARD ENDPOINTS
 # ============================================================================
 
@@ -412,3 +511,412 @@ def get_dashboard(
 
     dashboard = get_logistics_dashboard(db, company_id=company_id)
     return dashboard
+
+
+# ============================================================================
+# MISSIONS ENDPOINTS
+# ============================================================================
+
+@router.get("/missions/reference/peek", response_model=NextReferenceResponse)
+def peek_mission_reference(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Preview next mission reference without incrementing counter."""
+    if not current_user.permissions.logistics_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    next_ref = peek_next_mission_reference(db)
+    return NextReferenceResponse(reference=next_ref)
+
+
+@router.get("/missions/reference/next", response_model=NextReferenceResponse)
+def get_mission_reference(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Get and increment the next mission reference."""
+    if not current_user.permissions.logistics_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    next_ref = get_next_mission_reference(db)
+    return NextReferenceResponse(reference=next_ref)
+
+
+@router.get("/missions/driver/{driver_id}", response_model=MissionListResponse)
+def list_driver_missions(
+    driver_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    status: str = Query(None),
+):
+    """List missions for a specific driver (Mes Missions)."""
+    if not (current_user.permissions.logistics_missions_view or current_user.permissions.logistics_missions_view_own):
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    result = get_driver_missions(
+        db,
+        driver_id=driver_id,
+        page=(skip // limit) + 1,
+        page_size=limit,
+        status_filter=status,
+    )
+    return result
+
+
+@router.post("/missions", response_model=MissionResponse)
+def create_mission_endpoint(
+    mission_data: MissionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Create a new mission."""
+    if not current_user.permissions.logistics_missions_create:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    mission = create_mission(db, mission_data, current_user.id, current_user.username)
+    return mission
+
+
+@router.get("/missions", response_model=MissionListResponse)
+def list_missions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    company_id: int = Query(None),
+    segment: str = Query(None),
+    status: str = Query(None),
+    driver_id: int = Query(None),
+    vehicle_id: int = Query(None),
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+    search: str = Query(None),
+):
+    """List missions with filtering and pagination."""
+    if not current_user.permissions.logistics_missions_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    if not current_user.permissions.logistics_view_all_companies:
+        if hasattr(current_user, 'company_id'):
+            company_id = current_user.company_id
+
+    from datetime import datetime as dt
+    parsed_date_from = dt.fromisoformat(date_from) if date_from else None
+    parsed_date_to = dt.fromisoformat(date_to) if date_to else None
+
+    result = get_missions(
+        db,
+        page=(skip // limit) + 1,
+        page_size=limit,
+        segment=segment,
+        status=status,
+        driver_id=driver_id,
+        vehicle_id=vehicle_id,
+        date_from=parsed_date_from,
+        date_to=parsed_date_to,
+        search=search,
+        company_id=company_id,
+    )
+    return result
+
+
+@router.get("/missions/{mission_id}", response_model=MissionResponse)
+def get_mission_endpoint(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Get a specific mission by ID."""
+    if not current_user.permissions.logistics_missions_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return get_mission(db, mission_id)
+
+
+@router.put("/missions/{mission_id}", response_model=MissionResponse)
+def update_mission_endpoint(
+    mission_id: int,
+    mission_data: MissionUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Update a mission."""
+    if not current_user.permissions.logistics_missions_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return update_mission(db, mission_id, mission_data, current_user.id)
+
+
+@router.delete("/missions/{mission_id}")
+def delete_mission_endpoint(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Delete a mission (soft delete)."""
+    if not current_user.permissions.logistics_missions_delete:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    success = delete_mission(db, mission_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    return {"message": "Mission deleted successfully"}
+
+
+@router.put("/missions/{mission_id}/start", response_model=MissionResponse)
+def start_mission_endpoint(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Start a mission: planned → in_progress."""
+    if not current_user.permissions.logistics_missions_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return start_mission(db, mission_id, current_user.id)
+
+
+@router.put("/missions/{mission_id}/complete", response_model=MissionResponse)
+def complete_mission_endpoint(
+    mission_id: int,
+    data: MissionCompleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Complete a mission: in_progress → completed."""
+    if not current_user.permissions.logistics_missions_submit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return complete_mission(db, mission_id, data, current_user.id)
+
+
+@router.put("/missions/{mission_id}/cancel", response_model=MissionResponse)
+def cancel_mission_endpoint(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Cancel a mission: planned|in_progress → cancelled."""
+    if not current_user.permissions.logistics_missions_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return cancel_mission(db, mission_id, current_user.id)
+
+
+@router.put("/missions/{mission_id}/submit", response_model=MissionResponse)
+def submit_mission_endpoint(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Submit a completed mission for approval."""
+    if not current_user.permissions.logistics_missions_submit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return submit_mission(db, mission_id, current_user.id)
+
+
+@router.put("/missions/{mission_id}/approve", response_model=MissionResponse)
+def approve_mission_endpoint(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Approve a submitted mission."""
+    if not current_user.permissions.logistics_missions_approve:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return approve_mission(db, mission_id, current_user.id)
+
+
+@router.put("/missions/{mission_id}/reject", response_model=MissionResponse)
+def reject_mission_endpoint(
+    mission_id: int,
+    data: MissionRejectRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Reject a submitted mission."""
+    if not current_user.permissions.logistics_missions_approve:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return reject_mission(db, mission_id, data, current_user.id)
+
+
+# ============================================================================
+# CHECKPOINTS ENDPOINTS
+# ============================================================================
+
+@router.post("/missions/{mission_id}/checkpoints", response_model=CheckpointResponse)
+def add_checkpoint_endpoint(
+    mission_id: int,
+    data: CheckpointCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Add a checkpoint to a mission."""
+    if not current_user.permissions.logistics_missions_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return add_checkpoint(db, mission_id, data)
+
+
+@router.get("/missions/{mission_id}/checkpoints", response_model=list[CheckpointResponse])
+def list_mission_checkpoints(
+    mission_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """List checkpoints for a mission."""
+    if not current_user.permissions.logistics_missions_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return get_mission_checkpoints(db, mission_id)
+
+
+@router.delete("/checkpoints/{checkpoint_id}")
+def delete_checkpoint_endpoint(
+    checkpoint_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Delete a checkpoint."""
+    if not current_user.permissions.logistics_missions_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    success = delete_checkpoint(db, checkpoint_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Checkpoint not found")
+    return {"message": "Checkpoint deleted successfully"}
+
+
+# ============================================================================
+# FUEL LOGS ENDPOINTS
+# ============================================================================
+
+@router.get("/fuel/alerts", response_model=FuelAlertListResponse)
+def list_fuel_alerts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+    company_id: int = Query(None),
+):
+    """Get fuel overconsumption alerts."""
+    if not current_user.permissions.logistics_fuel_alerts:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    if not current_user.permissions.logistics_view_all_companies:
+        if hasattr(current_user, 'company_id'):
+            company_id = current_user.company_id
+
+    return get_fuel_alerts(db, company_id=company_id)
+
+
+@router.get("/fuel/vehicle/{vehicle_id}", response_model=FuelLogListResponse)
+def list_vehicle_fuel_logs(
+    vehicle_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """List fuel logs for a specific vehicle."""
+    if not current_user.permissions.logistics_fuel_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return get_vehicle_fuel_logs(
+        db,
+        vehicle_id=vehicle_id,
+        page=(skip // limit) + 1,
+        page_size=limit,
+    )
+
+
+@router.post("/fuel", response_model=FuelLogResponse)
+def create_fuel_log_endpoint(
+    fuel_data: FuelLogCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Create a new fuel log."""
+    if not current_user.permissions.logistics_fuel_create:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return create_fuel_log(db, fuel_data, current_user.id, current_user.username)
+
+
+@router.get("/fuel", response_model=FuelLogListResponse)
+def list_fuel_logs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    vehicle_id: int = Query(None),
+    driver_id: int = Query(None),
+    mission_id: int = Query(None),
+    date_from: str = Query(None),
+    date_to: str = Query(None),
+):
+    """List fuel logs with filtering and pagination."""
+    if not current_user.permissions.logistics_fuel_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    from datetime import datetime as dt
+    parsed_date_from = dt.fromisoformat(date_from) if date_from else None
+    parsed_date_to = dt.fromisoformat(date_to) if date_to else None
+
+    return get_fuel_logs(
+        db,
+        page=(skip // limit) + 1,
+        page_size=limit,
+        vehicle_id=vehicle_id,
+        driver_id=driver_id,
+        mission_id=mission_id,
+        date_from=parsed_date_from,
+        date_to=parsed_date_to,
+    )
+
+
+@router.get("/fuel/{fuel_id}", response_model=FuelLogResponse)
+def get_fuel_log_endpoint(
+    fuel_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Get a specific fuel log by ID."""
+    if not current_user.permissions.logistics_fuel_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return get_fuel_log(db, fuel_id)
+
+
+@router.put("/fuel/{fuel_id}", response_model=FuelLogResponse)
+def update_fuel_log_endpoint(
+    fuel_id: int,
+    fuel_data: FuelLogUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Update a fuel log."""
+    if not current_user.permissions.logistics_fuel_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    return update_fuel_log(db, fuel_id, fuel_data, current_user.id)
+
+
+@router.delete("/fuel/{fuel_id}")
+def delete_fuel_log_endpoint(
+    fuel_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Delete a fuel log (soft delete)."""
+    if not current_user.permissions.logistics_fuel_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    success = delete_fuel_log(db, fuel_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Fuel log not found")
+    return {"message": "Fuel log deleted successfully"}

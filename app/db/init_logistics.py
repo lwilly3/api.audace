@@ -47,13 +47,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "frigorifique", "label": "Frigo (denrées)", "description": "Camion réfrigéré pour produits alimentaires"},
             {"name": "autres", "label": "Autres", "description": "Autres types de véhicules"},
         ]
-        for seg in vehicle_segments:
+        for i, seg in enumerate(vehicle_segments):
             db.add(LogisticsConfigOption(
                 list_type="vehicle_segment",
                 name=seg["name"],
-                label=seg["label"],
                 description=seg["description"],
-                sort_order=vehicle_segments.index(seg)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -65,13 +64,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "retired", "label": "Retiré du service", "description": "Véhicule retiré définitivement"},
             {"name": "damaged", "label": "Endommagé", "description": "Véhicule non opérationnel suite à dommages"},
         ]
-        for status in vehicle_statuses:
+        for i, status in enumerate(vehicle_statuses):
             db.add(LogisticsConfigOption(
                 list_type="vehicle_status",
                 name=status["name"],
-                label=status["label"],
                 description=status["description"],
-                sort_order=vehicle_statuses.index(status)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -81,13 +79,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "driver", "label": "Chauffeur", "description": "Conducteur principal du véhicule"},
             {"name": "motor_boy", "label": "Motor Boy", "description": "Assistant / mécanicien du véhicule"},
         ]
-        for role in driver_roles:
+        for i, role in enumerate(driver_roles):
             db.add(LogisticsConfigOption(
                 list_type="driver_role",
                 name=role["name"],
-                label=role["label"],
                 description=role["description"],
-                sort_order=driver_roles.index(role)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -99,13 +96,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "retired", "label": "Retraité", "description": "Chauffeur à la retraite"},
             {"name": "suspended", "label": "Suspendu", "description": "Chauffeur suspendu"},
         ]
-        for status in driver_statuses:
+        for i, status in enumerate(driver_statuses):
             db.add(LogisticsConfigOption(
                 list_type="driver_status",
                 name=status["name"],
-                label=status["label"],
                 description=status["description"],
-                sort_order=driver_statuses.index(status)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -115,13 +111,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "active", "label": "Active", "description": "Équipe en service"},
             {"name": "inactive", "label": "Inactive", "description": "Équipe inactive"},
         ]
-        for status in team_statuses:
+        for i, status in enumerate(team_statuses):
             db.add(LogisticsConfigOption(
                 list_type="team_status",
                 name=status["name"],
-                label=status["label"],
                 description=status["description"],
-                sort_order=team_statuses.index(status)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -133,13 +128,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "completed", "label": "Complétée", "description": "Mission terminée avec succès"},
             {"name": "cancelled", "label": "Annulée", "description": "Mission annulée"},
         ]
-        for status in mission_statuses:
+        for i, status in enumerate(mission_statuses):
             db.add(LogisticsConfigOption(
                 list_type="mission_status",
                 name=status["name"],
-                label=status["label"],
                 description=status["description"],
-                sort_order=mission_statuses.index(status)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -152,13 +146,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "stop", "label": "Arrêt", "description": "Arrêt intermédiaire"},
             {"name": "arrival", "label": "Arrivée", "description": "Point d'arrivée final"},
         ]
-        for ctype in checkpoint_types:
+        for i, ctype in enumerate(checkpoint_types):
             db.add(LogisticsConfigOption(
                 list_type="checkpoint_type",
                 name=ctype["name"],
-                label=ctype["label"],
                 description=ctype["description"],
-                sort_order=checkpoint_types.index(ctype)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -172,13 +165,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "materials", "label": "Matériaux", "description": "Matériaux en vrac (gravier, sable, etc.)"},
             {"name": "other", "label": "Autre", "description": "Autres types de cargo"},
         ]
-        for cargo in cargo_types:
+        for i, cargo in enumerate(cargo_types):
             db.add(LogisticsConfigOption(
                 list_type="cargo_type",
                 name=cargo["name"],
-                label=cargo["label"],
                 description=cargo["description"],
-                sort_order=cargo_types.index(cargo)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -189,13 +181,12 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "corrective", "label": "Corrective", "description": "Réparation suite à panne"},
             {"name": "inspection", "label": "Inspection", "description": "Inspection technique ou contrôle"},
         ]
-        for mtype in maintenance_types:
+        for i, mtype in enumerate(maintenance_types):
             db.add(LogisticsConfigOption(
                 list_type="maintenance_type",
                 name=mtype["name"],
-                label=mtype["label"],
                 description=mtype["description"],
-                sort_order=maintenance_types.index(mtype)
+                sort_order=i,
             ))
 
         # ====================================================================
@@ -209,30 +200,31 @@ def initialize_logistics_config(db: Session) -> None:
             {"name": "medical", "label": "Médical", "description": "Document médical (visite médicale)"},
             {"name": "other", "label": "Autre", "description": "Autres documents"},
         ]
-        for dtype in document_types:
+        for i, dtype in enumerate(document_types):
             db.add(LogisticsConfigOption(
                 list_type="document_type",
                 name=dtype["name"],
-                label=dtype["label"],
                 description=dtype["description"],
-                sort_order=document_types.index(dtype)
+                sort_order=i,
             ))
 
         # ====================================================================
-        # GLOBAL SETTINGS
+        # GLOBAL SETTINGS (key-value store)
         # ====================================================================
-        # Check if global settings exists
-        existing_settings = db.query(LogisticsGlobalSettings).first()
-        if not existing_settings:
-            settings = LogisticsGlobalSettings(
-                reference_prefix_vehicle="LOG",
-                reference_counter_vehicle=0,
-                fuel_consumption_alert_threshold=8.0,  # Alert if > 8 L/100km
-                maintenance_alert_days=30,
-                document_expiry_alert_days=30,
-                tire_wear_percent_alert=20,  # Alert if wear >= 20%
-            )
-            db.add(settings)
+        settings_defaults = [
+            {"key": "reference_prefix_vehicle", "value": "LOG", "value_type": "string", "description": "Préfixe référence véhicule"},
+            {"key": "reference_counter_vehicle", "value": "0", "value_type": "int", "description": "Compteur référence véhicule"},
+            {"key": "reference_prefix_mission", "value": "MIS", "value_type": "string", "description": "Préfixe référence mission"},
+            {"key": "reference_counter_mission", "value": "0", "value_type": "int", "description": "Compteur référence mission"},
+            {"key": "fuel_consumption_alert_threshold", "value": "8.0", "value_type": "float", "description": "Seuil alerte consommation L/100km"},
+            {"key": "maintenance_alert_days", "value": "30", "value_type": "int", "description": "Jours avant alerte maintenance"},
+            {"key": "document_expiry_alert_days", "value": "30", "value_type": "int", "description": "Jours avant alerte expiration document"},
+            {"key": "tire_wear_percent_alert", "value": "20", "value_type": "int", "description": "Seuil alerte usure pneumatique (%)"},
+        ]
+        for setting in settings_defaults:
+            existing_setting = db.query(LogisticsGlobalSettings).filter_by(key=setting["key"]).first()
+            if not existing_setting:
+                db.add(LogisticsGlobalSettings(**setting))
 
         db.commit()
         logger.info("✅ Logistics configuration initialized successfully")

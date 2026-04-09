@@ -3,7 +3,7 @@ Schémas Pydantic pour le module Logistique.
 
 Validation et sérialisation des données pour l'API REST.
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional, List
@@ -234,6 +234,326 @@ class GlobalSettingsResponse(BaseModel):
 
 
 # ════════════════════════════════════════════════════════════════
+# DASHBOARD
+# ════════════════════════════════════════════════════════════════
+
+# ════════════════════════════════════════════════════════════════
+# MISSIONS
+# ════════════════════════════════════════════════════════════════
+
+class MissionBase(BaseModel):
+    vehicle_id: int
+    driver_id: int
+    segment: str
+    departure_location: str
+    arrival_location: str
+    planned_date: datetime
+
+
+class MissionCreate(MissionBase):
+    co_driver_id: Optional[int] = None
+    team_id: Optional[int] = None
+    client_name: Optional[str] = None
+    client_reference: Optional[str] = None
+    departure_lat: Optional[float] = None
+    departure_lng: Optional[float] = None
+    arrival_lat: Optional[float] = None
+    arrival_lng: Optional[float] = None
+    distance_planned_km: Optional[float] = None
+    mileage_start: Optional[int] = None
+    cargo_type_id: Optional[int] = None
+    cargo_description: Optional[str] = None
+    cargo_loaded_qty: Optional[Decimal] = None
+    cargo_unit: Optional[str] = None
+    # Grumier
+    wood_species: Optional[str] = None
+    log_count: Optional[int] = None
+    # Citerne
+    product_name: Optional[str] = None
+    depotage_cert_number: Optional[str] = None
+    tank_calibrated: Optional[bool] = None
+    # Plateau
+    container_count: Optional[int] = None
+    fill_rate_percent: Optional[Decimal] = None
+    # Financier
+    revenue: Optional[Decimal] = None
+    toll_cost: Optional[Decimal] = None
+    other_costs: Optional[Decimal] = None
+    notes: Optional[str] = None
+
+
+class MissionUpdate(BaseModel):
+    vehicle_id: Optional[int] = None
+    driver_id: Optional[int] = None
+    co_driver_id: Optional[int] = None
+    team_id: Optional[int] = None
+    segment: Optional[str] = None
+    client_name: Optional[str] = None
+    client_reference: Optional[str] = None
+    departure_location: Optional[str] = None
+    departure_lat: Optional[float] = None
+    departure_lng: Optional[float] = None
+    arrival_location: Optional[str] = None
+    arrival_lat: Optional[float] = None
+    arrival_lng: Optional[float] = None
+    distance_planned_km: Optional[float] = None
+    planned_date: Optional[datetime] = None
+    mileage_start: Optional[int] = None
+    cargo_type_id: Optional[int] = None
+    cargo_description: Optional[str] = None
+    cargo_loaded_qty: Optional[Decimal] = None
+    cargo_unit: Optional[str] = None
+    wood_species: Optional[str] = None
+    log_count: Optional[int] = None
+    product_name: Optional[str] = None
+    depotage_cert_number: Optional[str] = None
+    tank_calibrated: Optional[bool] = None
+    container_count: Optional[int] = None
+    fill_rate_percent: Optional[Decimal] = None
+    revenue: Optional[Decimal] = None
+    toll_cost: Optional[Decimal] = None
+    other_costs: Optional[Decimal] = None
+    notes: Optional[str] = None
+
+
+class MissionResponse(MissionBase):
+    id: int
+    reference: str
+    co_driver_id: Optional[int]
+    team_id: Optional[int]
+    status: str
+    client_name: Optional[str]
+    client_reference: Optional[str]
+    departure_lat: Optional[float]
+    departure_lng: Optional[float]
+    arrival_lat: Optional[float]
+    arrival_lng: Optional[float]
+    distance_planned_km: Optional[float]
+    distance_actual_km: Optional[float]
+    mileage_start: Optional[int]
+    mileage_end: Optional[int]
+    actual_departure: Optional[datetime]
+    actual_arrival: Optional[datetime]
+    return_empty: bool
+    cargo_type_id: Optional[int]
+    cargo_description: Optional[str]
+    cargo_loaded_qty: Optional[Decimal]
+    cargo_unloaded_qty: Optional[Decimal]
+    cargo_unit: Optional[str]
+    cargo_loss_qty: Optional[Decimal]
+    cargo_loss_reason: Optional[str]
+    wood_species: Optional[str]
+    log_count: Optional[int]
+    product_name: Optional[str]
+    depotage_cert_number: Optional[str]
+    tank_calibrated: Optional[bool]
+    container_count: Optional[int]
+    fill_rate_percent: Optional[Decimal]
+    revenue: Optional[Decimal]
+    fuel_cost: Optional[Decimal]
+    toll_cost: Optional[Decimal]
+    other_costs: Optional[Decimal]
+    total_cost: Optional[Decimal]
+    submitted_by: Optional[int]
+    submitted_at: Optional[datetime]
+    approved_by: Optional[int]
+    approved_at: Optional[datetime]
+    rejection_reason: Optional[str]
+    photos_json: Optional[list]
+    notes: Optional[str]
+    created_at: datetime
+    created_by: int
+    created_by_name: str
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class MissionListResponse(BaseModel):
+    items: List[MissionResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class MissionCompleteRequest(BaseModel):
+    mileage_end: int
+    distance_actual_km: Optional[float] = None
+    cargo_unloaded_qty: Optional[Decimal] = None
+    cargo_loss_qty: Optional[Decimal] = None
+    cargo_loss_reason: Optional[str] = None
+    return_empty: Optional[bool] = None
+    notes: Optional[str] = None
+
+
+class MissionRejectRequest(BaseModel):
+    rejection_reason: str
+
+
+# ════════════════════════════════════════════════════════════════
+# CHECKPOINTS
+# ════════════════════════════════════════════════════════════════
+
+class CheckpointCreate(BaseModel):
+    checkpoint_type: str
+    location_name: Optional[str] = None
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    arrived_at: datetime
+    departed_at: Optional[datetime] = None
+    wait_time_minutes: Optional[int] = None
+    cargo_quantity: Optional[Decimal] = None
+    cargo_unit: Optional[str] = None
+    mileage_at: Optional[int] = None
+    photos_json: Optional[list] = None
+    notes: Optional[str] = None
+
+
+class CheckpointResponse(BaseModel):
+    id: int
+    mission_id: int
+    checkpoint_type: str
+    location_name: Optional[str]
+    lat: Optional[float]
+    lng: Optional[float]
+    arrived_at: datetime
+    departed_at: Optional[datetime]
+    wait_time_minutes: Optional[int]
+    cargo_quantity: Optional[Decimal]
+    cargo_unit: Optional[str]
+    mileage_at: Optional[int]
+    photos_json: Optional[list]
+    notes: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ════════════════════════════════════════════════════════════════
+# CARBURANT (FUEL LOGS)
+# ════════════════════════════════════════════════════════════════
+
+class FuelLogBase(BaseModel):
+    vehicle_id: int
+    date: datetime
+    quantity_liters: Decimal
+    total_cost: Decimal
+    mileage_at: int
+
+
+class FuelLogCreate(FuelLogBase):
+    driver_id: Optional[int] = None
+    mission_id: Optional[int] = None
+    station_name: Optional[str] = None
+    fuel_type: Optional[str] = None
+    unit_price: Optional[Decimal] = None
+    is_full_tank: bool = True
+    receipt_url: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class FuelLogUpdate(BaseModel):
+    vehicle_id: Optional[int] = None
+    driver_id: Optional[int] = None
+    mission_id: Optional[int] = None
+    date: Optional[datetime] = None
+    station_name: Optional[str] = None
+    fuel_type: Optional[str] = None
+    quantity_liters: Optional[Decimal] = None
+    unit_price: Optional[Decimal] = None
+    total_cost: Optional[Decimal] = None
+    mileage_at: Optional[int] = None
+    is_full_tank: Optional[bool] = None
+    receipt_url: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class FuelLogResponse(FuelLogBase):
+    id: int
+    driver_id: Optional[int]
+    mission_id: Optional[int]
+    station_name: Optional[str]
+    fuel_type: Optional[str]
+    unit_price: Optional[Decimal]
+    consumption_l100km: Optional[Decimal]
+    is_full_tank: bool
+    receipt_url: Optional[str]
+    notes: Optional[str]
+    created_at: datetime
+    created_by: int
+    created_by_name: str
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class FuelLogListResponse(BaseModel):
+    items: List[FuelLogResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class FuelAlertResponse(BaseModel):
+    vehicle_id: int
+    registration_number: str
+    avg_consumption: float
+    threshold: float
+    alert_type: str
+
+
+class FuelAlertListResponse(BaseModel):
+    items: List[FuelAlertResponse]
+    total: int
+
+
+# ════════════════════════════════════════════════════════════════
+# UTILISATEURS CHAUFFEURS (gestion par superviseur)
+# ════════════════════════════════════════════════════════════════
+
+class DriverUserCreate(BaseModel):
+    """Création combinée User + LogisticsDriver."""
+    # Compte utilisateur
+    username: str
+    email: EmailStr
+    password: str
+    # Fiche chauffeur
+    first_name: str
+    last_name: str
+    role: str = "driver"  # "driver" ou "motor_boy"
+    phone: Optional[str] = None
+    company_id: int
+    license_types_json: Optional[List[str]] = None
+    license_expiry: Optional[date] = None
+    hire_date: Optional[date] = None
+    notes: Optional[str] = None
+
+
+class DriverUserResponse(BaseModel):
+    """Réponse combinée User + LogisticsDriver."""
+    # User info
+    user_id: int
+    username: str
+    email: str
+    is_active: bool
+    # Driver info
+    driver_id: int
+    first_name: str
+    last_name: str
+    role: str
+    company_id: int
+    status: str
+    created_at: datetime
+
+
+class DriverUserListResponse(BaseModel):
+    items: List[DriverUserResponse]
+    total: int
+    page: int
+    page_size: int
 # DASHBOARD
 # ════════════════════════════════════════════════════════════════
 
