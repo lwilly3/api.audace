@@ -268,16 +268,16 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
     "logistics_manage_settings": permissions.logistics_settings_manage,
 
     # Permissions pour le sous-module Pannes véhicules
-    "pannes_access_section": permissions.pannes_access_section,
-    "pannes_view": permissions.pannes_view,
-    "pannes_create": permissions.pannes_create,
-    "pannes_edit": permissions.pannes_edit,
-    "pannes_delete": permissions.pannes_delete,
-    "pannes_view_all_companies": permissions.pannes_view_all_companies,
-    "acteurs_view": permissions.acteurs_view,
-    "acteurs_create": permissions.acteurs_create,
-    "acteurs_edit": permissions.acteurs_edit,
-    "acteurs_link_account": permissions.acteurs_link_account,
+    "logistics_pannes_access_section": permissions.logistics_pannes_access_section,
+    "logistics_pannes_view": permissions.logistics_pannes_view,
+    "logistics_pannes_create": permissions.logistics_pannes_create,
+    "logistics_pannes_edit": permissions.logistics_pannes_edit,
+    "logistics_pannes_delete": permissions.logistics_pannes_delete,
+    "logistics_pannes_view_all_companies": permissions.logistics_pannes_view_all_companies,
+    "logistics_acteurs_view": permissions.logistics_acteurs_view,
+    "logistics_acteurs_create": permissions.logistics_acteurs_create,
+    "logistics_acteurs_edit": permissions.logistics_acteurs_edit,
+    "logistics_acteurs_link_account": permissions.logistics_acteurs_link_account,
 
     # Timestamp
     "granted_at": permissions.granted_at.isoformat() if permissions.granted_at else None
@@ -483,16 +483,16 @@ def initialize_user_permissions(db: Session, user_id: int):
     logistics_settings_manage=False,
 
     # Pannes véhicules
-    pannes_access_section=False,
-    pannes_view=False,
-    pannes_create=False,
-    pannes_edit=False,
-    pannes_delete=False,
-    pannes_view_all_companies=False,
-    acteurs_view=False,
-    acteurs_create=False,
-    acteurs_edit=False,
-    acteurs_link_account=False,
+    logistics_pannes_access_section=False,
+    logistics_pannes_view=False,
+    logistics_pannes_create=False,
+    logistics_pannes_edit=False,
+    logistics_pannes_delete=False,
+    logistics_pannes_view_all_companies=False,
+    logistics_acteurs_view=False,
+    logistics_acteurs_create=False,
+    logistics_acteurs_edit=False,
+    logistics_acteurs_link_account=False,
 )
         # Ajouter la nouvelle entrée dans la session de la base de données
         db.add(new_permissions)
@@ -855,16 +855,16 @@ def update_user_permissions(db: Session, user_id: int, permissions: Dict[str, bo
     'logistics_kpi_view',
     'logistics_reports_export',
     'logistics_manage_settings',
-    'pannes_access_section',
-    'pannes_view',
-    'pannes_create',
-    'pannes_edit',
-    'pannes_delete',
-    'pannes_view_all_companies',
-    'acteurs_view',
-    'acteurs_create',
-    'acteurs_edit',
-    'acteurs_link_account',
+    'logistics_pannes_access_section',
+    'logistics_pannes_view',
+    'logistics_pannes_create',
+    'logistics_pannes_edit',
+    'logistics_pannes_delete',
+    'logistics_pannes_view_all_companies',
+    'logistics_acteurs_view',
+    'logistics_acteurs_create',
+    'logistics_acteurs_edit',
+    'logistics_acteurs_link_account',
 }
 
         # Vérifier les permissions fournies

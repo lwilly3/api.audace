@@ -64,7 +64,7 @@ def get_dashboard_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """KPIs agrégés du module Gestion des Pannes."""
-    if not current_user.permissions.pannes_access_section:
+    if not current_user.permissions.logistics_pannes_access_section:
         raise HTTPException(status_code=403, detail="Accès au module Pannes refusé")
     return get_pannes_dashboard(db)
 
@@ -86,7 +86,7 @@ def list_fiches_pannes_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Liste des fiches de panne avec filtres."""
-    if not current_user.permissions.pannes_view:
+    if not current_user.permissions.logistics_pannes_view:
         raise HTTPException(status_code=403, detail="Permission pannes_view requise")
     return get_fiches_pannes(
         db,
@@ -107,7 +107,7 @@ def create_fiche_panne_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Créer une nouvelle fiche de panne avec ses acteurs liés."""
-    if not current_user.permissions.pannes_create:
+    if not current_user.permissions.logistics_pannes_create:
         raise HTTPException(status_code=403, detail="Permission pannes_create requise")
     fiche = create_fiche_panne(
         db, data,
@@ -125,7 +125,7 @@ def get_fiche_panne_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Détail d'une fiche de panne."""
-    if not current_user.permissions.pannes_view:
+    if not current_user.permissions.logistics_pannes_view:
         raise HTTPException(status_code=403, detail="Permission pannes_view requise")
     fiche = get_fiche_panne(db, fiche_id)
     if not fiche:
@@ -141,7 +141,7 @@ def update_fiche_panne_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Modifier une fiche (statut, champs, acteurs)."""
-    if not current_user.permissions.pannes_edit:
+    if not current_user.permissions.logistics_pannes_edit:
         raise HTTPException(status_code=403, detail="Permission pannes_edit requise")
     fiche = update_fiche_panne(db, fiche_id, data, user_id=current_user.id)
     if not fiche:
@@ -156,7 +156,7 @@ def delete_fiche_panne_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Supprimer une fiche de panne (admin uniquement)."""
-    if not current_user.permissions.pannes_delete:
+    if not current_user.permissions.logistics_pannes_delete:
         raise HTTPException(status_code=403, detail="Permission pannes_delete requise")
     deleted = delete_fiche_panne(db, fiche_id)
     if not deleted:
@@ -179,7 +179,7 @@ def list_acteurs_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Liste des acteurs avec recherche autocomplete."""
-    if not current_user.permissions.acteurs_view:
+    if not current_user.permissions.logistics_acteurs_view:
         raise HTTPException(status_code=403, detail="Permission acteurs_view requise")
     return get_acteurs(db, page=page, page_size=page_size,
                        search=search, role=role, actif=actif, societe=societe)
@@ -192,7 +192,7 @@ def create_acteur_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Créer un nouvel acteur (sans compte de connexion obligatoire)."""
-    if not current_user.permissions.acteurs_create:
+    if not current_user.permissions.logistics_acteurs_create:
         raise HTTPException(status_code=403, detail="Permission acteurs_create requise")
     return create_acteur(db, data)
 
@@ -204,7 +204,7 @@ def get_acteur_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Détail d'un acteur."""
-    if not current_user.permissions.acteurs_view:
+    if not current_user.permissions.logistics_acteurs_view:
         raise HTTPException(status_code=403, detail="Permission acteurs_view requise")
     acteur = get_acteur(db, acteur_id)
     if not acteur:
@@ -220,7 +220,7 @@ def update_acteur_endpoint(
     current_user=Depends(oauth2.get_current_user),
 ):
     """Modifier un acteur."""
-    if not current_user.permissions.acteurs_edit:
+    if not current_user.permissions.logistics_acteurs_edit:
         raise HTTPException(status_code=403, detail="Permission acteurs_edit requise")
     acteur = update_acteur(db, acteur_id, data)
     if not acteur:
@@ -240,7 +240,7 @@ def lier_compte_endpoint(
     Autorisé : admin (acteurs_link_account) ou l'utilisateur lui-même (user_id == current_user.id).
     """
     is_self = data.user_id == current_user.id
-    has_perm = current_user.permissions.acteurs_link_account
+    has_perm = current_user.permissions.logistics_acteurs_link_account
 
     if not is_self and not has_perm:
         raise HTTPException(

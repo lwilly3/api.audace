@@ -262,24 +262,24 @@ class UserPermissions(Base):
     logistics_settings_manage = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Paramètres (frontend: logistics_manage_settings)
 
     # ===========================================================================
-    # Module Gestion des Pannes
+    # Module Gestion des Pannes (préfixe logistics_pannes_*)
     # ===========================================================================
 
     # Accès au module
-    pannes_access_section = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_pannes_access_section = Column(Boolean, default=False, server_default=text('false'), nullable=False)
 
     # Fiches pannes
-    pannes_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
-    pannes_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
-    pannes_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
-    pannes_delete = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Admin uniquement
-    pannes_view_all_companies = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les 2 sociétés
+    logistics_pannes_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_pannes_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_pannes_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_pannes_delete = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Admin uniquement
+    logistics_pannes_view_all_companies = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Voir les 2 sociétés
 
     # Acteurs (personnel terrain)
-    acteurs_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
-    acteurs_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
-    acteurs_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
-    acteurs_link_account = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Lier acteur → user
+    logistics_acteurs_view = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_acteurs_create = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_acteurs_edit = Column(Boolean, default=False, server_default=text('false'), nullable=False)
+    logistics_acteurs_link_account = Column(Boolean, default=False, server_default=text('false'), nullable=False)  # Lier acteur → user
 
     # Relation avec la table users
     user = relationship("User", back_populates="permissions")
