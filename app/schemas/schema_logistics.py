@@ -554,6 +554,200 @@ class DriverUserListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+# ════════════════════════════════════════════════════════════════
+# MÉCANICIENS
+# ════════════════════════════════════════════════════════════════
+
+class MechanicCreate(BaseModel):
+    first_name: str
+    last_name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    specialty: Optional[str] = None
+    company_id: Optional[int] = None
+    notes: Optional[str] = None
+
+
+class MechanicUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    specialty: Optional[str] = None
+    company_id: Optional[int] = None
+    is_active: Optional[bool] = None
+    notes: Optional[str] = None
+
+
+class MechanicResponse(BaseModel):
+    id: int
+    user_id: Optional[int]
+    has_account: bool
+    first_name: str
+    last_name: str
+    full_name: str
+    email: Optional[str]
+    phone: Optional[str]
+    specialty: Optional[str]
+    company_id: Optional[int]
+    is_active: bool
+    notes: Optional[str]
+    created_at: datetime
+    created_by: int
+    created_by_name: str
+
+    class Config:
+        from_attributes = True
+
+
+class MechanicListResponse(BaseModel):
+    items: List[MechanicResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+# ════════════════════════════════════════════════════════════════
+# INVITATIONS (Chemin A — profils orphelins)
+# ════════════════════════════════════════════════════════════════
+
+class InviteCreateRequest(BaseModel):
+    email: str
+
+
+class InviteResponse(BaseModel):
+    token: str
+    invite_url: str
+    expires_at: datetime
+    entity_type: str
+    entity_id: int
+    email: str
+
+
+class InviteValidateResponse(BaseModel):
+    is_valid: bool
+    entity_type: Optional[str] = None
+    entity_id: Optional[int] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = None
+    company_name: Optional[str] = None
+    email: Optional[str] = None
+    expires_at: Optional[datetime] = None
+
+
+class InviteAcceptRequest(BaseModel):
+    username: str
+    password: str
+
+
+class LinkUserRequest(BaseModel):
+    user_id: int
+
+
+# ════════════════════════════════════════════════════════════════
+# PANNES / MAINTENANCE
+# ════════════════════════════════════════════════════════════════
+
+class PartItem(BaseModel):
+    description: str
+    quantity: str
+
+
+class MaintenanceCreate(BaseModel):
+    vehicle_id: int
+    category: str = "corrective"          # corrective | preventive | inspection
+    priority: str = "medium"              # low | medium | high | critical
+    description: str
+    scheduled_date: Optional[date] = None
+    mileage_start: Optional[int] = None
+    mileage_end: Optional[int] = None
+    engine_reference: Optional[str] = None
+    mechanics_json: Optional[List[int]] = None   # liste d'IDs mécaniciens
+    reported_by_driver_id: Optional[int] = None
+    operations_manager: Optional[str] = None
+    parts_used_json: Optional[List[PartItem]] = None
+    labor_cost: Optional[Decimal] = None
+    parts_cost: Optional[Decimal] = None
+    external_cost: Optional[Decimal] = None
+    notes: Optional[str] = None
+
+
+class MaintenanceUpdate(BaseModel):
+    category: Optional[str] = None
+    priority: Optional[str] = None
+    description: Optional[str] = None
+    scheduled_date: Optional[date] = None
+    mileage_start: Optional[int] = None
+    mileage_end: Optional[int] = None
+    engine_reference: Optional[str] = None
+    mechanics_json: Optional[List[int]] = None
+    reported_by_driver_id: Optional[int] = None
+    operations_manager: Optional[str] = None
+    parts_used_json: Optional[List[PartItem]] = None
+    labor_cost: Optional[Decimal] = None
+    parts_cost: Optional[Decimal] = None
+    external_cost: Optional[Decimal] = None
+    notes: Optional[str] = None
+
+
+class MechanicSummary(BaseModel):
+    id: int
+    full_name: str
+    specialty: Optional[str]
+    has_account: bool
+
+    class Config:
+        from_attributes = True
+
+
+class MaintenanceResponse(BaseModel):
+    id: int
+    reference: Optional[str]
+    vehicle_id: int
+    vehicle_registration: Optional[str]
+    category: str
+    priority: str
+    description: str
+    status: str
+    scheduled_date: Optional[date]
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+    mileage_start: Optional[int]
+    mileage_end: Optional[int]
+    engine_reference: Optional[str]
+    mechanics_json: List[int]
+    mechanics_details: List[MechanicSummary]
+    reported_by_driver_id: Optional[int]
+    reported_by_driver_name: Optional[str]
+    operations_manager: Optional[str]
+    parts_used_json: List[dict]
+    labor_cost: Optional[Decimal]
+    parts_cost: Optional[Decimal]
+    external_cost: Optional[Decimal]
+    total_cost: Optional[Decimal]
+    notes: Optional[str]
+    created_at: datetime
+    created_by: int
+    created_by_name: str
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class MaintenanceListResponse(BaseModel):
+    items: List[MaintenanceResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class MaintenanceStatusUpdate(BaseModel):
+    notes: Optional[str] = None
+
+
 # DASHBOARD
 # ════════════════════════════════════════════════════════════════
 
@@ -564,6 +758,7 @@ class LogisticsDashboardStats(BaseModel):
     total_teams: int
     missions_in_progress: int
     vehicles_in_maintenance: int
+    open_breakdowns_count: int
     alerts_count: int
 
 

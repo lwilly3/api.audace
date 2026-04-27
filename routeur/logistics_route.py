@@ -55,6 +55,25 @@ from app.db.crud.crud_logistics import (
     create_driver_user,
     get_driver_users,
     toggle_driver_user_active,
+    create_mechanic,
+    get_mechanics,
+    get_mechanic,
+    update_mechanic,
+    delete_mechanic,
+    link_mechanic_to_user,
+    create_invitation,
+    validate_invitation,
+    accept_invitation,
+    get_next_maintenance_reference,
+    peek_next_maintenance_reference,
+    create_maintenance,
+    get_maintenances,
+    get_maintenance,
+    update_maintenance,
+    delete_maintenance,
+    start_maintenance,
+    close_maintenance,
+    cancel_maintenance,
 )
 from app.models.model_user import User
 from app.schemas.schema_logistics import (
@@ -89,6 +108,20 @@ from app.schemas.schema_logistics import (
     DriverUserCreate,
     DriverUserResponse,
     DriverUserListResponse,
+    MechanicCreate,
+    MechanicUpdate,
+    MechanicResponse,
+    MechanicListResponse,
+    InviteCreateRequest,
+    InviteResponse,
+    InviteValidateResponse,
+    InviteAcceptRequest,
+    LinkUserRequest,
+    MaintenanceCreate,
+    MaintenanceUpdate,
+    MaintenanceResponse,
+    MaintenanceListResponse,
+    MaintenanceStatusUpdate,
 )
 
 router = APIRouter(prefix="/logistics", tags=["logistics"])
@@ -920,3 +953,283 @@ def delete_fuel_log_endpoint(
     if not success:
         raise HTTPException(status_code=404, detail="Fuel log not found")
     return {"message": "Fuel log deleted successfully"}
+
+
+# ============================================================================
+# MÉCANICIENS ENDPOINTS
+# ============================================================================
+
+@router.post("/mechanics", response_model=MechanicResponse, status_code=201)
+def create_mechanic_endpoint(
+    data: MechanicCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Créer un mécanicien (peut être sans compte application)."""
+    if not current_user.permissions.logistics_mechanics_manage:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return create_mechanic(db, data, current_user.id, current_user.username)
+
+
+@router.get("/mechanics", response_model=MechanicListResponse)
+def list_mechanics_endpoint(
+    company_id: Optional[int] = Query(None),
+    is_active: Optional[bool] = Query(None),
+    search: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Lister les mécaniciens."""
+    if not current_user.permissions.logistics_mechanics_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return get_mechanics(db, company_id=company_id, is_active=is_active, search=search, page=page, page_size=page_size)
+
+
+@router.get("/mechanics/{mechanic_id}", response_model=MechanicResponse)
+def get_mechanic_endpoint(
+    mechanic_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Détail d'un mécanicien."""
+    if not current_user.permissions.logistics_mechanics_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return get_mechanic(db, mechanic_id)
+
+
+@router.put("/mechanics/{mechanic_id}", response_model=MechanicResponse)
+def update_mechanic_endpoint(
+    mechanic_id: int,
+    data: MechanicUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Mettre à jour un mécanicien."""
+    if not current_user.permissions.logistics_mechanics_manage:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return update_mechanic(db, mechanic_id, data, current_user.id)
+
+
+@router.delete("/mechanics/{mechanic_id}")
+def delete_mechanic_endpoint(
+    mechanic_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Supprimer un mécanicien (soft delete)."""
+    if not current_user.permissions.logistics_mechanics_manage:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    delete_mechanic(db, mechanic_id)
+    return {"message": "Mécanicien supprimé."}
+
+
+@router.post("/mechanics/{mechanic_id}/invite", response_model=InviteResponse)
+def invite_mechanic_endpoint(
+    mechanic_id: int,
+    data: InviteCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Générer un lien d'invitation pour un mécanicien sans compte."""
+    if not current_user.permissions.logistics_mechanics_manage:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return create_invitation(
+        db,
+        entity_type="mechanic",
+        entity_id=mechanic_id,
+        email=data.email,
+        created_by=current_user.id,
+        created_by_name=current_user.username,
+    )
+
+
+@router.put("/mechanics/{mechanic_id}/link-user", response_model=MechanicResponse)
+def link_mechanic_user_endpoint(
+    mechanic_id: int,
+    data: LinkUserRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Lier manuellement un mécanicien à un compte existant (admin)."""
+    if not current_user.permissions.logistics_mechanics_manage:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return link_mechanic_to_user(db, mechanic_id, data.user_id)
+
+
+# ============================================================================
+# INVITATIONS ENDPOINTS (publics — sans authentification)
+# ============================================================================
+
+@router.get("/invite/validate/{token}", response_model=InviteValidateResponse)
+def validate_invite_endpoint(token: str, db: Session = Depends(get_db)):
+    """Valider un token d'invitation et récupérer les infos du profil."""
+    return validate_invitation(db, token)
+
+
+@router.post("/invite/accept/{token}")
+def accept_invite_endpoint(
+    token: str,
+    data: InviteAcceptRequest,
+    db: Session = Depends(get_db),
+):
+    """Accepter une invitation : créer le compte et lier le profil."""
+    return accept_invitation(db, token, data)
+
+
+# Invitation depuis un profil chauffeur existant
+@router.post("/drivers/{driver_id}/invite", response_model=InviteResponse)
+def invite_driver_endpoint(
+    driver_id: int,
+    data: InviteCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Générer un lien d'invitation pour un chauffeur sans compte."""
+    if not current_user.permissions.logistics_drivers_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return create_invitation(
+        db,
+        entity_type="driver",
+        entity_id=driver_id,
+        email=data.email,
+        created_by=current_user.id,
+        created_by_name=current_user.username,
+    )
+
+
+# ============================================================================
+# PANNES / MAINTENANCE ENDPOINTS
+# ============================================================================
+
+@router.get("/maintenance/reference/peek", response_model=NextReferenceResponse)
+def peek_maintenance_reference_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Aperçu de la prochaine référence PAN-XXXX sans l'incrémenter."""
+    reference = peek_next_maintenance_reference(db)
+    return NextReferenceResponse(reference=reference)
+
+
+@router.get("/maintenance/reference/next", response_model=NextReferenceResponse)
+def next_maintenance_reference_endpoint(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Réserver la prochaine référence PAN-XXXX (incrémente le compteur)."""
+    reference = get_next_maintenance_reference(db)
+    return NextReferenceResponse(reference=reference)
+
+
+@router.post("/maintenance", response_model=MaintenanceResponse, status_code=201)
+def create_maintenance_endpoint(
+    data: MaintenanceCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Créer une nouvelle fiche de panne."""
+    if not current_user.permissions.logistics_maintenance_create:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return create_maintenance(db, data, current_user.id, current_user.username)
+
+
+@router.get("/maintenance", response_model=MaintenanceListResponse)
+def list_maintenance_endpoint(
+    vehicle_id: Optional[int] = Query(None),
+    status: Optional[str] = Query(None),
+    category: Optional[str] = Query(None),
+    company_id: Optional[int] = Query(None),
+    priority: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Lister les fiches de panne avec filtres."""
+    if not current_user.permissions.logistics_maintenance_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return get_maintenances(
+        db, vehicle_id=vehicle_id, status=status, category=category,
+        company_id=company_id, priority=priority, search=search,
+        page=page, page_size=page_size,
+    )
+
+
+@router.get("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
+def get_maintenance_endpoint(
+    maintenance_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Détail d'une fiche de panne."""
+    if not current_user.permissions.logistics_maintenance_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return get_maintenance(db, maintenance_id)
+
+
+@router.put("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
+def update_maintenance_endpoint(
+    maintenance_id: int,
+    data: MaintenanceUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Mettre à jour une fiche de panne."""
+    if not current_user.permissions.logistics_maintenance_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return update_maintenance(db, maintenance_id, data, current_user.id)
+
+
+@router.delete("/maintenance/{maintenance_id}")
+def delete_maintenance_endpoint(
+    maintenance_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Supprimer une fiche de panne (soft delete)."""
+    if not current_user.permissions.logistics_maintenance_delete:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    delete_maintenance(db, maintenance_id)
+    return {"message": "Fiche de panne supprimée."}
+
+
+@router.put("/maintenance/{maintenance_id}/start", response_model=MaintenanceResponse)
+def start_maintenance_endpoint(
+    maintenance_id: int,
+    data: MaintenanceStatusUpdate = MaintenanceStatusUpdate(),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Démarrer une intervention (scheduled → in_progress)."""
+    if not current_user.permissions.logistics_maintenance_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return start_maintenance(db, maintenance_id, current_user.id)
+
+
+@router.put("/maintenance/{maintenance_id}/close", response_model=MaintenanceResponse)
+def close_maintenance_endpoint(
+    maintenance_id: int,
+    data: MaintenanceStatusUpdate = MaintenanceStatusUpdate(),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Clôturer une intervention (→ completed)."""
+    if not current_user.permissions.logistics_maintenance_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return close_maintenance(db, maintenance_id, current_user.id, data.notes)
+
+
+@router.put("/maintenance/{maintenance_id}/cancel", response_model=MaintenanceResponse)
+def cancel_maintenance_endpoint(
+    maintenance_id: int,
+    data: MaintenanceStatusUpdate = MaintenanceStatusUpdate(),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Annuler une intervention (→ cancelled)."""
+    if not current_user.permissions.logistics_maintenance_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return cancel_maintenance(db, maintenance_id, current_user.id, data.notes)

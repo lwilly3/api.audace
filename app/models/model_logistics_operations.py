@@ -212,43 +212,54 @@ class LogisticsFuelLog(BaseModel):
 class LogisticsMaintenance(BaseModel):
     """
     Maintenance / Entretien du module Logistique.
+    Fiche de panne / intervention corrective ou préventive.
     """
     __tablename__ = 'logistics_maintenance'
 
     id = Column(Integer, primary_key=True, index=True)
+    reference = Column(String(20), unique=True, nullable=True, index=True)
     vehicle_id = Column(Integer, ForeignKey('logistics_vehicles.id'), nullable=False)
     maintenance_type_id = Column(Integer, ForeignKey('logistics_config_options.id'), nullable=True)
-    
+
     # Classification
     category = Column(String(20), nullable=False)  # preventive, corrective, inspection
+    priority = Column(String(20), default='medium')  # low, medium, high, critical
     description = Column(Text, nullable=False)
-    
+
     # Statut
     status = Column(String(20), default='scheduled')  # scheduled, in_progress, completed, cancelled
     scheduled_date = Column(Date, nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
-    
+
     # Kilométrage
     mileage_at = Column(Integer, nullable=True)
+    mileage_start = Column(Integer, nullable=True)
+    mileage_end = Column(Integer, nullable=True)
     next_maintenance_km = Column(Integer, nullable=True)
     next_maintenance_date = Column(Date, nullable=True)
-    
+
     # Prestataire
     performed_by_name = Column(String(255), nullable=True)
     performed_by_type = Column(String(20), nullable=True)  # internal, external
-    
+
+    # Mécaniciens et intervenants (multi-noms, inspiré des fiches Excel)
+    mechanics_json = Column(JSON, default=[])
+    engine_reference = Column(String(100), nullable=True)  # N° Moteur au moment de la panne
+    reported_by_driver_id = Column(Integer, ForeignKey('logistics_drivers.id'), nullable=True)
+    operations_manager = Column(String(255), nullable=True)
+
     # Coûts
     labor_cost = Column(DECIMAL(10, 2), default=0)
     parts_cost = Column(DECIMAL(10, 2), default=0)
     external_cost = Column(DECIMAL(10, 2), default=0)
     total_cost = Column(DECIMAL(12, 2), default=0)
-    
+
     # Détails
     parts_used_json = Column(JSON, default=[])
     attachments_json = Column(JSON, default=[])
     notes = Column(Text, nullable=True)
-    
+
     # Audit
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     created_by = Column(Integer, nullable=False)
@@ -259,11 +270,13 @@ class LogisticsMaintenance(BaseModel):
     # Relations
     vehicle = relationship('LogisticsVehicle', foreign_keys=[vehicle_id], back_populates='maintenance_records')
     maintenance_type = relationship('LogisticsConfigOption', foreign_keys=[maintenance_type_id])
+    reported_by_driver = relationship('LogisticsDriver', foreign_keys=[reported_by_driver_id])
 
     __table_args__ = (
         Index('ix_logi_maintenance_vehicle_date', 'vehicle_id', 'scheduled_date'),
         Index('ix_logi_maintenance_status', 'status'),
         Index('ix_logi_maintenance_category', 'category'),
+        Index('ix_logi_maintenance_priority', 'priority'),
     )
 
 

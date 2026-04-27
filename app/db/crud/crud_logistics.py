@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 from app.models.model_logistics_vehicle import LogisticsVehicle
-from app.models.model_logistics_driver_team import LogisticsDriver, LogisticsTeam
-from app.models.model_logistics_operations import LogisticsMission, LogisticsMissionCheckpoint, LogisticsFuelLog
+from app.models.model_logistics_driver_team import LogisticsDriver, LogisticsTeam, LogisticsMechanic, LogisticsInvitation
+from app.models.model_logistics_operations import LogisticsMission, LogisticsMissionCheckpoint, LogisticsFuelLog, LogisticsMaintenance
 from app.models.model_logistics_settings import LogisticsConfigOption, LogisticsGlobalSettings
 from app.models.model_inventory_company import InventoryCompany
 from app.models.model_user import User
@@ -29,8 +29,13 @@ from app.schemas.schema_logistics import (
     FuelLogCreate, FuelLogResponse, FuelLogUpdate, FuelLogListResponse,
     FuelAlertResponse, FuelAlertListResponse,
     DriverUserCreate, DriverUserResponse, DriverUserListResponse,
+    MechanicCreate, MechanicUpdate, MechanicResponse, MechanicListResponse, MechanicSummary,
+    InviteCreateRequest, InviteResponse, InviteValidateResponse, InviteAcceptRequest, LinkUserRequest,
+    MaintenanceCreate, MaintenanceUpdate, MaintenanceResponse, MaintenanceListResponse,
 )
 from typing import Optional, List
+import uuid
+from datetime import timedelta
 
 
 # ════════════════════════════════════════════════════════════════
@@ -521,6 +526,7 @@ def get_logistics_dashboard(db: Session, company_id: Optional[int] = None) -> Lo
     driver_query = db.query(LogisticsDriver).filter(LogisticsDriver.is_deleted == False)
     team_query = db.query(LogisticsTeam).filter(LogisticsTeam.is_deleted == False)
     mission_query = db.query(LogisticsMission).filter(LogisticsMission.is_deleted == False)
+    maintenance_query = db.query(LogisticsMaintenance).filter(LogisticsMaintenance.is_deleted == False)
 
     if company_id:
         vehicle_query = vehicle_query.filter(LogisticsVehicle.company_id == company_id)
@@ -529,12 +535,20 @@ def get_logistics_dashboard(db: Session, company_id: Optional[int] = None) -> Lo
         mission_query = mission_query.join(
             LogisticsVehicle, LogisticsMission.vehicle_id == LogisticsVehicle.id
         ).filter(LogisticsVehicle.company_id == company_id)
+        maintenance_query = maintenance_query.join(
+            LogisticsVehicle, LogisticsMaintenance.vehicle_id == LogisticsVehicle.id
+        ).filter(LogisticsVehicle.company_id == company_id)
 
     total_vehicles = vehicle_query.count()
     vehicles_active = vehicle_query.filter(LogisticsVehicle.is_archived == False).count()
     total_drivers = driver_query.count()
     total_teams = team_query.count()
     missions_in_progress = mission_query.filter(LogisticsMission.status == 'in_progress').count()
+    vehicles_in_maintenance = maintenance_query.filter(LogisticsMaintenance.status == 'in_progress').count()
+    open_breakdowns_count = maintenance_query.filter(
+        LogisticsMaintenance.status.in_(["scheduled", "in_progress"]),
+        LogisticsMaintenance.category == "corrective",
+    ).count()
 
     stats = LogisticsDashboardStats(
         total_vehicles=total_vehicles,
@@ -542,13 +556,14 @@ def get_logistics_dashboard(db: Session, company_id: Optional[int] = None) -> Lo
         total_drivers=total_drivers,
         total_teams=total_teams,
         missions_in_progress=missions_in_progress,
-        vehicles_in_maintenance=0,  # À implémenter avec la maintenance CRUD
-        alerts_count=0,  # À implémenter
+        vehicles_in_maintenance=vehicles_in_maintenance,
+        open_breakdowns_count=open_breakdowns_count,
+        alerts_count=open_breakdowns_count,
     )
 
     alerts = [
         AlertSummary(type="documents_expiring", count=0, description="Documents expirant bientôt"),
-        AlertSummary(type="maintenance_due", count=0, description="Maintenances prévues"),
+        AlertSummary(type="maintenance_due", count=open_breakdowns_count, description="Pannes ouvertes"),
     ]
 
     return LogisticsDashboardResponse(stats=stats, alerts=alerts)
@@ -1428,3 +1443,594 @@ def toggle_driver_user_active(
         status=driver.status,
         created_at=driver.created_at,
     )
+
+
+# ════════════════════════════════════════════════════════════════
+# MÉCANICIENS
+# ════════════════════════════════════════════════════════════════
+
+def _build_mechanic_response(m: LogisticsMechanic) -> MechanicResponse:
+    return MechanicResponse(
+        id=m.id,
+        user_id=m.user_id,
+        has_account=m.user_id is not None,
+        first_name=m.first_name,
+        last_name=m.last_name,
+        full_name=f"{m.first_name} {m.last_name}",
+        email=m.email,
+        phone=m.phone,
+        specialty=m.specialty,
+        company_id=m.company_id,
+        is_active=m.is_active,
+        notes=m.notes,
+        created_at=m.created_at,
+        created_by=m.created_by,
+        created_by_name=m.created_by_name,
+    )
+
+
+def create_mechanic(
+    db: Session, data: MechanicCreate, user_id: int, user_name: str
+) -> MechanicResponse:
+    mechanic = LogisticsMechanic(
+        first_name=data.first_name,
+        last_name=data.last_name,
+        email=data.email,
+        phone=data.phone,
+        specialty=data.specialty,
+        company_id=data.company_id,
+        notes=data.notes,
+        created_by=user_id,
+        created_by_name=user_name,
+    )
+    db.add(mechanic)
+    db.commit()
+    db.refresh(mechanic)
+    return _build_mechanic_response(mechanic)
+
+
+def get_mechanics(
+    db: Session,
+    company_id: Optional[int] = None,
+    is_active: Optional[bool] = None,
+    search: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 50,
+) -> MechanicListResponse:
+    query = db.query(LogisticsMechanic).filter(LogisticsMechanic.is_deleted == False)
+    if company_id:
+        query = query.filter(LogisticsMechanic.company_id == company_id)
+    if is_active is not None:
+        query = query.filter(LogisticsMechanic.is_active == is_active)
+    if search:
+        query = query.filter(
+            or_(
+                LogisticsMechanic.first_name.ilike(f"%{search}%"),
+                LogisticsMechanic.last_name.ilike(f"%{search}%"),
+                LogisticsMechanic.specialty.ilike(f"%{search}%"),
+            )
+        )
+    total = query.count()
+    mechanics = query.offset((page - 1) * page_size).limit(page_size).all()
+    return MechanicListResponse(
+        items=[_build_mechanic_response(m) for m in mechanics],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+def get_mechanic(db: Session, mechanic_id: int) -> MechanicResponse:
+    m = db.query(LogisticsMechanic).filter(
+        LogisticsMechanic.id == mechanic_id,
+        LogisticsMechanic.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Mécanicien non trouvé.")
+    return _build_mechanic_response(m)
+
+
+def update_mechanic(
+    db: Session, mechanic_id: int, data: MechanicUpdate, user_id: int
+) -> MechanicResponse:
+    m = db.query(LogisticsMechanic).filter(
+        LogisticsMechanic.id == mechanic_id,
+        LogisticsMechanic.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Mécanicien non trouvé.")
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(m, field, value)
+    m.updated_by = user_id
+    db.commit()
+    db.refresh(m)
+    return _build_mechanic_response(m)
+
+
+def delete_mechanic(db: Session, mechanic_id: int) -> bool:
+    m = db.query(LogisticsMechanic).filter(
+        LogisticsMechanic.id == mechanic_id,
+        LogisticsMechanic.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Mécanicien non trouvé.")
+    m.is_deleted = True
+    m.deleted_at = datetime.now(timezone.utc)
+    db.commit()
+    return True
+
+
+def link_mechanic_to_user(db: Session, mechanic_id: int, user_id: int) -> MechanicResponse:
+    m = db.query(LogisticsMechanic).filter(
+        LogisticsMechanic.id == mechanic_id,
+        LogisticsMechanic.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Mécanicien non trouvé.")
+    m.user_id = user_id
+    db.commit()
+    db.refresh(m)
+    return _build_mechanic_response(m)
+
+
+# ════════════════════════════════════════════════════════════════
+# INVITATIONS (Chemin A)
+# ════════════════════════════════════════════════════════════════
+
+def create_invitation(
+    db: Session,
+    entity_type: str,
+    entity_id: int,
+    email: str,
+    created_by: int,
+    created_by_name: str,
+    base_url: str = "",
+) -> InviteResponse:
+    # Invalider les invitations précédentes non utilisées pour la même entité
+    db.query(LogisticsInvitation).filter(
+        LogisticsInvitation.entity_type == entity_type,
+        LogisticsInvitation.entity_id == entity_id,
+        LogisticsInvitation.used_at == None,
+    ).delete(synchronize_session=False)
+
+    token = str(uuid.uuid4()).replace("-", "")
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+
+    invitation = LogisticsInvitation(
+        token=token,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        email=email,
+        expires_at=expires_at,
+        created_by=created_by,
+        created_by_name=created_by_name,
+    )
+    db.add(invitation)
+    db.commit()
+    db.refresh(invitation)
+
+    invite_url = f"{base_url}/invite/accept?token={token}"
+    return InviteResponse(
+        token=token,
+        invite_url=invite_url,
+        expires_at=expires_at,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        email=email,
+    )
+
+
+def validate_invitation(db: Session, token: str) -> InviteValidateResponse:
+    inv = db.query(LogisticsInvitation).filter(
+        LogisticsInvitation.token == token
+    ).first()
+
+    if not inv:
+        return InviteValidateResponse(is_valid=False)
+    if inv.used_at is not None:
+        return InviteValidateResponse(is_valid=False)
+    if datetime.now(timezone.utc) > inv.expires_at.replace(tzinfo=timezone.utc) if inv.expires_at.tzinfo is None else datetime.now(timezone.utc) > inv.expires_at:
+        return InviteValidateResponse(is_valid=False)
+
+    full_name = None
+    role = None
+    company_name = None
+
+    if inv.entity_type == "driver":
+        entity = db.query(LogisticsDriver).filter(
+            LogisticsDriver.id == inv.entity_id,
+            LogisticsDriver.is_deleted == False,
+        ).first()
+        if entity:
+            full_name = f"{entity.first_name} {entity.last_name}"
+            role = entity.role
+            if entity.company:
+                company_name = entity.company.name
+    elif inv.entity_type == "mechanic":
+        entity = db.query(LogisticsMechanic).filter(
+            LogisticsMechanic.id == inv.entity_id,
+            LogisticsMechanic.is_deleted == False,
+        ).first()
+        if entity:
+            full_name = f"{entity.first_name} {entity.last_name}"
+            role = entity.specialty or "Mécanicien"
+            if entity.company:
+                company_name = entity.company.name
+
+    return InviteValidateResponse(
+        is_valid=True,
+        entity_type=inv.entity_type,
+        entity_id=inv.entity_id,
+        full_name=full_name,
+        role=role,
+        company_name=company_name,
+        email=inv.email,
+        expires_at=inv.expires_at,
+    )
+
+
+def accept_invitation(
+    db: Session, token: str, data: InviteAcceptRequest
+) -> dict:
+    inv = db.query(LogisticsInvitation).filter(
+        LogisticsInvitation.token == token
+    ).first()
+    if not inv or inv.used_at is not None:
+        raise HTTPException(status_code=400, detail="Invitation invalide ou déjà utilisée.")
+
+    expires = inv.expires_at.replace(tzinfo=timezone.utc) if inv.expires_at.tzinfo is None else inv.expires_at
+    if datetime.now(timezone.utc) > expires:
+        raise HTTPException(status_code=400, detail="Invitation expirée.")
+
+    # Vérifier que le username n'existe pas déjà
+    existing_user = db.query(User).filter(
+        or_(User.username == data.username, User.email == inv.email)
+    ).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Ce nom d'utilisateur ou email est déjà utilisé.")
+
+    # Créer le compte utilisateur
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    hashed_password = pwd_context.hash(data.password)
+
+    new_user = User(
+        username=data.username,
+        email=inv.email,
+        hashed_password=hashed_password,
+        is_active=True,
+    )
+    db.add(new_user)
+    db.flush()
+
+    # Lier l'entité
+    if inv.entity_type == "driver":
+        entity = db.query(LogisticsDriver).filter(LogisticsDriver.id == inv.entity_id).first()
+        if entity:
+            entity.user_id = new_user.id
+    elif inv.entity_type == "mechanic":
+        entity = db.query(LogisticsMechanic).filter(LogisticsMechanic.id == inv.entity_id).first()
+        if entity:
+            entity.user_id = new_user.id
+
+    # Marquer l'invitation comme utilisée
+    inv.used_at = datetime.now(timezone.utc)
+    db.commit()
+
+    return {"message": "Compte créé avec succès."}
+
+
+# ════════════════════════════════════════════════════════════════
+# PANNES / MAINTENANCE — REFERENCE AUTO-INCREMENT
+# ════════════════════════════════════════════════════════════════
+
+def get_next_maintenance_reference(db: Session) -> str:
+    """Génère la prochaine référence panne au format 'PAN-XXXX'."""
+    try:
+        prefix_setting = db.query(LogisticsGlobalSettings).filter(
+            LogisticsGlobalSettings.key == "reference_prefix_maintenance"
+        ).with_for_update().first()
+        prefix = prefix_setting.value if prefix_setting else "PAN"
+
+        counter_setting = db.query(LogisticsGlobalSettings).filter(
+            LogisticsGlobalSettings.key == "reference_counter_maintenance"
+        ).with_for_update().first()
+
+        if not counter_setting:
+            # Créer le compteur s'il n'existe pas
+            counter_setting = LogisticsGlobalSettings(
+                key="reference_counter_maintenance",
+                value="0",
+                value_type="int",
+                description="Compteur référence fiches de panne",
+            )
+            if not prefix_setting:
+                db.add(LogisticsGlobalSettings(
+                    key="reference_prefix_maintenance",
+                    value="PAN",
+                    value_type="string",
+                    description="Préfixe référence fiches de panne",
+                ))
+            db.add(counter_setting)
+            db.flush()
+
+        new_counter = int(counter_setting.value) + 1
+        counter_setting.value = str(new_counter)
+        db.flush()
+        return f"{prefix}-{new_counter:04d}"
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur génération référence: {str(e)}")
+
+
+def peek_next_maintenance_reference(db: Session) -> str:
+    prefix_setting = db.query(LogisticsGlobalSettings).filter(
+        LogisticsGlobalSettings.key == "reference_prefix_maintenance"
+    ).first()
+    prefix = prefix_setting.value if prefix_setting else "PAN"
+
+    counter_setting = db.query(LogisticsGlobalSettings).filter(
+        LogisticsGlobalSettings.key == "reference_counter_maintenance"
+    ).first()
+    current = int(counter_setting.value) if counter_setting else 0
+    return f"{prefix}-{current + 1:04d}"
+
+
+# ════════════════════════════════════════════════════════════════
+# PANNES / MAINTENANCE — CRUD
+# ════════════════════════════════════════════════════════════════
+
+def _build_maintenance_response(m: LogisticsMaintenance, db: Session) -> MaintenanceResponse:
+    vehicle_registration = None
+    if m.vehicle:
+        vehicle_registration = m.vehicle.registration_number
+
+    driver_name = None
+    if m.reported_by_driver:
+        driver_name = f"{m.reported_by_driver.first_name} {m.reported_by_driver.last_name}"
+
+    mechanics_details = []
+    if m.mechanics_json:
+        for mid in m.mechanics_json:
+            mech = db.query(LogisticsMechanic).filter(
+                LogisticsMechanic.id == mid,
+                LogisticsMechanic.is_deleted == False,
+            ).first()
+            if mech:
+                mechanics_details.append(MechanicSummary(
+                    id=mech.id,
+                    full_name=f"{mech.first_name} {mech.last_name}",
+                    specialty=mech.specialty,
+                    has_account=mech.user_id is not None,
+                ))
+
+    parts = m.parts_used_json or []
+
+    return MaintenanceResponse(
+        id=m.id,
+        reference=m.reference,
+        vehicle_id=m.vehicle_id,
+        vehicle_registration=vehicle_registration,
+        category=m.category,
+        priority=m.priority,
+        description=m.description,
+        status=m.status,
+        scheduled_date=m.scheduled_date,
+        started_at=m.started_at,
+        completed_at=m.completed_at,
+        mileage_start=m.mileage_start,
+        mileage_end=m.mileage_end,
+        engine_reference=m.engine_reference,
+        mechanics_json=m.mechanics_json or [],
+        mechanics_details=mechanics_details,
+        reported_by_driver_id=m.reported_by_driver_id,
+        reported_by_driver_name=driver_name,
+        operations_manager=m.operations_manager,
+        parts_used_json=parts,
+        labor_cost=m.labor_cost,
+        parts_cost=m.parts_cost,
+        external_cost=m.external_cost,
+        total_cost=m.total_cost,
+        notes=m.notes,
+        created_at=m.created_at,
+        created_by=m.created_by,
+        created_by_name=m.created_by_name,
+        updated_at=m.updated_at,
+    )
+
+
+def create_maintenance(
+    db: Session, data: MaintenanceCreate, user_id: int, user_name: str
+) -> MaintenanceResponse:
+    reference = get_next_maintenance_reference(db)
+
+    parts_json = [p.model_dump() for p in data.parts_used_json] if data.parts_used_json else []
+
+    # Calcul total_cost
+    labor = data.labor_cost or Decimal("0")
+    parts = data.parts_cost or Decimal("0")
+    external = data.external_cost or Decimal("0")
+    total = labor + parts + external
+
+    maintenance = LogisticsMaintenance(
+        reference=reference,
+        vehicle_id=data.vehicle_id,
+        category=data.category,
+        priority=data.priority,
+        description=data.description,
+        status="scheduled",
+        scheduled_date=data.scheduled_date,
+        mileage_start=data.mileage_start,
+        mileage_end=data.mileage_end,
+        engine_reference=data.engine_reference,
+        mechanics_json=data.mechanics_json or [],
+        reported_by_driver_id=data.reported_by_driver_id,
+        operations_manager=data.operations_manager,
+        parts_used_json=parts_json,
+        labor_cost=labor,
+        parts_cost=parts,
+        external_cost=external,
+        total_cost=total,
+        notes=data.notes,
+        created_by=user_id,
+        created_by_name=user_name,
+    )
+    db.add(maintenance)
+    db.commit()
+    db.refresh(maintenance)
+    return _build_maintenance_response(maintenance, db)
+
+
+def get_maintenances(
+    db: Session,
+    vehicle_id: Optional[int] = None,
+    status: Optional[str] = None,
+    category: Optional[str] = None,
+    company_id: Optional[int] = None,
+    priority: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> MaintenanceListResponse:
+    query = db.query(LogisticsMaintenance).filter(LogisticsMaintenance.is_deleted == False)
+
+    if vehicle_id:
+        query = query.filter(LogisticsMaintenance.vehicle_id == vehicle_id)
+    if status:
+        query = query.filter(LogisticsMaintenance.status == status)
+    if category:
+        query = query.filter(LogisticsMaintenance.category == category)
+    if priority:
+        query = query.filter(LogisticsMaintenance.priority == priority)
+    if company_id:
+        query = query.join(LogisticsVehicle, LogisticsMaintenance.vehicle_id == LogisticsVehicle.id
+                           ).filter(LogisticsVehicle.company_id == company_id)
+    if search:
+        query = query.filter(
+            or_(
+                LogisticsMaintenance.reference.ilike(f"%{search}%"),
+                LogisticsMaintenance.description.ilike(f"%{search}%"),
+                LogisticsMaintenance.operations_manager.ilike(f"%{search}%"),
+            )
+        )
+
+    total = query.count()
+    items = query.order_by(LogisticsMaintenance.scheduled_date.desc()).offset(
+        (page - 1) * page_size
+    ).limit(page_size).all()
+
+    return MaintenanceListResponse(
+        items=[_build_maintenance_response(m, db) for m in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+def get_maintenance(db: Session, maintenance_id: int) -> MaintenanceResponse:
+    m = db.query(LogisticsMaintenance).filter(
+        LogisticsMaintenance.id == maintenance_id,
+        LogisticsMaintenance.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Fiche de panne non trouvée.")
+    return _build_maintenance_response(m, db)
+
+
+def update_maintenance(
+    db: Session, maintenance_id: int, data: MaintenanceUpdate, user_id: int
+) -> MaintenanceResponse:
+    m = db.query(LogisticsMaintenance).filter(
+        LogisticsMaintenance.id == maintenance_id,
+        LogisticsMaintenance.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Fiche de panne non trouvée.")
+
+    update_data = data.model_dump(exclude_unset=True)
+
+    if "parts_used_json" in update_data and update_data["parts_used_json"] is not None:
+        update_data["parts_used_json"] = [
+            p.model_dump() if hasattr(p, "model_dump") else p
+            for p in update_data["parts_used_json"]
+        ]
+
+    for field, value in update_data.items():
+        setattr(m, field, value)
+
+    # Recalculer total_cost
+    m.total_cost = (m.labor_cost or Decimal("0")) + (m.parts_cost or Decimal("0")) + (m.external_cost or Decimal("0"))
+    m.updated_by = user_id
+    db.commit()
+    db.refresh(m)
+    return _build_maintenance_response(m, db)
+
+
+def delete_maintenance(db: Session, maintenance_id: int) -> bool:
+    m = db.query(LogisticsMaintenance).filter(
+        LogisticsMaintenance.id == maintenance_id,
+        LogisticsMaintenance.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Fiche de panne non trouvée.")
+    m.is_deleted = True
+    m.deleted_at = datetime.now(timezone.utc)
+    db.commit()
+    return True
+
+
+def start_maintenance(db: Session, maintenance_id: int, user_id: int) -> MaintenanceResponse:
+    m = db.query(LogisticsMaintenance).filter(
+        LogisticsMaintenance.id == maintenance_id,
+        LogisticsMaintenance.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Fiche de panne non trouvée.")
+    if m.status != "scheduled":
+        raise HTTPException(status_code=400, detail=f"Impossible de démarrer une fiche au statut '{m.status}'.")
+    m.status = "in_progress"
+    m.started_at = datetime.now(timezone.utc)
+    m.updated_by = user_id
+    db.commit()
+    db.refresh(m)
+    return _build_maintenance_response(m, db)
+
+
+def close_maintenance(db: Session, maintenance_id: int, user_id: int, notes: Optional[str] = None) -> MaintenanceResponse:
+    m = db.query(LogisticsMaintenance).filter(
+        LogisticsMaintenance.id == maintenance_id,
+        LogisticsMaintenance.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Fiche de panne non trouvée.")
+    if m.status not in ("scheduled", "in_progress"):
+        raise HTTPException(status_code=400, detail=f"Impossible de clôturer une fiche au statut '{m.status}'.")
+    m.status = "completed"
+    m.completed_at = datetime.now(timezone.utc)
+    if notes:
+        m.notes = (m.notes or "") + f"\n[Clôture] {notes}"
+    m.updated_by = user_id
+    db.commit()
+    db.refresh(m)
+    return _build_maintenance_response(m, db)
+
+
+def cancel_maintenance(db: Session, maintenance_id: int, user_id: int, notes: Optional[str] = None) -> MaintenanceResponse:
+    m = db.query(LogisticsMaintenance).filter(
+        LogisticsMaintenance.id == maintenance_id,
+        LogisticsMaintenance.is_deleted == False,
+    ).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Fiche de panne non trouvée.")
+    if m.status == "completed":
+        raise HTTPException(status_code=400, detail="Impossible d'annuler une fiche déjà clôturée.")
+    m.status = "cancelled"
+    if notes:
+        m.notes = (m.notes or "") + f"\n[Annulation] {notes}"
+    m.updated_by = user_id
+    db.commit()
+    db.refresh(m)
+    return _build_maintenance_response(m, db)

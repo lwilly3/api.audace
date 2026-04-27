@@ -56,6 +56,7 @@ from routeur import (
      rss_route,  # Routes pour l'agregateur RSS (Social)
 
     logistics_route,  # Routes pour le module Logistique (gestion de flotte)
+     pannes_route,  # Routes pour le module Gestion des Pannes (fiches + acteurs)
 
 
 )  # Importation des routeurs de l'appication
@@ -367,6 +368,7 @@ app.include_router(ga_analytics_route.router) # Routes pour Google Analytics 4 (
 
 app.include_router(rss_route.router) # Routes pour l'agregateur RSS (Social)
 app.include_router(logistics_route.router) # Routes pour le module Logistique (gestion de flotte)
+app.include_router(pannes_route.router) # Routes pour le module Gestion des Pannes (fiches + acteurs)
 
 # Endpoint par défaut pour vérifier que l'API est opérationnelle
 @app.get("/")

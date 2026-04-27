@@ -282,10 +282,13 @@ def get_user_permissions(db: Session, user_id: int) -> Dict[str, Any]:
         result["needs_2fa_setup"] = role_requires_2fa and not getattr(user, 'two_factor_enabled', False)
         result["role_requires_2fa"] = role_requires_2fa
 
+        # Flag super_admin pour le client mobile (bypass permissions côté client)
+        result["is_super_admin"] = is_super_admin
+
         # Bypass super_admin : toutes les permissions boolean a True
         if is_super_admin:
             for key in result:
-                if key not in ("user_id", "granted_at", "needs_2fa_setup", "role_requires_2fa"):
+                if key not in ("user_id", "granted_at", "needs_2fa_setup", "role_requires_2fa", "is_super_admin"):
                     if isinstance(result[key], bool):
                         result[key] = True
 
