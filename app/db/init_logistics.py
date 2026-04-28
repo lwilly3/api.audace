@@ -12,6 +12,30 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _seed_panne_categories(db: Session) -> None:
+    """Seed the 9 default panne categories (list_type='panne_category')."""
+    panne_categories = [
+        {"name": "moteur",        "description": "Moteur (panne, surchauffe, huile)",              "color": "#ef4444"},
+        {"name": "transmission",  "description": "Transmission (boîte, embrayage, différentiel)",  "color": "#f97316"},
+        {"name": "electrique",    "description": "Électrique (batterie, alternateur, câblage)",    "color": "#eab308"},
+        {"name": "freinage",      "description": "Freinage (freins, ABS, tambours)",               "color": "#3b82f6"},
+        {"name": "pneumatiques",  "description": "Pneumatiques (pneus, jantes, crevaisons)",       "color": "#8b5cf6"},
+        {"name": "carrosserie",   "description": "Carrosserie (cabine, structure, benne)",         "color": "#6b7280"},
+        {"name": "climatisation", "description": "Climatisation / chauffage",                      "color": "#06b6d4"},
+        {"name": "hydraulique",   "description": "Hydraulique (vérins, pompes, flexibles)",        "color": "#10b981"},
+        {"name": "autre",         "description": "Autre catégorie de panne",                       "color": "#9ca3af", "is_default": True},
+    ]
+    for i, cat in enumerate(panne_categories):
+        db.add(LogisticsConfigOption(
+            list_type="panne_category",
+            name=cat["name"],
+            description=cat["description"],
+            color=cat["color"],
+            is_default=cat.get("is_default", False),
+            sort_order=i,
+        ))
+
+
 def initialize_logistics_config(db: Session) -> None:
     """
     Initialize default logistics configuration at app startup.
@@ -33,7 +57,14 @@ def initialize_logistics_config(db: Session) -> None:
         # Check if already initialized (by seeing if we have any vehicle segments)
         existing = db.query(LogisticsConfigOption).filter_by(list_type="vehicle_segment").first()
         if existing:
-            logger.info("✅ Logistics configuration already initialized")
+            # Seed panne_category if not yet added (added in v0.35.0)
+            existing_category = db.query(LogisticsConfigOption).filter_by(list_type="panne_category").first()
+            if not existing_category:
+                _seed_panne_categories(db)
+                db.commit()
+                logger.info("✅ Panne categories seeded (upgrade v0.35.0)")
+            else:
+                logger.info("✅ Logistics configuration already initialized")
             return
 
         # ====================================================================
@@ -207,6 +238,11 @@ def initialize_logistics_config(db: Session) -> None:
                 description=dtype["description"],
                 sort_order=i,
             ))
+
+        # ====================================================================
+        # PANNE CATEGORIES
+        # ====================================================================
+        _seed_panne_categories(db)
 
         # ====================================================================
         # GLOBAL SETTINGS (key-value store)

@@ -13,11 +13,14 @@ from typing import Optional, List
 from datetime import date
 
 from app.models.model_pannes import FichePanne, Acteur, FicheActeur
+from app.models.model_logistics_settings import LogisticsConfigOption
+from app.models.model_logistics_vehicle import LogisticsVehicle
 from app.schemas.schema_pannes import (
     ActeurCreate, ActeurUpdate,
     FichePanneCreate, FichePanneUpdate,
-    FichePanneListItem, PannesDashboardResponse,
-    RepartitionSociete, VehiculeRecurrent, MecanicienActif,
+    FichePanneListItem, FichePanneResponse, PannesDashboardResponse,
+    RepartitionSociete, RepartitionCategorie, VehiculeRecurrent, MecanicienActif,
+    PanneCategoryCreate, PanneCategoryUpdate, VehicleInfo,
 )
 
 
@@ -31,6 +34,17 @@ def _get_next_numero_fiche(db: Session) -> int:
         text("SELECT COALESCE(MAX(numero_fiche), 0) + 1 FROM fiches_pannes")
     ).scalar()
     return result
+
+
+def _build_vehicle_info(vehicle: LogisticsVehicle) -> VehicleInfo:
+    """Construit le sous-objet VehicleInfo pour les réponses."""
+    return VehicleInfo(
+        id=vehicle.id,
+        registration_number=vehicle.registration_number,
+        brand=vehicle.brand,
+        model_name=vehicle.model,
+        company_name=vehicle.company.name if vehicle.company else '',
+    )
 
 
 def _build_fiche_list_item(fiche: FichePanne) -> FichePanneListItem:
@@ -47,10 +61,50 @@ def _build_fiche_list_item(fiche: FichePanne) -> FichePanneListItem:
         immatriculation=fiche.immatriculation,
         societe=fiche.societe,
         statut=fiche.statut,
+        category_id=fiche.category_id,
+        category_name=fiche.category.name if fiche.category else None,
+        category_color=fiche.category.color if fiche.category else None,
+        vehicle_id=fiche.vehicle_id,
         mecaniciens=mecaniciens,
         created_at=fiche.created_at,
         updated_at=fiche.updated_at,
     )
+
+
+def build_fiche_response(fiche: FichePanne) -> dict:
+    """Construit le dict complet pour FichePanneResponse (gère les champs renommés)."""
+    vehicle_info = None
+    if fiche.vehicle:
+        vehicle_info = {
+            'id': fiche.vehicle.id,
+            'registration_number': fiche.vehicle.registration_number,
+            'brand': fiche.vehicle.brand,
+            'model_name': fiche.vehicle.model,
+            'company_name': fiche.vehicle.company.name if fiche.vehicle.company else '',
+        }
+    return {
+        'id': fiche.id,
+        'numero_fiche': fiche.numero_fiche,
+        'date_panne': fiche.date_panne,
+        'immatriculation': fiche.immatriculation,
+        'numero_moteur': fiche.numero_moteur,
+        'societe': fiche.societe,
+        'km_depart': fiche.km_depart,
+        'km_fin': fiche.km_fin,
+        'service_demande': fiche.service_demande,
+        'pieces_commandees': fiche.pieces_commandees,
+        'statut': fiche.statut,
+        'category_id': fiche.category_id,
+        'category_name': fiche.category.name if fiche.category else None,
+        'category_color': fiche.category.color if fiche.category else None,
+        'vehicle_id': fiche.vehicle_id,
+        'vehicle': vehicle_info,
+        'acteurs': fiche.acteurs,
+        'created_at': fiche.created_at,
+        'updated_at': fiche.updated_at,
+        'created_by': fiche.created_by,
+        'created_by_name': fiche.created_by_name,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -137,11 +191,14 @@ def get_fiches_pannes(
     immatriculation: Optional[str] = None,
     date_debut: Optional[date] = None,
     date_fin: Optional[date] = None,
+    category_id: Optional[int] = None,
 ) -> dict:
     from sqlalchemy.orm import joinedload
 
     query = db.query(FichePanne).options(
-        joinedload(FichePanne.acteurs).joinedload(FicheActeur.acteur)
+        joinedload(FichePanne.acteurs).joinedload(FicheActeur.acteur),
+        joinedload(FichePanne.category),
+        joinedload(FichePanne.vehicle).joinedload(LogisticsVehicle.company),
     )
 
     if statut:
@@ -156,6 +213,8 @@ def get_fiches_pannes(
         query = query.filter(FichePanne.date_panne >= date_debut)
     if date_fin:
         query = query.filter(FichePanne.date_panne <= date_fin)
+    if category_id is not None:
+        query = query.filter(FichePanne.category_id == category_id)
 
     query = query.order_by(FichePanne.date_panne.desc(), FichePanne.numero_fiche.desc())
     total = query.count()
@@ -169,7 +228,11 @@ def get_fiche_panne(db: Session, fiche_id: int) -> Optional[FichePanne]:
     from sqlalchemy.orm import joinedload
     return (
         db.query(FichePanne)
-        .options(joinedload(FichePanne.acteurs).joinedload(FicheActeur.acteur))
+        .options(
+            joinedload(FichePanne.acteurs).joinedload(FicheActeur.acteur),
+            joinedload(FichePanne.category),
+            joinedload(FichePanne.vehicle).joinedload(LogisticsVehicle.company),
+        )
         .filter(FichePanne.id == fiche_id)
         .first()
     )
@@ -185,6 +248,20 @@ def create_fiche_panne(
 
     acteurs_data = data.acteurs
     fiche_dict = data.model_dump(exclude={'acteurs'})
+
+    # Si un véhicule enregistré est fourni, on override immatriculation + societe
+    if data.vehicle_id:
+        from sqlalchemy.orm import joinedload as jl
+        vehicle = (
+            db.query(LogisticsVehicle)
+            .options(jl(LogisticsVehicle.company))
+            .filter(LogisticsVehicle.id == data.vehicle_id)
+            .first()
+        )
+        if vehicle:
+            fiche_dict['immatriculation'] = vehicle.registration_number
+            if vehicle.company:
+                fiche_dict['societe'] = vehicle.company.name
 
     fiche = FichePanne(
         **fiche_dict,
@@ -226,6 +303,21 @@ def update_fiche_panne(
         return None
 
     update_dict = data.model_dump(exclude_none=True, exclude={'acteurs'})
+
+    # Si vehicle_id change, resync immatriculation + societe
+    if 'vehicle_id' in update_dict and update_dict['vehicle_id'] is not None:
+        from sqlalchemy.orm import joinedload as jl
+        vehicle = (
+            db.query(LogisticsVehicle)
+            .options(jl(LogisticsVehicle.company))
+            .filter(LogisticsVehicle.id == update_dict['vehicle_id'])
+            .first()
+        )
+        if vehicle:
+            update_dict['immatriculation'] = vehicle.registration_number
+            if vehicle.company:
+                update_dict['societe'] = vehicle.company.name
+
     for field, value in update_dict.items():
         setattr(fiche, field, value)
 
@@ -293,6 +385,30 @@ def get_pannes_dashboard(db: Session) -> PannesDashboardResponse:
         for row in societe_rows
     ]
 
+    # Répartition par catégorie
+    categorie_rows = (
+        db.query(
+            FichePanne.category_id,
+            LogisticsConfigOption.name.label('cat_name'),
+            LogisticsConfigOption.color.label('cat_color'),
+            func.count(FichePanne.id).label('nb'),
+        )
+        .outerjoin(LogisticsConfigOption, FichePanne.category_id == LogisticsConfigOption.id)
+        .group_by(FichePanne.category_id, LogisticsConfigOption.name, LogisticsConfigOption.color)
+        .order_by(func.count(FichePanne.id).desc())
+        .all()
+    )
+    repartition_categorie = [
+        RepartitionCategorie(
+            category_id=row.category_id,
+            category_name=row.cat_name or 'Non catégorisé',
+            category_color=row.cat_color,
+            nombre_fiches=row.nb,
+            pourcentage=round((row.nb / total_fiches * 100), 1) if total_fiches > 0 else 0.0,
+        )
+        for row in categorie_rows
+    ]
+
     # Véhicules récurrents (immatriculation avec > 1 fiche)
     vehicule_rows = (
         db.query(FichePanne.immatriculation, func.count(FichePanne.id).label('nb'))
@@ -337,6 +453,79 @@ def get_pannes_dashboard(db: Session) -> PannesDashboardResponse:
         fiches_en_cours=fiches_en_cours,
         fiches_cloturees=fiches_cloturees,
         repartition_societe=repartition_societe,
+        repartition_categorie=repartition_categorie,
         vehicules_recurrents=vehicules_recurrents,
         mecaniciens_actifs=mecaniciens_actifs,
     )
+
+
+# ---------------------------------------------------------------------------
+# Panne Categories (LogisticsConfigOption list_type="panne_category")
+# ---------------------------------------------------------------------------
+
+def get_panne_categories(
+    db: Session,
+    include_inactive: bool = False,
+) -> List[LogisticsConfigOption]:
+    query = db.query(LogisticsConfigOption).filter(
+        LogisticsConfigOption.list_type == 'panne_category'
+    )
+    if not include_inactive:
+        query = query.filter(LogisticsConfigOption.is_active == True)
+    return query.order_by(LogisticsConfigOption.sort_order, LogisticsConfigOption.name).all()
+
+
+def create_panne_category(
+    db: Session,
+    data: PanneCategoryCreate,
+) -> LogisticsConfigOption:
+    max_order = db.query(func.max(LogisticsConfigOption.sort_order)).filter(
+        LogisticsConfigOption.list_type == 'panne_category'
+    ).scalar() or 0
+    option = LogisticsConfigOption(
+        list_type='panne_category',
+        name=data.name,
+        description=data.description,
+        color=data.color,
+        icon=data.icon,
+        is_active=data.is_active,
+        sort_order=max_order + 1,
+    )
+    db.add(option)
+    db.commit()
+    db.refresh(option)
+    return option
+
+
+def update_panne_category(
+    db: Session,
+    option_id: int,
+    data: PanneCategoryUpdate,
+) -> Optional[LogisticsConfigOption]:
+    option = db.query(LogisticsConfigOption).filter(
+        LogisticsConfigOption.id == option_id,
+        LogisticsConfigOption.list_type == 'panne_category',
+    ).first()
+    if not option:
+        return None
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(option, field, value)
+    db.commit()
+    db.refresh(option)
+    return option
+
+
+def delete_panne_category(
+    db: Session,
+    option_id: int,
+) -> bool:
+    """Soft delete : désactive la catégorie sans la supprimer."""
+    option = db.query(LogisticsConfigOption).filter(
+        LogisticsConfigOption.id == option_id,
+        LogisticsConfigOption.list_type == 'panne_category',
+    ).first()
+    if not option:
+        return False
+    option.is_active = False
+    db.commit()
+    return True

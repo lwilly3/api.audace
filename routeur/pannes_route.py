@@ -35,6 +35,11 @@ from app.db.crud.crud_pannes import (
     update_fiche_panne,
     delete_fiche_panne,
     get_pannes_dashboard,
+    get_panne_categories,
+    create_panne_category,
+    update_panne_category,
+    delete_panne_category,
+    build_fiche_response,
 )
 from app.schemas.schema_pannes import (
     ActeurCreate,
@@ -47,6 +52,9 @@ from app.schemas.schema_pannes import (
     FichePanneResponse,
     FichePanneListResponse,
     PannesDashboardResponse,
+    PanneCategoryResponse,
+    PanneCategoryCreate,
+    PanneCategoryUpdate,
 )
 
 router = APIRouter(
@@ -82,6 +90,7 @@ def list_fiches_pannes_endpoint(
     immatriculation: Optional[str] = Query(None),
     date_debut: Optional[date] = Query(None),
     date_fin: Optional[date] = Query(None),
+    category_id: Optional[int] = Query(None, description="Filtrer par catégorie"),
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
 ):
@@ -97,6 +106,7 @@ def list_fiches_pannes_endpoint(
         immatriculation=immatriculation,
         date_debut=date_debut,
         date_fin=date_fin,
+        category_id=category_id,
     )
 
 
@@ -115,7 +125,8 @@ def create_fiche_panne_endpoint(
         username=current_user.username,
     )
     # Rechargement avec joinedload pour la réponse complète
-    return get_fiche_panne(db, fiche.id)
+    fiche = get_fiche_panne(db, fiche.id)
+    return FichePanneResponse(**build_fiche_response(fiche))
 
 
 @router.get("/pannes/{fiche_id}", response_model=FichePanneResponse)
@@ -130,7 +141,7 @@ def get_fiche_panne_endpoint(
     fiche = get_fiche_panne(db, fiche_id)
     if not fiche:
         raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
-    return fiche
+    return FichePanneResponse(**build_fiche_response(fiche))
 
 
 @router.patch("/pannes/{fiche_id}", response_model=FichePanneResponse)
@@ -146,7 +157,8 @@ def update_fiche_panne_endpoint(
     fiche = update_fiche_panne(db, fiche_id, data, user_id=current_user.id)
     if not fiche:
         raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
-    return get_fiche_panne(db, fiche.id)
+    fiche = get_fiche_panne(db, fiche.id)
+    return FichePanneResponse(**build_fiche_response(fiche))
 
 
 @router.delete("/pannes/{fiche_id}", status_code=204)
@@ -161,6 +173,64 @@ def delete_fiche_panne_endpoint(
     deleted = delete_fiche_panne(db, fiche_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
+
+
+# ===========================================================================
+# CATÉGORIES DE PANNES
+# ===========================================================================
+
+@router.get("/pannes/categories", response_model=list[PanneCategoryResponse])
+def list_panne_categories_endpoint(
+    include_inactive: bool = Query(False),
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Liste des catégories de pannes configurées."""
+    if not current_user.permissions.logistics_pannes_access_section:
+        raise HTTPException(status_code=403, detail="Accès au module Pannes refusé")
+    return get_panne_categories(db, include_inactive=include_inactive)
+
+
+@router.post("/pannes/categories", response_model=PanneCategoryResponse, status_code=201)
+def create_panne_category_endpoint(
+    data: PanneCategoryCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Créer une nouvelle catégorie de panne."""
+    if not current_user.permissions.logistics_manage_settings:
+        raise HTTPException(status_code=403, detail="Permission logistics_manage_settings requise")
+    return create_panne_category(db, data)
+
+
+@router.put("/pannes/categories/{option_id}", response_model=PanneCategoryResponse)
+def update_panne_category_endpoint(
+    option_id: int,
+    data: PanneCategoryUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Modifier une catégorie de panne."""
+    if not current_user.permissions.logistics_manage_settings:
+        raise HTTPException(status_code=403, detail="Permission logistics_manage_settings requise")
+    option = update_panne_category(db, option_id, data)
+    if not option:
+        raise HTTPException(status_code=404, detail="Catégorie introuvable")
+    return option
+
+
+@router.delete("/pannes/categories/{option_id}", status_code=204)
+def delete_panne_category_endpoint(
+    option_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Désactiver une catégorie de panne (soft delete)."""
+    if not current_user.permissions.logistics_manage_settings:
+        raise HTTPException(status_code=403, detail="Permission logistics_manage_settings requise")
+    deleted = delete_panne_category(db, option_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Catégorie introuvable")
 
 
 # ===========================================================================

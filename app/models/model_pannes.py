@@ -109,6 +109,14 @@ class FichePanne(Base):
     # Valeurs : "en_attente" / "en_cours" / "cloture"
     statut = Column(String(20), nullable=False, default='en_attente', index=True)
 
+    # Catégorie de panne (FK → LogisticsConfigOption list_type="panne_category")
+    # nullable=True pour la rétrocompat avec les fiches existantes
+    category_id = Column(Integer, ForeignKey('logistics_config_options.id'), nullable=True)
+
+    # Véhicule lié (FK → logistics_vehicles)
+    # nullable=True : rétrocompat + cas où le véhicule n'est pas encore enregistré
+    vehicle_id = Column(Integer, ForeignKey('logistics_vehicles.id'), nullable=True)
+
     # Audit
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
@@ -117,10 +125,14 @@ class FichePanne(Base):
 
     # Relations
     acteurs = relationship('FicheActeur', back_populates='fiche', cascade='all, delete-orphan')
+    category = relationship('LogisticsConfigOption', foreign_keys=[category_id])
+    vehicle = relationship('LogisticsVehicle', foreign_keys=[vehicle_id])
 
     __table_args__ = (
         Index('ix_fiches_pannes_date_societe', 'date_panne', 'societe'),
         Index('ix_fiches_pannes_statut_societe', 'statut', 'societe'),
+        Index('ix_fiches_pannes_category_id', 'category_id'),
+        Index('ix_fiches_pannes_vehicle_id', 'vehicle_id'),
     )
 
 

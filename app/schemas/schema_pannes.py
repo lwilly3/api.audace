@@ -13,6 +13,58 @@ from datetime import date, datetime
 
 
 # ---------------------------------------------------------------------------
+# VehicleInfo (sous-schéma pour les réponses FichePanne)
+# ---------------------------------------------------------------------------
+
+class VehicleInfo(BaseModel):
+    id: int
+    registration_number: str
+    brand: Optional[str]
+    model_name: Optional[str]
+    company_name: str
+
+    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
+
+
+# ---------------------------------------------------------------------------
+# PanneCategory (LogisticsConfigOption avec list_type="panne_category")
+# ---------------------------------------------------------------------------
+
+class PanneCategoryResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    color: Optional[str]
+    icon: Optional[str]
+    is_default: bool
+    is_active: bool
+    sort_order: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PanneCategoryCreate(BaseModel):
+    name: str = Field(..., max_length=255)
+    description: Optional[str] = None
+    color: Optional[str] = Field(None, max_length=20)
+    icon: Optional[str] = Field(None, max_length=50)
+    is_active: bool = True
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PanneCategoryUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=255)
+    description: Optional[str] = None
+    color: Optional[str] = Field(None, max_length=20)
+    icon: Optional[str] = Field(None, max_length=50)
+    is_active: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---------------------------------------------------------------------------
 # Acteur
 # ---------------------------------------------------------------------------
 
@@ -105,6 +157,8 @@ class FichePanneCreate(BaseModel):
     service_demande: Optional[str] = Field(None)
     pieces_commandees: Optional[str] = Field(None)
     statut: str = Field('en_attente', description="en_attente / en_cours / cloture")
+    category_id: int = Field(..., description="ID de la catégorie de panne (obligatoire)")
+    vehicle_id: Optional[int] = Field(None, description="ID du véhicule enregistré (optionnel)")
     # Acteurs liés à la fiche
     acteurs: List[FicheActeurCreate] = Field(default_factory=list)
 
@@ -121,6 +175,8 @@ class FichePanneUpdate(BaseModel):
     service_demande: Optional[str] = None
     pieces_commandees: Optional[str] = None
     statut: Optional[str] = None
+    category_id: Optional[int] = None
+    vehicle_id: Optional[int] = None
     # Si fourni, remplace la liste complète des acteurs
     acteurs: Optional[List[FicheActeurCreate]] = None
 
@@ -139,6 +195,11 @@ class FichePanneResponse(BaseModel):
     service_demande: Optional[str]
     pieces_commandees: Optional[str]
     statut: str
+    category_id: Optional[int]
+    category_name: Optional[str] = None
+    category_color: Optional[str] = None
+    vehicle_id: Optional[int]
+    vehicle: Optional[VehicleInfo] = None
     acteurs: List[FicheActeurItem]
     created_at: datetime
     updated_at: Optional[datetime]
@@ -156,6 +217,10 @@ class FichePanneListItem(BaseModel):
     immatriculation: str
     societe: str
     statut: str
+    category_id: Optional[int]
+    category_name: Optional[str] = None
+    category_color: Optional[str] = None
+    vehicle_id: Optional[int]
     # Noms des mécaniciens (pour affichage colonne dans le tableau)
     mecaniciens: List[str]
     created_at: datetime
@@ -200,12 +265,23 @@ class RepartitionSociete(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class RepartitionCategorie(BaseModel):
+    category_id: Optional[int]
+    category_name: str
+    category_color: Optional[str]
+    nombre_fiches: int
+    pourcentage: float
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class PannesDashboardResponse(BaseModel):
     total_fiches: int
     fiches_en_attente: int
     fiches_en_cours: int
     fiches_cloturees: int
     repartition_societe: List[RepartitionSociete]
+    repartition_categorie: List[RepartitionCategorie]
     vehicules_recurrents: List[VehiculeRecurrent]   # Immatriculations avec > 1 fiche
     mecaniciens_actifs: List[MecanicienActif]        # Top mécaniciens par nombre d'interventions
 
