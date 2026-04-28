@@ -129,54 +129,8 @@ def create_fiche_panne_endpoint(
     return FichePanneResponse(**build_fiche_response(fiche))
 
 
-@router.get("/pannes/{fiche_id}", response_model=FichePanneResponse)
-def get_fiche_panne_endpoint(
-    fiche_id: int,
-    db: Session = Depends(get_db),
-    current_user=Depends(oauth2.get_current_user),
-):
-    """Détail d'une fiche de panne."""
-    if not current_user.permissions.logistics_pannes_view:
-        raise HTTPException(status_code=403, detail="Permission pannes_view requise")
-    fiche = get_fiche_panne(db, fiche_id)
-    if not fiche:
-        raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
-    return FichePanneResponse(**build_fiche_response(fiche))
-
-
-@router.patch("/pannes/{fiche_id}", response_model=FichePanneResponse)
-def update_fiche_panne_endpoint(
-    fiche_id: int,
-    data: FichePanneUpdate,
-    db: Session = Depends(get_db),
-    current_user=Depends(oauth2.get_current_user),
-):
-    """Modifier une fiche (statut, champs, acteurs)."""
-    if not current_user.permissions.logistics_pannes_edit:
-        raise HTTPException(status_code=403, detail="Permission pannes_edit requise")
-    fiche = update_fiche_panne(db, fiche_id, data, user_id=current_user.id)
-    if not fiche:
-        raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
-    fiche = get_fiche_panne(db, fiche.id)
-    return FichePanneResponse(**build_fiche_response(fiche))
-
-
-@router.delete("/pannes/{fiche_id}", status_code=204)
-def delete_fiche_panne_endpoint(
-    fiche_id: int,
-    db: Session = Depends(get_db),
-    current_user=Depends(oauth2.get_current_user),
-):
-    """Supprimer une fiche de panne (admin uniquement)."""
-    if not current_user.permissions.logistics_pannes_delete:
-        raise HTTPException(status_code=403, detail="Permission pannes_delete requise")
-    deleted = delete_fiche_panne(db, fiche_id)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
-
-
 # ===========================================================================
-# CATÉGORIES DE PANNES
+# CATÉGORIES DE PANNES  — DOIT être avant /{fiche_id} pour éviter le conflit
 # ===========================================================================
 
 @router.get("/pannes/categories", response_model=list[PanneCategoryResponse])
@@ -231,6 +185,52 @@ def delete_panne_category_endpoint(
     deleted = delete_panne_category(db, option_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Catégorie introuvable")
+
+
+@router.get("/pannes/{fiche_id}", response_model=FichePanneResponse)
+def get_fiche_panne_endpoint(
+    fiche_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Détail d'une fiche de panne."""
+    if not current_user.permissions.logistics_pannes_view:
+        raise HTTPException(status_code=403, detail="Permission pannes_view requise")
+    fiche = get_fiche_panne(db, fiche_id)
+    if not fiche:
+        raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
+    return FichePanneResponse(**build_fiche_response(fiche))
+
+
+@router.patch("/pannes/{fiche_id}", response_model=FichePanneResponse)
+def update_fiche_panne_endpoint(
+    fiche_id: int,
+    data: FichePanneUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Modifier une fiche (statut, champs, acteurs)."""
+    if not current_user.permissions.logistics_pannes_edit:
+        raise HTTPException(status_code=403, detail="Permission pannes_edit requise")
+    fiche = update_fiche_panne(db, fiche_id, data, user_id=current_user.id)
+    if not fiche:
+        raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
+    fiche = get_fiche_panne(db, fiche.id)
+    return FichePanneResponse(**build_fiche_response(fiche))
+
+
+@router.delete("/pannes/{fiche_id}", status_code=204)
+def delete_fiche_panne_endpoint(
+    fiche_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Supprimer une fiche de panne (admin uniquement)."""
+    if not current_user.permissions.logistics_pannes_delete:
+        raise HTTPException(status_code=403, detail="Permission pannes_delete requise")
+    deleted = delete_fiche_panne(db, fiche_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Fiche de panne introuvable")
 
 
 # ===========================================================================
