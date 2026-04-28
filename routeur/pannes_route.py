@@ -39,6 +39,7 @@ from app.db.crud.crud_pannes import (
     create_panne_category,
     update_panne_category,
     delete_panne_category,
+    get_breakdown_types,
     build_fiche_response,
 )
 from app.schemas.schema_pannes import (
@@ -55,6 +56,7 @@ from app.schemas.schema_pannes import (
     PanneCategoryResponse,
     PanneCategoryCreate,
     PanneCategoryUpdate,
+    BreakdownTypeResponse,
 )
 
 router = APIRouter(
@@ -185,6 +187,17 @@ def delete_panne_category_endpoint(
     deleted = delete_panne_category(db, option_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Catégorie introuvable")
+
+
+@router.get("/pannes/breakdown-types", response_model=list[BreakdownTypeResponse])
+def list_breakdown_types_endpoint(
+    db: Session = Depends(get_db),
+    current_user=Depends(oauth2.get_current_user),
+):
+    """Liste des types de panne (multi-select) configurés."""
+    if not current_user.permissions.logistics_pannes_access_section:
+        raise HTTPException(status_code=403, detail="Accès au module Pannes refusé")
+    return get_breakdown_types(db)
 
 
 @router.get("/pannes/{fiche_id}", response_model=FichePanneResponse)

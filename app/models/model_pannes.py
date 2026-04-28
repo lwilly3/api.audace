@@ -8,7 +8,7 @@ Tables :
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Date, Boolean, DateTime,
+    Column, Integer, String, Text, Date, Boolean, DateTime, JSON,
     ForeignKey, Index, UniqueConstraint, func, text
 )
 from sqlalchemy.orm import relationship
@@ -101,6 +101,10 @@ class FichePanne(Base):
 
     # Description libre du service demandé / nature de la panne
     service_demande = Column(Text, nullable=True)
+
+    # Types de panne (multi-select) — liste de noms de types (LogisticsConfigOption list_type="breakdown_type")
+    # Ex : ["Freinage & Garnitures", "Pneus & Roues", "Électricité & Éclairage"]
+    breakdown_types_json = Column(JSON, nullable=True, default=[])
 
     # Pièces commandées — format libre : "Filtre gasoil x1 | Huile moteur 15L"
     pieces_commandees = Column(Text, nullable=True)

@@ -8,7 +8,7 @@ Schémas :
 """
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import date, datetime
 
 
@@ -60,6 +60,22 @@ class PanneCategoryUpdate(BaseModel):
     icon: Optional[str] = Field(None, max_length=50)
     is_active: Optional[bool] = None
     sort_order: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---------------------------------------------------------------------------
+# BreakdownType (LogisticsConfigOption avec list_type="breakdown_type")
+# ---------------------------------------------------------------------------
+
+class BreakdownTypeResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    is_default: bool
+    is_active: bool
+    sort_order: int
+    metadata_json: Optional[Any] = None  # {"code": "...", "group": "..."}
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -159,6 +175,8 @@ class FichePanneCreate(BaseModel):
     statut: str = Field('en_attente', description="en_attente / en_cours / cloture")
     category_id: int = Field(..., description="ID de la catégorie de panne (obligatoire)")
     vehicle_id: Optional[int] = Field(None, description="ID du véhicule enregistré (optionnel)")
+    # Types de panne multi-select (noms stockés)
+    breakdown_types: List[str] = Field(default_factory=list)
     # Acteurs liés à la fiche
     acteurs: List[FicheActeurCreate] = Field(default_factory=list)
 
@@ -177,6 +195,8 @@ class FichePanneUpdate(BaseModel):
     statut: Optional[str] = None
     category_id: Optional[int] = None
     vehicle_id: Optional[int] = None
+    # Si fourni, remplace la liste complète des types de panne
+    breakdown_types: Optional[List[str]] = None
     # Si fourni, remplace la liste complète des acteurs
     acteurs: Optional[List[FicheActeurCreate]] = None
 
@@ -200,6 +220,7 @@ class FichePanneResponse(BaseModel):
     category_color: Optional[str] = None
     vehicle_id: Optional[int]
     vehicle: Optional[VehicleInfo] = None
+    breakdown_types: List[str] = Field(default_factory=list)
     acteurs: List[FicheActeurItem]
     created_at: datetime
     updated_at: Optional[datetime]
@@ -221,6 +242,7 @@ class FichePanneListItem(BaseModel):
     category_name: Optional[str] = None
     category_color: Optional[str] = None
     vehicle_id: Optional[int]
+    breakdown_types: List[str] = Field(default_factory=list)
     # Noms des mécaniciens (pour affichage colonne dans le tableau)
     mecaniciens: List[str]
     created_at: datetime

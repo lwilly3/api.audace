@@ -20,7 +20,7 @@ from app.schemas.schema_pannes import (
     FichePanneCreate, FichePanneUpdate,
     FichePanneListItem, FichePanneResponse, PannesDashboardResponse,
     RepartitionSociete, RepartitionCategorie, VehiculeRecurrent, MecanicienActif,
-    PanneCategoryCreate, PanneCategoryUpdate, VehicleInfo,
+    PanneCategoryCreate, PanneCategoryUpdate, VehicleInfo, BreakdownTypeResponse,
 )
 
 
@@ -65,6 +65,7 @@ def _build_fiche_list_item(fiche: FichePanne) -> FichePanneListItem:
         category_name=fiche.category.name if fiche.category else None,
         category_color=fiche.category.color if fiche.category else None,
         vehicle_id=fiche.vehicle_id,
+        breakdown_types=fiche.breakdown_types_json or [],
         mecaniciens=mecaniciens,
         created_at=fiche.created_at,
         updated_at=fiche.updated_at,
@@ -99,6 +100,7 @@ def build_fiche_response(fiche: FichePanne) -> dict:
         'category_color': fiche.category.color if fiche.category else None,
         'vehicle_id': fiche.vehicle_id,
         'vehicle': vehicle_info,
+        'breakdown_types': fiche.breakdown_types_json or [],
         'acteurs': fiche.acteurs,
         'created_at': fiche.created_at,
         'updated_at': fiche.updated_at,
@@ -247,7 +249,8 @@ def create_fiche_panne(
     numero = _get_next_numero_fiche(db)
 
     acteurs_data = data.acteurs
-    fiche_dict = data.model_dump(exclude={'acteurs'})
+    fiche_dict = data.model_dump(exclude={'acteurs', 'breakdown_types'})
+    fiche_dict['breakdown_types_json'] = data.breakdown_types or []
 
     # Si un véhicule enregistré est fourni, on override immatriculation + societe
     if data.vehicle_id:
@@ -302,7 +305,11 @@ def update_fiche_panne(
     if not fiche:
         return None
 
-    update_dict = data.model_dump(exclude_none=True, exclude={'acteurs'})
+    update_dict = data.model_dump(exclude_none=True, exclude={'acteurs', 'breakdown_types'})
+
+    # Mapping breakdown_types → breakdown_types_json
+    if data.breakdown_types is not None:
+        update_dict['breakdown_types_json'] = data.breakdown_types
 
     # Si vehicle_id change, resync immatriculation + societe
     if 'vehicle_id' in update_dict and update_dict['vehicle_id'] is not None:
@@ -529,3 +536,19 @@ def delete_panne_category(
     option.is_active = False
     db.commit()
     return True
+
+
+# ---------------------------------------------------------------------------
+# Breakdown Types (LogisticsConfigOption list_type="breakdown_type")
+# ---------------------------------------------------------------------------
+
+def get_breakdown_types(
+    db: Session,
+    include_inactive: bool = False,
+) -> List[LogisticsConfigOption]:
+    query = db.query(LogisticsConfigOption).filter(
+        LogisticsConfigOption.list_type == 'breakdown_type'
+    )
+    if not include_inactive:
+        query = query.filter(LogisticsConfigOption.is_active == True)
+    return query.order_by(LogisticsConfigOption.sort_order, LogisticsConfigOption.name).all()

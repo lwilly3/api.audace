@@ -12,6 +12,43 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _seed_breakdown_types(db: Session) -> None:
+    """Seed 18 default breakdown types (list_type='breakdown_type')."""
+    breakdown_types = [
+        # Groupe 1 — Systèmes mécaniques
+        {"name": "Moteur",                        "description": "Surchauffe, perte de puissance, fuite huile moteur, casse interne",                          "group": "mechanical", "code": "engine_failure",         "sort_order": 1},
+        {"name": "Transmission & Embrayage",      "description": "Disque/butée d'embrayage, boîte de vitesses, câble accélérateur",                           "group": "mechanical", "code": "transmission_clutch",    "sort_order": 2},
+        {"name": "Roulements & Essieux",          "description": "Roulements, butées, moyeux, axes de mâchoire, arrêt-graisse",                               "group": "mechanical", "code": "bearings_axle",          "sort_order": 3},
+        {"name": "Suspension & Silent-blocs",     "description": "Silent-blocs BV et barre stabilisatrice, coussins de lame, ressorts",                       "group": "mechanical", "code": "suspension_silentbloc",  "sort_order": 4},
+        {"name": "Freinage & Garnitures",         "description": "Garnitures, poumons de frein, mâchoires, colonnes d'air, goujons",                          "group": "mechanical", "code": "braking_system",         "sort_order": 5},
+        {"name": "Pneus & Roues",                 "description": "Crevaison, usure, montage roue de secours, goujons de roue tracteur",                       "group": "mechanical", "code": "tires_wheels",           "sort_order": 6},
+        # Groupe 2 — Systèmes fluides & énergie
+        {"name": "Électricité & Éclairage",       "description": "Feux de gabarit, ampoules, câblage, démarreur, bouton démarrage",                           "group": "fluids_energy", "code": "electrical_lighting",  "sort_order": 7},
+        {"name": "Batterie",                      "description": "Batterie déchargée ou défectueuse, problème de démarrage",                                  "group": "fluids_energy", "code": "battery",              "sort_order": 8},
+        {"name": "Filtres & Lubrifiants",         "description": "Filtres gasoil/décanteur, huile moteur, lave-glace, rinçage réservoir",                     "group": "fluids_energy", "code": "filters_lubricants",   "sort_order": 9},
+        {"name": "Circuits hydrauliques & Pneumatiques", "description": "Raccords Ø12, fuites d'air remorque, membranes poumons, électrovanne, lève-cabine",  "group": "fluids_energy", "code": "hydraulic_pneumatic",  "sort_order": 10},
+        {"name": "Fuite carburant",               "description": "Fuite au réservoir, joint de pompe alimentaire, tuyaux carburant",                          "group": "fluids_energy", "code": "fuel_leak",            "sort_order": 11},
+        # Groupe 3 — Carrosserie & Structures
+        {"name": "Soudure & Carrosserie",         "description": "Travaux de soudure, protection cabine, support électrovanne, structure",                    "group": "bodywork", "code": "welding_bodywork",           "sort_order": 12},
+        {"name": "Vitrage & Cabine",              "description": "Vitre de portière, protection cabine arrière, étanchéité",                                  "group": "bodywork", "code": "glazing_cabin",             "sort_order": 13},
+        {"name": "Équipement plateau / grumier",  "description": "Bride de lame, boulons, raccords de benne, chaînes d'arrimage, bâche",                     "group": "bodywork", "code": "flatbed_logger_equipment",  "sort_order": 14},
+        {"name": "Équipement citerne",            "description": "Vannes, joints de citerne, couvercles, pompes de transfert, jauges",                        "group": "bodywork", "code": "tanker_equipment",          "sort_order": 15},
+        # Groupe 4 — Maintenance & Incidents route
+        {"name": "Maintenance préventive",        "description": "Révision planifiée, vidange, contrôle avant mission, entretien périodique",                 "group": "maintenance_incidents", "code": "preventive_maintenance", "sort_order": 16},
+        {"name": "Accident & Sinistre",           "description": "Collision, tonneau, sinistre route, dommages tiers",                                        "group": "maintenance_incidents", "code": "accident_incident",      "sort_order": 17},
+        {"name": "Autre / Non diagnostiqué",      "description": "Panne non identifiée en attente de diagnostic par le mécanicien",                           "group": "maintenance_incidents", "code": "other_undiagnosed",      "sort_order": 18, "is_default": True},
+    ]
+    for bt in breakdown_types:
+        db.add(LogisticsConfigOption(
+            list_type="breakdown_type",
+            name=bt["name"],
+            description=bt["description"],
+            is_default=bt.get("is_default", False),
+            sort_order=bt["sort_order"],
+            metadata_json={"code": bt["code"], "group": bt["group"]},
+        ))
+
+
 def _seed_panne_categories(db: Session) -> None:
     """Seed the 9 default panne categories (list_type='panne_category')."""
     panne_categories = [
@@ -63,6 +100,12 @@ def initialize_logistics_config(db: Session) -> None:
                 _seed_panne_categories(db)
                 db.commit()
                 logger.info("✅ Panne categories seeded (upgrade v0.35.0)")
+            # Seed breakdown_types if not yet added (added in v0.36.0)
+            existing_breakdown = db.query(LogisticsConfigOption).filter_by(list_type="breakdown_type").first()
+            if not existing_breakdown:
+                _seed_breakdown_types(db)
+                db.commit()
+                logger.info("✅ Breakdown types seeded (upgrade v0.36.0)")
             else:
                 logger.info("✅ Logistics configuration already initialized")
             return
@@ -243,6 +286,11 @@ def initialize_logistics_config(db: Session) -> None:
         # PANNE CATEGORIES
         # ====================================================================
         _seed_panne_categories(db)
+
+        # ====================================================================
+        # BREAKDOWN TYPES (types de panne multi-select)
+        # ====================================================================
+        _seed_breakdown_types(db)
 
         # ====================================================================
         # GLOBAL SETTINGS (key-value store)
