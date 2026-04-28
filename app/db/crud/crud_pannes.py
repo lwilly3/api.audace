@@ -19,8 +19,8 @@ from app.schemas.schema_pannes import (
     ActeurCreate, ActeurUpdate,
     FichePanneCreate, FichePanneUpdate,
     FichePanneListItem, FichePanneResponse, PannesDashboardResponse,
-    RepartitionSociete, RepartitionCategorie, VehiculeRecurrent, MecanicienActif,
-    PanneCategoryCreate, PanneCategoryUpdate, VehicleInfo, BreakdownTypeResponse,
+    RepartitionSociete, RepartitionMotif, VehiculeRecurrent, MecanicienActif,
+    PanneMotifCreate, PanneMotifUpdate, VehicleInfo, BreakdownTypeResponse,
 )
 
 
@@ -61,9 +61,9 @@ def _build_fiche_list_item(fiche: FichePanne) -> FichePanneListItem:
         immatriculation=fiche.immatriculation,
         societe=fiche.societe,
         statut=fiche.statut,
-        category_id=fiche.category_id,
-        category_name=fiche.category.name if fiche.category else None,
-        category_color=fiche.category.color if fiche.category else None,
+        motif_id=fiche.category_id,
+        motif_name=fiche.category.name if fiche.category else None,
+        motif_color=fiche.category.color if fiche.category else None,
         vehicle_id=fiche.vehicle_id,
         breakdown_types=fiche.breakdown_types_json or [],
         mecaniciens=mecaniciens,
@@ -95,9 +95,9 @@ def build_fiche_response(fiche: FichePanne) -> dict:
         'service_demande': fiche.service_demande,
         'pieces_commandees': fiche.pieces_commandees,
         'statut': fiche.statut,
-        'category_id': fiche.category_id,
-        'category_name': fiche.category.name if fiche.category else None,
-        'category_color': fiche.category.color if fiche.category else None,
+        'motif_id': fiche.category_id,
+        'motif_name': fiche.category.name if fiche.category else None,
+        'motif_color': fiche.category.color if fiche.category else None,
         'vehicle_id': fiche.vehicle_id,
         'vehicle': vehicle_info,
         'breakdown_types': fiche.breakdown_types_json or [],
@@ -250,6 +250,8 @@ def create_fiche_panne(
 
     acteurs_data = data.acteurs
     fiche_dict = data.model_dump(exclude={'acteurs', 'breakdown_types'})
+    # motif_id (API) → category_id (colonne ORM, non migrée)
+    fiche_dict['category_id'] = fiche_dict.pop('motif_id')
     fiche_dict['breakdown_types_json'] = data.breakdown_types or []
 
     # Si un véhicule enregistré est fourni, on override immatriculation + societe
@@ -306,6 +308,10 @@ def update_fiche_panne(
         return None
 
     update_dict = data.model_dump(exclude_none=True, exclude={'acteurs', 'breakdown_types'})
+
+    # motif_id (API) → category_id (colonne ORM, non migrée)
+    if 'motif_id' in update_dict:
+        update_dict['category_id'] = update_dict.pop('motif_id')
 
     # Mapping breakdown_types → breakdown_types_json
     if data.breakdown_types is not None:
@@ -392,12 +398,12 @@ def get_pannes_dashboard(db: Session) -> PannesDashboardResponse:
         for row in societe_rows
     ]
 
-    # Répartition par catégorie
-    categorie_rows = (
+    # Répartition par motif d'intervention
+    motif_rows = (
         db.query(
             FichePanne.category_id,
-            LogisticsConfigOption.name.label('cat_name'),
-            LogisticsConfigOption.color.label('cat_color'),
+            LogisticsConfigOption.name.label('motif_name'),
+            LogisticsConfigOption.color.label('motif_color'),
             func.count(FichePanne.id).label('nb'),
         )
         .outerjoin(LogisticsConfigOption, FichePanne.category_id == LogisticsConfigOption.id)
@@ -405,15 +411,15 @@ def get_pannes_dashboard(db: Session) -> PannesDashboardResponse:
         .order_by(func.count(FichePanne.id).desc())
         .all()
     )
-    repartition_categorie = [
-        RepartitionCategorie(
-            category_id=row.category_id,
-            category_name=row.cat_name or 'Non catégorisé',
-            category_color=row.cat_color,
+    repartition_motif = [
+        RepartitionMotif(
+            motif_id=row.category_id,
+            motif_name=row.motif_name or 'Non catégorisé',
+            motif_color=row.motif_color,
             nombre_fiches=row.nb,
             pourcentage=round((row.nb / total_fiches * 100), 1) if total_fiches > 0 else 0.0,
         )
-        for row in categorie_rows
+        for row in motif_rows
     ]
 
     # Véhicules récurrents (immatriculation avec > 1 fiche)
@@ -460,17 +466,17 @@ def get_pannes_dashboard(db: Session) -> PannesDashboardResponse:
         fiches_en_cours=fiches_en_cours,
         fiches_cloturees=fiches_cloturees,
         repartition_societe=repartition_societe,
-        repartition_categorie=repartition_categorie,
+        repartition_motif=repartition_motif,
         vehicules_recurrents=vehicules_recurrents,
         mecaniciens_actifs=mecaniciens_actifs,
     )
 
 
 # ---------------------------------------------------------------------------
-# Panne Categories (LogisticsConfigOption list_type="panne_category")
+# Panne Motifs (LogisticsConfigOption list_type="panne_category")
 # ---------------------------------------------------------------------------
 
-def get_panne_categories(
+def get_panne_motifs(
     db: Session,
     include_inactive: bool = False,
 ) -> List[LogisticsConfigOption]:
@@ -482,9 +488,9 @@ def get_panne_categories(
     return query.order_by(LogisticsConfigOption.sort_order, LogisticsConfigOption.name).all()
 
 
-def create_panne_category(
+def create_panne_motif(
     db: Session,
-    data: PanneCategoryCreate,
+    data: PanneMotifCreate,
 ) -> LogisticsConfigOption:
     max_order = db.query(func.max(LogisticsConfigOption.sort_order)).filter(
         LogisticsConfigOption.list_type == 'panne_category'
@@ -504,10 +510,10 @@ def create_panne_category(
     return option
 
 
-def update_panne_category(
+def update_panne_motif(
     db: Session,
     option_id: int,
-    data: PanneCategoryUpdate,
+    data: PanneMotifUpdate,
 ) -> Optional[LogisticsConfigOption]:
     option = db.query(LogisticsConfigOption).filter(
         LogisticsConfigOption.id == option_id,
@@ -522,7 +528,7 @@ def update_panne_category(
     return option
 
 
-def delete_panne_category(
+def delete_panne_motif(
     db: Session,
     option_id: int,
 ) -> bool:

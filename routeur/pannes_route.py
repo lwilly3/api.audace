@@ -4,16 +4,15 @@
 Préfixe : /pannes  (fiches)  +  /acteurs
 Auth    : Depends(oauth2.get_current_user) sur toutes les routes
 Permissions (colonnes de UserPermissions) :
-  - pannes_access_section   : accès au module
-  - pannes_view             : lire les fiches
-  - pannes_create           : créer une fiche
-  - pannes_edit             : modifier une fiche
-  - pannes_delete           : supprimer une fiche (admin)
-  - pannes_view_all_companies : voir les fiches de toutes les sociétés
-  - acteurs_view            : voir la liste des acteurs
-  - acteurs_create          : créer un acteur
-  - acteurs_edit            : modifier un acteur
-  - acteurs_link_account    : lier un acteur à un compte
+  - logistics_pannes_access_section   : accès au module
+  - logistics_pannes_view             : lire les fiches
+  - logistics_pannes_create           : créer une fiche
+  - logistics_pannes_edit             : modifier une fiche
+  - logistics_pannes_delete           : supprimer une fiche (admin)
+  - logistics_acteurs_view            : voir la liste des acteurs
+  - logistics_acteurs_create          : créer un acteur
+  - logistics_acteurs_edit            : modifier un acteur
+  - logistics_acteurs_link_account    : lier un acteur à un compte
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -35,10 +34,10 @@ from app.db.crud.crud_pannes import (
     update_fiche_panne,
     delete_fiche_panne,
     get_pannes_dashboard,
-    get_panne_categories,
-    create_panne_category,
-    update_panne_category,
-    delete_panne_category,
+    get_panne_motifs,
+    create_panne_motif,
+    update_panne_motif,
+    delete_panne_motif,
     get_breakdown_types,
     build_fiche_response,
 )
@@ -53,9 +52,9 @@ from app.schemas.schema_pannes import (
     FichePanneResponse,
     FichePanneListResponse,
     PannesDashboardResponse,
-    PanneCategoryResponse,
-    PanneCategoryCreate,
-    PanneCategoryUpdate,
+    PanneMotifResponse,
+    PanneMotifCreate,
+    PanneMotifUpdate,
     BreakdownTypeResponse,
 )
 
@@ -92,7 +91,7 @@ def list_fiches_pannes_endpoint(
     immatriculation: Optional[str] = Query(None),
     date_debut: Optional[date] = Query(None),
     date_fin: Optional[date] = Query(None),
-    category_id: Optional[int] = Query(None, description="Filtrer par catégorie"),
+    motif_id: Optional[int] = Query(None, description="Filtrer par motif d'intervention"),
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
 ):
@@ -108,7 +107,7 @@ def list_fiches_pannes_endpoint(
         immatriculation=immatriculation,
         date_debut=date_debut,
         date_fin=date_fin,
-        category_id=category_id,
+        category_id=motif_id,   # motif_id (API) → category_id (ORM)
     )
 
 
@@ -126,67 +125,66 @@ def create_fiche_panne_endpoint(
         user_id=current_user.id,
         username=current_user.username,
     )
-    # Rechargement avec joinedload pour la réponse complète
     fiche = get_fiche_panne(db, fiche.id)
     return FichePanneResponse(**build_fiche_response(fiche))
 
 
 # ===========================================================================
-# CATÉGORIES DE PANNES  — DOIT être avant /{fiche_id} pour éviter le conflit
+# MOTIFS D'INTERVENTION — DOIT être avant /{fiche_id} pour éviter le conflit
 # ===========================================================================
 
-@router.get("/pannes/categories", response_model=list[PanneCategoryResponse])
-def list_panne_categories_endpoint(
+@router.get("/pannes/motifs", response_model=list[PanneMotifResponse])
+def list_panne_motifs_endpoint(
     include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
 ):
-    """Liste des catégories de pannes configurées."""
+    """Liste des motifs d'intervention configurés (Panne / Entretien / Accident / Diagnostic)."""
     if not current_user.permissions.logistics_pannes_access_section:
         raise HTTPException(status_code=403, detail="Accès au module Pannes refusé")
-    return get_panne_categories(db, include_inactive=include_inactive)
+    return get_panne_motifs(db, include_inactive=include_inactive)
 
 
-@router.post("/pannes/categories", response_model=PanneCategoryResponse, status_code=201)
-def create_panne_category_endpoint(
-    data: PanneCategoryCreate,
+@router.post("/pannes/motifs", response_model=PanneMotifResponse, status_code=201)
+def create_panne_motif_endpoint(
+    data: PanneMotifCreate,
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
 ):
-    """Créer une nouvelle catégorie de panne."""
+    """Créer un nouveau motif d'intervention."""
     if not current_user.permissions.logistics_manage_settings:
         raise HTTPException(status_code=403, detail="Permission logistics_manage_settings requise")
-    return create_panne_category(db, data)
+    return create_panne_motif(db, data)
 
 
-@router.put("/pannes/categories/{option_id}", response_model=PanneCategoryResponse)
-def update_panne_category_endpoint(
+@router.put("/pannes/motifs/{option_id}", response_model=PanneMotifResponse)
+def update_panne_motif_endpoint(
     option_id: int,
-    data: PanneCategoryUpdate,
+    data: PanneMotifUpdate,
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
 ):
-    """Modifier une catégorie de panne."""
+    """Modifier un motif d'intervention."""
     if not current_user.permissions.logistics_manage_settings:
         raise HTTPException(status_code=403, detail="Permission logistics_manage_settings requise")
-    option = update_panne_category(db, option_id, data)
+    option = update_panne_motif(db, option_id, data)
     if not option:
-        raise HTTPException(status_code=404, detail="Catégorie introuvable")
+        raise HTTPException(status_code=404, detail="Motif introuvable")
     return option
 
 
-@router.delete("/pannes/categories/{option_id}", status_code=204)
-def delete_panne_category_endpoint(
+@router.delete("/pannes/motifs/{option_id}", status_code=204)
+def delete_panne_motif_endpoint(
     option_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
 ):
-    """Désactiver une catégorie de panne (soft delete)."""
+    """Désactiver un motif d'intervention (soft delete)."""
     if not current_user.permissions.logistics_manage_settings:
         raise HTTPException(status_code=403, detail="Permission logistics_manage_settings requise")
-    deleted = delete_panne_category(db, option_id)
+    deleted = delete_panne_motif(db, option_id)
     if not deleted:
-        raise HTTPException(status_code=404, detail="Catégorie introuvable")
+        raise HTTPException(status_code=404, detail="Motif introuvable")
 
 
 @router.get("/pannes/breakdown-types", response_model=list[BreakdownTypeResponse])
@@ -194,7 +192,7 @@ def list_breakdown_types_endpoint(
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user),
 ):
-    """Liste des types de panne (multi-select) configurés."""
+    """Liste des types de panne (symptômes techniques multi-select) configurés."""
     if not current_user.permissions.logistics_pannes_access_section:
         raise HTTPException(status_code=403, detail="Accès au module Pannes refusé")
     return get_breakdown_types(db)
@@ -320,7 +318,7 @@ def lier_compte_endpoint(
 ):
     """
     Lier un acteur existant à un compte applicatif (user_id).
-    Autorisé : admin (acteurs_link_account) ou l'utilisateur lui-même (user_id == current_user.id).
+    Autorisé : admin (acteurs_link_account) ou l'utilisateur lui-même.
     """
     is_self = data.user_id == current_user.id
     has_perm = current_user.permissions.logistics_acteurs_link_account

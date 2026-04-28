@@ -5,6 +5,12 @@ Schémas :
   - Acteur      : Create / Update / Response
   - FichePanne  : Create / Update / Response / ListResponse
   - PannesDashboard : réponse KPIs dashboard
+
+Vocabulaire :
+  - "motif"  = raison de l'intervention (Panne / Entretien / Accident / Diagnostic)
+               → champ API : motif_id / motif_name / motif_color
+               → colonne DB ORM : category_id (non renommé pour éviter migration)
+  - "breakdown_types" = symptômes techniques multi-select (Moteur, Freinage & Garnitures…)
 """
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -27,10 +33,11 @@ class VehicleInfo(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# PanneCategory (LogisticsConfigOption avec list_type="panne_category")
+# PanneMotif (LogisticsConfigOption avec list_type="panne_category")
+# Représente le MOTIF de l'intervention : Panne / Entretien / Accident / Diagnostic
 # ---------------------------------------------------------------------------
 
-class PanneCategoryResponse(BaseModel):
+class PanneMotifResponse(BaseModel):
     id: int
     name: str
     description: Optional[str]
@@ -43,7 +50,7 @@ class PanneCategoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class PanneCategoryCreate(BaseModel):
+class PanneMotifCreate(BaseModel):
     name: str = Field(..., max_length=255)
     description: Optional[str] = None
     color: Optional[str] = Field(None, max_length=20)
@@ -53,7 +60,7 @@ class PanneCategoryCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class PanneCategoryUpdate(BaseModel):
+class PanneMotifUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=255)
     description: Optional[str] = None
     color: Optional[str] = Field(None, max_length=20)
@@ -66,6 +73,7 @@ class PanneCategoryUpdate(BaseModel):
 
 # ---------------------------------------------------------------------------
 # BreakdownType (LogisticsConfigOption avec list_type="breakdown_type")
+# Représente les SYMPTÔMES techniques constatés (multi-select)
 # ---------------------------------------------------------------------------
 
 class BreakdownTypeResponse(BaseModel):
@@ -161,6 +169,7 @@ class FicheActeurCreate(BaseModel):
 
 # ---------------------------------------------------------------------------
 # FichePanne
+# Note : motif_id dans l'API correspond à category_id dans la colonne ORM (non migré)
 # ---------------------------------------------------------------------------
 
 class FichePanneCreate(BaseModel):
@@ -173,9 +182,9 @@ class FichePanneCreate(BaseModel):
     service_demande: Optional[str] = Field(None)
     pieces_commandees: Optional[str] = Field(None)
     statut: str = Field('en_attente', description="en_attente / en_cours / cloture")
-    category_id: int = Field(..., description="ID de la catégorie de panne (obligatoire)")
+    motif_id: int = Field(..., description="ID du motif d'intervention (obligatoire)")
     vehicle_id: Optional[int] = Field(None, description="ID du véhicule enregistré (optionnel)")
-    # Types de panne multi-select (noms stockés)
+    # Types de panne multi-select (symptômes techniques, noms stockés)
     breakdown_types: List[str] = Field(default_factory=list)
     # Acteurs liés à la fiche
     acteurs: List[FicheActeurCreate] = Field(default_factory=list)
@@ -193,7 +202,7 @@ class FichePanneUpdate(BaseModel):
     service_demande: Optional[str] = None
     pieces_commandees: Optional[str] = None
     statut: Optional[str] = None
-    category_id: Optional[int] = None
+    motif_id: Optional[int] = None
     vehicle_id: Optional[int] = None
     # Si fourni, remplace la liste complète des types de panne
     breakdown_types: Optional[List[str]] = None
@@ -215,9 +224,9 @@ class FichePanneResponse(BaseModel):
     service_demande: Optional[str]
     pieces_commandees: Optional[str]
     statut: str
-    category_id: Optional[int]
-    category_name: Optional[str] = None
-    category_color: Optional[str] = None
+    motif_id: Optional[int]
+    motif_name: Optional[str] = None
+    motif_color: Optional[str] = None
     vehicle_id: Optional[int]
     vehicle: Optional[VehicleInfo] = None
     breakdown_types: List[str] = Field(default_factory=list)
@@ -238,9 +247,9 @@ class FichePanneListItem(BaseModel):
     immatriculation: str
     societe: str
     statut: str
-    category_id: Optional[int]
-    category_name: Optional[str] = None
-    category_color: Optional[str] = None
+    motif_id: Optional[int]
+    motif_name: Optional[str] = None
+    motif_color: Optional[str] = None
     vehicle_id: Optional[int]
     breakdown_types: List[str] = Field(default_factory=list)
     # Noms des mécaniciens (pour affichage colonne dans le tableau)
@@ -287,10 +296,10 @@ class RepartitionSociete(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class RepartitionCategorie(BaseModel):
-    category_id: Optional[int]
-    category_name: str
-    category_color: Optional[str]
+class RepartitionMotif(BaseModel):
+    motif_id: Optional[int]
+    motif_name: str
+    motif_color: Optional[str]
     nombre_fiches: int
     pourcentage: float
 
@@ -303,8 +312,8 @@ class PannesDashboardResponse(BaseModel):
     fiches_en_cours: int
     fiches_cloturees: int
     repartition_societe: List[RepartitionSociete]
-    repartition_categorie: List[RepartitionCategorie]
-    vehicules_recurrents: List[VehiculeRecurrent]   # Immatriculations avec > 1 fiche
-    mecaniciens_actifs: List[MecanicienActif]        # Top mécaniciens par nombre d'interventions
+    repartition_motif: List[RepartitionMotif]
+    vehicules_recurrents: List[VehiculeRecurrent]
+    mecaniciens_actifs: List[MecanicienActif]
 
     model_config = ConfigDict(from_attributes=True)
