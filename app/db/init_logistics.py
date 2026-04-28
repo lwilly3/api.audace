@@ -50,26 +50,48 @@ def _seed_breakdown_types(db: Session) -> None:
 
 
 def _seed_panne_categories(db: Session) -> None:
-    """Seed the 9 default panne categories (list_type='panne_category')."""
+    """Seed the 4 default panne motifs (list_type='panne_category').
+    Ces motifs répondent à la question POURQUOI le véhicule est en atelier.
+    Ils sont distincts des 'types de panne' qui décrivent CE QUI est cassé.
+    """
     panne_categories = [
-        {"name": "moteur",        "description": "Moteur (panne, surchauffe, huile)",              "color": "#ef4444"},
-        {"name": "transmission",  "description": "Transmission (boîte, embrayage, différentiel)",  "color": "#f97316"},
-        {"name": "electrique",    "description": "Électrique (batterie, alternateur, câblage)",    "color": "#eab308"},
-        {"name": "freinage",      "description": "Freinage (freins, ABS, tambours)",               "color": "#3b82f6"},
-        {"name": "pneumatiques",  "description": "Pneumatiques (pneus, jantes, crevaisons)",       "color": "#8b5cf6"},
-        {"name": "carrosserie",   "description": "Carrosserie (cabine, structure, benne)",         "color": "#6b7280"},
-        {"name": "climatisation", "description": "Climatisation / chauffage",                      "color": "#06b6d4"},
-        {"name": "hydraulique",   "description": "Hydraulique (vérins, pompes, flexibles)",        "color": "#10b981"},
-        {"name": "autre",         "description": "Autre catégorie de panne",                       "color": "#9ca3af", "is_default": True},
+        {
+            "name": "Panne",
+            "description": "Véhicule immobilisé de façon imprévue — problème mécanique, électrique ou autre",
+            "color": "#ef4444",   # rouge
+            "is_default": True,
+            "sort_order": 1,
+        },
+        {
+            "name": "Entretien",
+            "description": "Révision planifiée, vidange, maintenance périodique, remplacement préventif",
+            "color": "#f59e0b",   # amber
+            "is_default": False,
+            "sort_order": 2,
+        },
+        {
+            "name": "Accident",
+            "description": "Dommage suite à une collision, tonneau ou sinistre — réparation carrosserie / structure",
+            "color": "#f97316",   # orange
+            "is_default": False,
+            "sort_order": 3,
+        },
+        {
+            "name": "Diagnostic",
+            "description": "Contrôle ou vérification demandé sans panne avérée — inspection avant mission, bilan technique",
+            "color": "#3b82f6",   # bleu
+            "is_default": False,
+            "sort_order": 4,
+        },
     ]
-    for i, cat in enumerate(panne_categories):
+    for cat in panne_categories:
         db.add(LogisticsConfigOption(
             list_type="panne_category",
             name=cat["name"],
             description=cat["description"],
             color=cat["color"],
             is_default=cat.get("is_default", False),
-            sort_order=i,
+            sort_order=cat["sort_order"],
         ))
 
 
