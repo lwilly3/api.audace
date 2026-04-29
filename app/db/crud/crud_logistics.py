@@ -226,17 +226,39 @@ def update_vehicle(
             detail="Véhicule non trouvé."
         )
 
-    # Champs alias non-ORM à exclure du setattr générique
-    ALIAS_FIELDS = {'fuel_type', 'mileage', 'capacity_kg', 'capacity_volume', 'status'}
+    # Champs alias à ne pas toucher via setattr générique (traités explicitement ci-dessous)
+    ALIAS_FIELDS = {'fuel_type', 'mileage', 'capacity_kg', 'capacity_volume', 'status',
+                    'mileage_counter', 'capacity_value', 'capacity_unit', 'fuel_type_id', 'status_id'}
 
     for field, value in data.model_dump(exclude_unset=True).items():
         if field in ALIAS_FIELDS:
-            continue  # gérés par le endpoint (route) avant d'arriver ici
+            continue
         setattr(vehicle, field, value)
 
-    # fuel_type_raw : stocker si pas de FK résolue
-    if 'fuel_type' in data.model_dump(exclude_unset=True) and not data.fuel_type_id:
+    # --- Champs résolus par la route APRÈS création du modèle Pydantic.
+    # model_dump(exclude_unset=True) ne les voit pas car définis après __init__.
+    # On les lit directement via l'attribut.
+
+    # capacity_value / capacity_unit (résolu depuis capacity_kg ou capacity_volume)
+    if data.capacity_value is not None:
+        vehicle.capacity_value = data.capacity_value
+        if data.capacity_unit:
+            vehicle.capacity_unit = data.capacity_unit
+
+    # mileage_counter (résolu depuis mileage alias)
+    if data.mileage_counter is not None:
+        vehicle.mileage_counter = data.mileage_counter
+
+    # fuel_type_id (trouvé en base) ou fuel_type_raw (fallback string)
+    if data.fuel_type_id is not None:
+        vehicle.fuel_type_id = data.fuel_type_id
+        vehicle.fuel_type_raw = None
+    elif data.fuel_type:
         vehicle.fuel_type_raw = data.fuel_type
+
+    # status_id (résolu depuis status string ou fourni directement)
+    if data.status_id is not None:
+        vehicle.status_id = data.status_id
 
     vehicle.updated_by = user_id
     db.commit()
