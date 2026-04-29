@@ -129,12 +129,22 @@ class VehicleUpdate(BaseModel):
     brand: Optional[str] = None
     model: Optional[str] = None
     year: Optional[int] = None
+    vin: Optional[str] = None
     capacity_value: Optional[Decimal] = None
     capacity_unit: Optional[str] = None
+    capacity_kg: Optional[Decimal] = None    # alias frontend → capacity_value (kg)
+    capacity_volume: Optional[Decimal] = None  # alias frontend → capacity_value (litres)
+    fuel_type_id: Optional[int] = None
+    fuel_type: Optional[str] = None          # alias frontend → fuel_type_raw / fuel_type_id
     status_id: Optional[int] = None
+    status: Optional[str] = None             # alias frontend → status_id lookup
+    mileage: Optional[int] = None            # alias frontend → mileage_counter
     mileage_counter: Optional[int] = None
     current_driver_id: Optional[int] = None
     notes: Optional[str] = None
+    acquisition_date: Optional[date] = None
+    acquisition_cost: Optional[Decimal] = None
+    base_site_id: Optional[int] = None
 
 
 class VehicleResponse(VehicleBase):

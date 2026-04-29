@@ -127,6 +127,7 @@ def create_vehicle(
         fuel_type_id=data.fuel_type_id,
         fuel_type_raw=data.fuel_type if not data.fuel_type_id else None,
         status_id=data.status_id,
+        mileage_counter=data.mileage or 0,
         company_id=data.company_id,
         base_site_id=data.base_site_id,
         acquisition_date=data.acquisition_date,
@@ -225,12 +226,17 @@ def update_vehicle(
             detail="Véhicule non trouvé."
         )
 
+    # Champs alias non-ORM à exclure du setattr générique
+    ALIAS_FIELDS = {'fuel_type', 'mileage', 'capacity_kg', 'capacity_volume', 'status'}
+
     for field, value in data.model_dump(exclude_unset=True).items():
-        if field == 'fuel_type' and not data.fuel_type_id:
-            # Stocker fuel_type comme valeur directe si pas de FK
-            vehicle.fuel_type_raw = value
-        elif field not in ('fuel_type',):  # fuel_type n'est pas une colonne ORM
-            setattr(vehicle, field, value)
+        if field in ALIAS_FIELDS:
+            continue  # gérés par le endpoint (route) avant d'arriver ici
+        setattr(vehicle, field, value)
+
+    # fuel_type_raw : stocker si pas de FK résolue
+    if 'fuel_type' in data.model_dump(exclude_unset=True) and not data.fuel_type_id:
+        vehicle.fuel_type_raw = data.fuel_type
 
     vehicle.updated_by = user_id
     db.commit()

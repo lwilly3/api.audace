@@ -230,7 +230,7 @@ def create_vehicle_endpoint(
             vehicle_data.capacity_unit = "litres"
 
     vehicle = create_vehicle(db, vehicle_data, current_user.id, current_user.username)
-    return VehicleResponse.from_orm(vehicle)
+    return vehicle
 
 
 @router.get("/vehicles", response_model=VehicleListResponse)
@@ -283,7 +283,7 @@ def get_vehicle_endpoint(
     vehicle = get_vehicle(db, vehicle_id)
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
-    return VehicleResponse.from_orm(vehicle)
+    return vehicle
 
 
 @router.put("/vehicles/{vehicle_id}", response_model=VehicleResponse)
@@ -293,14 +293,43 @@ def update_vehicle_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(oauth2.get_current_user),
 ):
-    """Update a vehicle."""
+    """Update a vehicle. Accepts frontend aliases (mileage, fuel_type, capacity_kg/volume)."""
     if not current_user.permissions.logistics_vehicles_edit:
         raise HTTPException(status_code=403, detail="Permission denied")
+
+    # --- mileage alias → mileage_counter
+    if vehicle_data.mileage is not None and vehicle_data.mileage_counter is None:
+        vehicle_data.mileage_counter = vehicle_data.mileage
+
+    # --- fuel_type string → fuel_type_id lookup
+    if not vehicle_data.fuel_type_id and vehicle_data.fuel_type:
+        fuel_option = db.query(LogisticsConfigOption).filter_by(
+            list_type="vehicle_fuel_type", name=vehicle_data.fuel_type
+        ).first()
+        if fuel_option:
+            vehicle_data.fuel_type_id = fuel_option.id
+
+    # --- status string → status_id lookup
+    if not vehicle_data.status_id and vehicle_data.status:
+        option = db.query(LogisticsConfigOption).filter_by(
+            list_type="vehicle_status", name=vehicle_data.status
+        ).first()
+        if option:
+            vehicle_data.status_id = option.id
+
+    # --- capacity aliases → capacity_value + capacity_unit
+    if not vehicle_data.capacity_value:
+        if vehicle_data.capacity_kg:
+            vehicle_data.capacity_value = vehicle_data.capacity_kg
+            vehicle_data.capacity_unit = "kg"
+        elif vehicle_data.capacity_volume:
+            vehicle_data.capacity_value = vehicle_data.capacity_volume
+            vehicle_data.capacity_unit = "litres"
 
     vehicle = update_vehicle(db, vehicle_id, vehicle_data, current_user.id)
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
-    return VehicleResponse.from_orm(vehicle)
+    return vehicle
 
 
 @router.post("/vehicles/{vehicle_id}/archive", response_model=VehicleResponse)
@@ -316,7 +345,7 @@ def archive_vehicle_endpoint(
     vehicle = archive_vehicle(db, vehicle_id, current_user.id)
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
-    return VehicleResponse.from_orm(vehicle)
+    return vehicle
 
 
 @router.delete("/vehicles/{vehicle_id}")
