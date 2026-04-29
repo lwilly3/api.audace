@@ -157,7 +157,7 @@ def peek_vehicle_reference(
         raise HTTPException(status_code=403, detail="Access denied")
 
     next_ref = peek_next_vehicle_reference(db)
-    return NextReferenceResponse(next_reference=next_ref)
+    return NextReferenceResponse(reference=next_ref)
 
 
 @router.get("/vehicles/reference/next", response_model=NextReferenceResponse)
@@ -170,7 +170,7 @@ def get_vehicle_reference(
         raise HTTPException(status_code=403, detail="Access denied")
 
     next_ref = get_next_vehicle_reference(db)
-    return NextReferenceResponse(next_reference=next_ref)
+    return NextReferenceResponse(reference=next_ref)
 
 
 @router.post("/vehicles", response_model=VehicleResponse)
