@@ -215,6 +215,10 @@ def create_vehicle_endpoint(
     if not vehicle_data.status_id:
         raise HTTPException(status_code=422, detail="status or status_id is required")
 
+    # --- fuel_type : normaliser la chaîne vide en None avant lookup
+    if vehicle_data.fuel_type is not None and not vehicle_data.fuel_type.strip():
+        vehicle_data.fuel_type = None
+
     # --- fuel_type string → fuel_type_id lookup (optionnel)
     if not vehicle_data.fuel_type_id and vehicle_data.fuel_type:
         fuel_option = db.query(LogisticsConfigOption).filter_by(
@@ -223,14 +227,11 @@ def create_vehicle_endpoint(
         if fuel_option:
             vehicle_data.fuel_type_id = fuel_option.id
 
-    # --- capacity aliases (prend kg en priorite, sinon volume)
-    if not vehicle_data.capacity_value:
-        if vehicle_data.capacity_kg:
-            vehicle_data.capacity_value = vehicle_data.capacity_kg
-            vehicle_data.capacity_unit = "kg"
-        elif vehicle_data.capacity_volume:
-            vehicle_data.capacity_value = vehicle_data.capacity_volume
-            vehicle_data.capacity_unit = "litres"
+    # --- capacity volume → capacity_value (litres)
+    # capacity_kg est stocké séparément dans capacity_kg_value (géré dans CRUD)
+    if not vehicle_data.capacity_value and vehicle_data.capacity_volume:
+        vehicle_data.capacity_value = vehicle_data.capacity_volume
+        vehicle_data.capacity_unit = "litres"
 
     vehicle = create_vehicle(db, vehicle_data, current_user.id, current_user.username)
     return vehicle
@@ -313,6 +314,10 @@ def update_vehicle_endpoint(
     if vehicle_data.mileage is not None and vehicle_data.mileage_counter is None:
         vehicle_data.mileage_counter = vehicle_data.mileage
 
+    # --- fuel_type : normaliser la chaîne vide en None avant lookup
+    if vehicle_data.fuel_type is not None and not vehicle_data.fuel_type.strip():
+        vehicle_data.fuel_type = None
+
     # --- fuel_type string → fuel_type_id lookup
     if not vehicle_data.fuel_type_id and vehicle_data.fuel_type:
         fuel_option = db.query(LogisticsConfigOption).filter_by(
@@ -329,14 +334,10 @@ def update_vehicle_endpoint(
         if option:
             vehicle_data.status_id = option.id
 
-    # --- capacity aliases → capacity_value + capacity_unit
-    if not vehicle_data.capacity_value:
-        if vehicle_data.capacity_kg:
-            vehicle_data.capacity_value = vehicle_data.capacity_kg
-            vehicle_data.capacity_unit = "kg"
-        elif vehicle_data.capacity_volume:
-            vehicle_data.capacity_value = vehicle_data.capacity_volume
-            vehicle_data.capacity_unit = "litres"
+    # --- capacity volume → capacity_value (litres) ; capacity_kg géré séparément dans CRUD
+    if not vehicle_data.capacity_value and vehicle_data.capacity_volume:
+        vehicle_data.capacity_value = vehicle_data.capacity_volume
+        vehicle_data.capacity_unit = "litres"
 
     vehicle = update_vehicle(db, vehicle_id, vehicle_data, current_user.id)
     if not vehicle:

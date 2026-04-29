@@ -124,8 +124,9 @@ def create_vehicle(
         vin=data.vin,
         capacity_value=data.capacity_value,
         capacity_unit=data.capacity_unit,
+        capacity_kg_value=data.capacity_kg,
         fuel_type_id=data.fuel_type_id,
-        fuel_type_raw=data.fuel_type if not data.fuel_type_id else None,
+        fuel_type_raw=(data.fuel_type.strip() if data.fuel_type and data.fuel_type.strip() else None) if not data.fuel_type_id else None,
         status_id=data.status_id,
         mileage_counter=data.mileage or 0,
         company_id=data.company_id,
@@ -228,7 +229,8 @@ def update_vehicle(
 
     # Champs alias à ne pas toucher via setattr générique (traités explicitement ci-dessous)
     ALIAS_FIELDS = {'fuel_type', 'mileage', 'capacity_kg', 'capacity_volume', 'status',
-                    'mileage_counter', 'capacity_value', 'capacity_unit', 'fuel_type_id', 'status_id'}
+                    'mileage_counter', 'capacity_value', 'capacity_unit', 'fuel_type_id', 'status_id',
+                    'capacity_kg_value'}
 
     for field, value in data.model_dump(exclude_unset=True).items():
         if field in ALIAS_FIELDS:
@@ -239,22 +241,26 @@ def update_vehicle(
     # model_dump(exclude_unset=True) ne les voit pas car définis après __init__.
     # On les lit directement via l'attribut.
 
-    # capacity_value / capacity_unit (résolu depuis capacity_kg ou capacity_volume)
+    # capacity_value / capacity_unit = volume (litres, m3…)
     if data.capacity_value is not None:
         vehicle.capacity_value = data.capacity_value
         if data.capacity_unit:
             vehicle.capacity_unit = data.capacity_unit
 
+    # capacity_kg_value = charge utile en kg (colonne séparée)
+    if data.capacity_kg is not None:
+        vehicle.capacity_kg_value = data.capacity_kg
+
     # mileage_counter (résolu depuis mileage alias)
     if data.mileage_counter is not None:
         vehicle.mileage_counter = data.mileage_counter
 
-    # fuel_type_id (trouvé en base) ou fuel_type_raw (fallback string)
+    # fuel_type_id (trouvé en base) ou fuel_type_raw (fallback string, chaîne vide ignorée)
     if data.fuel_type_id is not None:
         vehicle.fuel_type_id = data.fuel_type_id
         vehicle.fuel_type_raw = None
-    elif data.fuel_type:
-        vehicle.fuel_type_raw = data.fuel_type
+    elif data.fuel_type and data.fuel_type.strip():
+        vehicle.fuel_type_raw = data.fuel_type.strip()
 
     # status_id (résolu depuis status string ou fourni directement)
     if data.status_id is not None:

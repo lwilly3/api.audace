@@ -49,8 +49,9 @@ class LogisticsVehicle(BaseModel):
     vin = Column(String(50), unique=True, nullable=True)
     
     # Capacité
-    capacity_value = Column(DECIMAL(10, 2), nullable=True)
-    capacity_unit = Column(String(10), nullable=True)  # litres, m3, tonnes, conteneurs
+    capacity_value = Column(DECIMAL(10, 2), nullable=True)   # volume principal (litres, m3…)
+    capacity_unit = Column(String(10), nullable=True)         # litres, m3, conteneurs (legacy: kg/tonnes)
+    capacity_kg_value = Column(DECIMAL(10, 2), nullable=True) # charge utile en kg (séparé du volume)
     
     # État
     fuel_type_id = Column(Integer, ForeignKey('logistics_config_options.id'), nullable=True)
@@ -140,20 +141,21 @@ class LogisticsVehicle(BaseModel):
 
     @property
     def capacity_kg(self) -> Optional[float]:
-        """Capacite en kg si capacity_unit est 'kg' ou 'tonnes'."""
-        if self.capacity_value is None:
-            return None
-        if self.capacity_unit in ('kg', 'tonnes'):
+        """Charge utile en kg : colonne dédiée, ou fallback legacy (capacity_value avec unit kg)."""
+        if self.capacity_kg_value is not None:
+            return float(self.capacity_kg_value)
+        # backward compat : anciens véhicules stockaient kg dans capacity_value
+        if self.capacity_value is not None and self.capacity_unit in ('kg', 'tonnes'):
             return float(self.capacity_value)
         return None
 
     @property
     def capacity_volume(self) -> Optional[float]:
-        """Capacite en volume : retourne capacity_value si l unite n est pas un poids."""
+        """Capacite en volume (litres, m3…) : capacity_value si l'unité n'est pas un poids."""
         if self.capacity_value is None:
             return None
         if self.capacity_unit in ('kg', 'tonnes'):
-            return None  # c est du poids, pas du volume
+            return None  # legacy kg → pas du volume
         return float(self.capacity_value)
 
     @property
