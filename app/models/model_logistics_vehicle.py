@@ -54,6 +54,7 @@ class LogisticsVehicle(BaseModel):
     
     # État
     fuel_type_id = Column(Integer, ForeignKey('logistics_config_options.id'), nullable=True)
+    fuel_type_raw = Column(String(50), nullable=True)   # stockage direct si pas de config option
     status_id = Column(Integer, ForeignKey('logistics_config_options.id'), nullable=False)
     mileage_counter = Column(Integer, default=0)
     
@@ -117,8 +118,10 @@ class LogisticsVehicle(BaseModel):
 
     @property
     def fuel_type(self) -> Optional[str]:
-        """Type de carburant (string) depuis la relation fuel_type_option."""
-        return self.fuel_type_option.name if self.fuel_type_option else None
+        """Type de carburant : config option name en priorite, sinon valeur directe."""
+        if self.fuel_type_option:
+            return self.fuel_type_option.name
+        return self.fuel_type_raw
 
     @property
     def license_plate(self) -> Optional[str]:
@@ -146,12 +149,12 @@ class LogisticsVehicle(BaseModel):
 
     @property
     def capacity_volume(self) -> Optional[float]:
-        """Capacite en litres si capacity_unit est 'litres', 'L', 'm3'."""
+        """Capacite en volume : retourne capacity_value si l unite n est pas un poids."""
         if self.capacity_value is None:
             return None
-        if self.capacity_unit in ('litres', 'L', 'm3', 'conteneurs'):
-            return float(self.capacity_value)
-        return None
+        if self.capacity_unit in ('kg', 'tonnes'):
+            return None  # c est du poids, pas du volume
+        return float(self.capacity_value)
 
     @property
     def assigned_driver_id(self) -> Optional[int]:

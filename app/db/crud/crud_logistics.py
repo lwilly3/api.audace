@@ -125,6 +125,7 @@ def create_vehicle(
         capacity_value=data.capacity_value,
         capacity_unit=data.capacity_unit,
         fuel_type_id=data.fuel_type_id,
+        fuel_type_raw=data.fuel_type if not data.fuel_type_id else None,
         status_id=data.status_id,
         company_id=data.company_id,
         base_site_id=data.base_site_id,
@@ -225,7 +226,11 @@ def update_vehicle(
         )
 
     for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(vehicle, field, value)
+        if field == 'fuel_type' and not data.fuel_type_id:
+            # Stocker fuel_type comme valeur directe si pas de FK
+            vehicle.fuel_type_raw = value
+        elif field not in ('fuel_type',):  # fuel_type n'est pas une colonne ORM
+            setattr(vehicle, field, value)
 
     vehicle.updated_by = user_id
     db.commit()
