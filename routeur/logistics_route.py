@@ -4,9 +4,12 @@ Handles all REST endpoints for fleet management, drivers, teams, missions, fuel,
 Implements authorization checks and request validation via Pydantic schemas.
 """
 
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+
+logger = logging.getLogger("hapson-api")
 from core.auth import oauth2
 from app.db.database import get_db
 from app.db.crud.crud_logistics import (
@@ -296,6 +299,15 @@ def update_vehicle_endpoint(
     """Update a vehicle. Accepts frontend aliases (mileage, fuel_type, capacity_kg/volume)."""
     if not current_user.permissions.logistics_vehicles_edit:
         raise HTTPException(status_code=403, detail="Permission denied")
+
+    logger.info(
+        "[UPDATE_VEHICLE %d] fuel_type=%r capacity_kg=%r capacity_volume=%r mileage=%r",
+        vehicle_id,
+        vehicle_data.fuel_type,
+        vehicle_data.capacity_kg,
+        vehicle_data.capacity_volume,
+        vehicle_data.mileage,
+    )
 
     # --- mileage alias → mileage_counter
     if vehicle_data.mileage is not None and vehicle_data.mileage_counter is None:
