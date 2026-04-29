@@ -18,6 +18,15 @@ from app.db.crud.crud_logistics import (
     update_vehicle,
     archive_vehicle,
     delete_vehicle,
+    get_compartments,
+    create_compartment,
+    update_compartment,
+    delete_compartment,
+    get_vehicle_associations,
+    get_associations_by_company,
+    create_vehicle_association,
+    update_vehicle_association,
+    delete_vehicle_association,
     create_driver,
     get_drivers,
     get_driver,
@@ -123,6 +132,12 @@ from app.schemas.schema_logistics import (
     MaintenanceResponse,
     MaintenanceListResponse,
     MaintenanceStatusUpdate,
+    CompartmentCreate,
+    CompartmentUpdate,
+    CompartmentResponse,
+    VehicleAssociationCreate,
+    VehicleAssociationUpdate,
+    VehicleAssociationResponse,
 )
 
 router = APIRouter(prefix="/logistics", tags=["logistics"])
@@ -182,6 +197,7 @@ def list_vehicles(
     search: str = Query(None),
     segment: str = Query(None),
     status: str = Query(None),
+    vehicle_role: str = Query(None),
     is_archived: bool = Query(False),
 ):
     """List vehicles with filtering and pagination."""
@@ -201,6 +217,7 @@ def list_vehicles(
         company_id=company_id,
         search=search,
         segment=segment,
+        vehicle_role=vehicle_role,
         status_id=None,
         is_archived=is_archived,
     )
@@ -273,8 +290,139 @@ def delete_vehicle_endpoint(
 
 
 # ============================================================================
-# DRIVERS ENDPOINTS
+# VEHICLE COMPARTMENTS ENDPOINTS
 # ============================================================================
+
+@router.get("/vehicles/{vehicle_id}/compartments", response_model=list[CompartmentResponse])
+def list_compartments(
+    vehicle_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """List all compartments for a vehicle (applicable to porteur_citerne and remorque)."""
+    if not current_user.permissions.logistics_vehicles_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return get_compartments(db, vehicle_id)
+
+
+@router.post("/vehicles/{vehicle_id}/compartments", response_model=CompartmentResponse, status_code=201)
+def create_compartment_endpoint(
+    vehicle_id: int,
+    data: CompartmentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Add a compartment to a tanker vehicle."""
+    if not current_user.permissions.logistics_vehicles_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return create_compartment(db, vehicle_id, data)
+
+
+@router.put("/vehicles/{vehicle_id}/compartments/{compartment_id}", response_model=CompartmentResponse)
+def update_compartment_endpoint(
+    vehicle_id: int,
+    compartment_id: int,
+    data: CompartmentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Update a vehicle compartment."""
+    if not current_user.permissions.logistics_vehicles_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    comp = update_compartment(db, compartment_id, data)
+    if not comp:
+        raise HTTPException(status_code=404, detail="Compartment not found")
+    return comp
+
+
+@router.delete("/vehicles/{vehicle_id}/compartments/{compartment_id}")
+def delete_compartment_endpoint(
+    vehicle_id: int,
+    compartment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Delete a vehicle compartment."""
+    if not current_user.permissions.logistics_vehicles_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    success = delete_compartment(db, compartment_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Compartment not found")
+    return {"message": "Compartment deleted successfully"}
+
+
+# ============================================================================
+# VEHICLE ASSOCIATIONS (TRACTOR ↔ TRAILER) ENDPOINTS
+# ============================================================================
+
+@router.get("/vehicles/{vehicle_id}/associations", response_model=list[VehicleAssociationResponse])
+def list_vehicle_associations(
+    vehicle_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """List all tractor↔trailer associations for a vehicle."""
+    if not current_user.permissions.logistics_vehicles_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return get_vehicle_associations(db, vehicle_id)
+
+
+@router.get("/vehicle-associations", response_model=list[VehicleAssociationResponse])
+def list_associations_by_company(
+    company_id: int = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """List all tractor↔trailer associations for a company."""
+    if not current_user.permissions.logistics_vehicles_view:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    return get_associations_by_company(db, company_id)
+
+
+@router.post("/vehicle-associations", response_model=VehicleAssociationResponse, status_code=201)
+def create_association_endpoint(
+    data: VehicleAssociationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Create a tractor↔trailer association."""
+    if not current_user.permissions.logistics_vehicles_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    try:
+        return create_vehicle_association(db, data)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
+@router.put("/vehicle-associations/{association_id}", response_model=VehicleAssociationResponse)
+def update_association_endpoint(
+    association_id: int,
+    data: VehicleAssociationUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Update a tractor↔trailer association."""
+    if not current_user.permissions.logistics_vehicles_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    assoc = update_vehicle_association(db, association_id, data)
+    if not assoc:
+        raise HTTPException(status_code=404, detail="Association not found")
+    return assoc
+
+
+@router.delete("/vehicle-associations/{association_id}")
+def delete_association_endpoint(
+    association_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(oauth2.get_current_user),
+):
+    """Delete a tractor↔trailer association."""
+    if not current_user.permissions.logistics_vehicles_edit:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    success = delete_vehicle_association(db, association_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Association not found")
+    return {"message": "Association deleted successfully"}
 
 @router.post("/drivers", response_model=DriverResponse)
 def create_driver_endpoint(

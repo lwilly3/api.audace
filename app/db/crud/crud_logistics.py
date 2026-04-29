@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 from app.models.model_logistics_vehicle import LogisticsVehicle
+from app.models.model_logistics_vehicle_extras import LogisticsVehicleCompartment, LogisticsVehicleAssociation
 from app.models.model_logistics_driver_team import LogisticsDriver, LogisticsTeam, LogisticsMechanic, LogisticsInvitation
 from app.models.model_logistics_operations import LogisticsMission, LogisticsMissionCheckpoint, LogisticsFuelLog, LogisticsMaintenance
 from app.models.model_logistics_settings import LogisticsConfigOption, LogisticsGlobalSettings
@@ -18,6 +19,8 @@ from app.models.model_user import User
 from app.models.model_user_permissions import UserPermissions
 from app.schemas.schema_logistics import (
     VehicleCreate, VehicleResponse, VehicleUpdate, VehicleListResponse,
+    CompartmentCreate, CompartmentUpdate, CompartmentResponse,
+    VehicleAssociationCreate, VehicleAssociationUpdate, VehicleAssociationResponse,
     DriverCreate, DriverResponse, DriverUpdate, DriverListResponse,
     TeamCreate, TeamResponse, TeamUpdate, TeamListResponse, TeamDetailResponse,
     ConfigOptionCreate, ConfigOptionUpdate, ConfigOptionResponse,
@@ -112,6 +115,7 @@ def create_vehicle(
     vehicle = LogisticsVehicle(
         registration_number=data.registration_number,
         internal_reference=internal_ref,
+        vehicle_role=data.vehicle_role,
         segment=data.segment,
         type_id=data.type_id,
         brand=data.brand,
@@ -143,6 +147,7 @@ def get_vehicles(
     search: Optional[str] = None,
     company_id: Optional[int] = None,
     segment: Optional[str] = None,
+    vehicle_role: Optional[str] = None,
     status_id: Optional[int] = None,
     is_archived: bool = False,
 ) -> VehicleListResponse:
@@ -166,6 +171,9 @@ def get_vehicles(
     if segment:
         query = query.filter(LogisticsVehicle.segment == segment)
 
+    if vehicle_role:
+        query = query.filter(LogisticsVehicle.vehicle_role == vehicle_role)
+
     if status_id:
         query = query.filter(LogisticsVehicle.status_id == status_id)
 
@@ -173,7 +181,7 @@ def get_vehicles(
     offset = (page - 1) * page_size
 
     vehicles = query.offset(offset).limit(page_size).all()
-    
+
     return VehicleListResponse(
         items=[VehicleResponse.model_validate(v) for v in vehicles],
         total=total,
@@ -260,6 +268,202 @@ def delete_vehicle(db: Session, vehicle_id: int) -> bool:
 
     vehicle.is_deleted = True
     vehicle.deleted_at = datetime.now(timezone.utc)
+    db.commit()
+    return True
+
+
+# ════════════════════════════════════════════════════════════════
+# COMPARTIMENTS CITERNE
+# ════════════════════════════════════════════════════════════════
+
+def _get_vehicle_or_404(db: Session, vehicle_id: int) -> LogisticsVehicle:
+    v = db.query(LogisticsVehicle).filter(
+        LogisticsVehicle.id == vehicle_id,
+        LogisticsVehicle.is_deleted == False,
+    ).first()
+    if not v:
+        raise HTTPException(status_code=404, detail="Véhicule non trouvé.")
+    return v
+
+
+def get_compartments(db: Session, vehicle_id: int) -> list[CompartmentResponse]:
+    """Retourne tous les compartiments d'un véhicule triés par numéro."""
+    _get_vehicle_or_404(db, vehicle_id)
+    rows = (
+        db.query(LogisticsVehicleCompartment)
+        .filter(LogisticsVehicleCompartment.vehicle_id == vehicle_id)
+        .order_by(LogisticsVehicleCompartment.compartment_no)
+        .all()
+    )
+    return [CompartmentResponse.model_validate(r) for r in rows]
+
+
+def create_compartment(
+    db: Session, vehicle_id: int, data: CompartmentCreate
+) -> CompartmentResponse:
+    """Ajoute un compartiment à un véhicule citerne."""
+    _get_vehicle_or_404(db, vehicle_id)
+    # Vérifier l'unicité du numéro de compartiment
+    existing = db.query(LogisticsVehicleCompartment).filter(
+        LogisticsVehicleCompartment.vehicle_id == vehicle_id,
+        LogisticsVehicleCompartment.compartment_no == data.compartment_no,
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Compartiment n°{data.compartment_no} déjà existant pour ce véhicule.",
+        )
+    comp = LogisticsVehicleCompartment(vehicle_id=vehicle_id, **data.model_dump())
+    db.add(comp)
+    db.commit()
+    db.refresh(comp)
+    return CompartmentResponse.model_validate(comp)
+
+
+def update_compartment(
+    db: Session, vehicle_id: int, compartment_id: int, data: CompartmentUpdate
+) -> CompartmentResponse:
+    """Modifie un compartiment."""
+    comp = db.query(LogisticsVehicleCompartment).filter(
+        LogisticsVehicleCompartment.id == compartment_id,
+        LogisticsVehicleCompartment.vehicle_id == vehicle_id,
+    ).first()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Compartiment non trouvé.")
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(comp, field, value)
+    db.commit()
+    db.refresh(comp)
+    return CompartmentResponse.model_validate(comp)
+
+
+def delete_compartment(db: Session, vehicle_id: int, compartment_id: int) -> bool:
+    """Supprime définitivement un compartiment."""
+    comp = db.query(LogisticsVehicleCompartment).filter(
+        LogisticsVehicleCompartment.id == compartment_id,
+        LogisticsVehicleCompartment.vehicle_id == vehicle_id,
+    ).first()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Compartiment non trouvé.")
+    db.delete(comp)
+    db.commit()
+    return True
+
+
+# ════════════════════════════════════════════════════════════════
+# ASSOCIATIONS TRACTEUR ↔ REMORQUE
+# ════════════════════════════════════════════════════════════════
+
+def _build_association_response(assoc: LogisticsVehicleAssociation) -> VehicleAssociationResponse:
+    return VehicleAssociationResponse(
+        id=assoc.id,
+        tractor_id=assoc.tractor_id,
+        trailer_id=assoc.trailer_id,
+        company_id=assoc.company_id,
+        is_default=assoc.is_default,
+        is_active=assoc.is_active,
+        notes=assoc.notes,
+        tractor_registration=assoc.tractor.registration_number if assoc.tractor else None,
+        trailer_registration=assoc.trailer.registration_number if assoc.trailer else None,
+        created_at=assoc.created_at,
+    )
+
+
+def get_vehicle_associations(
+    db: Session,
+    vehicle_id: int,
+    active_only: bool = True,
+) -> list[VehicleAssociationResponse]:
+    """Associations où ce véhicule est tracteur ou remorque."""
+    _get_vehicle_or_404(db, vehicle_id)
+    query = db.query(LogisticsVehicleAssociation).filter(
+        or_(
+            LogisticsVehicleAssociation.tractor_id == vehicle_id,
+            LogisticsVehicleAssociation.trailer_id == vehicle_id,
+        )
+    )
+    if active_only:
+        query = query.filter(LogisticsVehicleAssociation.is_active == True)
+    return [_build_association_response(a) for a in query.all()]
+
+
+def get_associations_by_company(
+    db: Session,
+    company_id: int,
+    active_only: bool = True,
+) -> list[VehicleAssociationResponse]:
+    """Toutes les associations d'une entreprise."""
+    query = db.query(LogisticsVehicleAssociation).filter(
+        LogisticsVehicleAssociation.company_id == company_id
+    )
+    if active_only:
+        query = query.filter(LogisticsVehicleAssociation.is_active == True)
+    return [_build_association_response(a) for a in query.all()]
+
+
+def create_vehicle_association(
+    db: Session, data: VehicleAssociationCreate, user_id: int
+) -> VehicleAssociationResponse:
+    """Crée un couple tracteur ↔ remorque."""
+    # Valider que les deux véhicules existent
+    tractor = _get_vehicle_or_404(db, data.tractor_id)
+    trailer = _get_vehicle_or_404(db, data.trailer_id)
+
+    if tractor.vehicle_role != 'tracteur':
+        raise HTTPException(status_code=422, detail="Le véhicule tracteur doit avoir le rôle 'tracteur'.")
+    if trailer.vehicle_role != 'remorque':
+        raise HTTPException(status_code=422, detail="Le véhicule remorque doit avoir le rôle 'remorque'.")
+
+    # Si is_default=True, désactiver l'ancienne association par défaut pour ce tracteur et cette remorque
+    if data.is_default:
+        db.query(LogisticsVehicleAssociation).filter(
+            LogisticsVehicleAssociation.tractor_id == data.tractor_id,
+            LogisticsVehicleAssociation.is_default == True,
+        ).update({'is_default': False})
+        db.query(LogisticsVehicleAssociation).filter(
+            LogisticsVehicleAssociation.trailer_id == data.trailer_id,
+            LogisticsVehicleAssociation.is_default == True,
+        ).update({'is_default': False})
+
+    assoc = LogisticsVehicleAssociation(
+        tractor_id=data.tractor_id,
+        trailer_id=data.trailer_id,
+        company_id=data.company_id,
+        is_default=data.is_default,
+        is_active=True,
+        notes=data.notes,
+        created_by=user_id,
+    )
+    db.add(assoc)
+    db.commit()
+    db.refresh(assoc)
+    return _build_association_response(assoc)
+
+
+def update_vehicle_association(
+    db: Session, association_id: int, data: VehicleAssociationUpdate
+) -> VehicleAssociationResponse:
+    """Modifie une association."""
+    assoc = db.query(LogisticsVehicleAssociation).filter(
+        LogisticsVehicleAssociation.id == association_id
+    ).first()
+    if not assoc:
+        raise HTTPException(status_code=404, detail="Association non trouvée.")
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(assoc, field, value)
+    db.commit()
+    db.refresh(assoc)
+    return _build_association_response(assoc)
+
+
+def delete_vehicle_association(db: Session, association_id: int) -> bool:
+    """Supprime définitivement une association."""
+    assoc = db.query(LogisticsVehicleAssociation).filter(
+        LogisticsVehicleAssociation.id == association_id
+    ).first()
+    if not assoc:
+        raise HTTPException(status_code=404, detail="Association non trouvée.")
+    db.delete(assoc)
     db.commit()
     return True
 

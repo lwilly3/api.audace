@@ -20,15 +20,25 @@ class LogisticsVehicle(BaseModel):
     Représente un véhicule de transport (camion citerne, grumier, plateau, etc)
     avec ses informations d'identification, localisation, affectation, acquisition
     et statut.
+
+    vehicle_role discrimine la nature physique de l'engin :
+      - porteur_citerne : camion citerne monobloc (cab + citerne fixe intégrée)
+      - porteur         : camion porteur classique (benne, fourgon, grumier monobloc…)
+      - tracteur        : cab tracteur semi-remorque seul
+      - remorque        : remorque seule (citerne, plateau, grumier, bâchée…)
+      - leger           : véhicule léger (SUV, berline, pick-up, moto)
     """
     __tablename__ = 'logistics_vehicles'
 
     id = Column(Integer, primary_key=True, index=True)
     registration_number = Column(String(20), unique=True, nullable=False, index=True)
     internal_reference = Column(String(20), unique=True, nullable=True)
-    
+
+    # Rôle physique de l'engin (voir docstring ci-dessus)
+    vehicle_role = Column(String(20), nullable=False, default='porteur', server_default='porteur', index=True)
+
     # Classification
-    segment = Column(String(20), nullable=False, index=True)  # grumier, citerne, plateau, autre
+    segment = Column(String(20), nullable=False, index=True)  # petroleum, transport, media…
     type_id = Column(Integer, ForeignKey('logistics_config_options.id'), nullable=True)
     
     # Informations du véhicule
@@ -89,9 +99,14 @@ class LogisticsVehicle(BaseModel):
     fuel_logs = relationship('LogisticsFuelLog', back_populates='vehicle', cascade='all, delete-orphan')
     maintenance_records = relationship('LogisticsMaintenance', back_populates='vehicle', cascade='all, delete-orphan')
     tires = relationship('LogisticsTire', back_populates='vehicle', cascade='all, delete-orphan')
+    compartments = relationship('LogisticsVehicleCompartment', back_populates='vehicle', cascade='all, delete-orphan', order_by='LogisticsVehicleCompartment.compartment_no')
+    # Associations où ce véhicule est le tracteur ou la remorque
+    tractor_associations = relationship('LogisticsVehicleAssociation', foreign_keys='LogisticsVehicleAssociation.tractor_id', back_populates='tractor', cascade='all, delete-orphan')
+    trailer_associations = relationship('LogisticsVehicleAssociation', foreign_keys='LogisticsVehicleAssociation.trailer_id', back_populates='trailer', cascade='all, delete-orphan')
 
     __table_args__ = (
         Index('ix_vehicle_company_status', 'company_id', 'status_id'),
         Index('ix_vehicle_segment', 'segment'),
         Index('ix_vehicle_is_archived', 'is_archived'),
+        Index('ix_vehicle_role', 'vehicle_role'),
     )

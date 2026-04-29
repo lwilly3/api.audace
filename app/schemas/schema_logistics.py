@@ -2,6 +2,11 @@
 Schémas Pydantic pour le module Logistique.
 
 Validation et sérialisation des données pour l'API REST.
+
+Vocabulaire véhicule :
+  vehicle_role : porteur_citerne | porteur | tracteur | remorque | leger
+  compartments : compartiments d'une citerne (porteur_citerne ou remorque citerne)
+  associations : couples tracteur ↔ remorque
 """
 from pydantic import BaseModel, Field, EmailStr
 from datetime import datetime, date
@@ -10,11 +15,81 @@ from typing import Optional, List
 
 
 # ════════════════════════════════════════════════════════════════
+# COMPARTIMENTS CITERNE
+# ════════════════════════════════════════════════════════════════
+
+class CompartmentBase(BaseModel):
+    compartment_no: int = Field(..., ge=1, le=20)
+    capacity_liters: Decimal = Field(..., gt=0)
+    fuel_type: Optional[str] = None
+    label: Optional[str] = None
+    is_active: bool = True
+    notes: Optional[str] = None
+
+
+class CompartmentCreate(CompartmentBase):
+    pass
+
+
+class CompartmentUpdate(BaseModel):
+    capacity_liters: Optional[Decimal] = None
+    fuel_type: Optional[str] = None
+    label: Optional[str] = None
+    is_active: Optional[bool] = None
+    notes: Optional[str] = None
+
+
+class CompartmentResponse(CompartmentBase):
+    id: int
+    vehicle_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ════════════════════════════════════════════════════════════════
+# ASSOCIATIONS TRACTEUR ↔ REMORQUE
+# ════════════════════════════════════════════════════════════════
+
+class VehicleAssociationCreate(BaseModel):
+    tractor_id: int
+    trailer_id: int
+    company_id: int
+    is_default: bool = False
+    notes: Optional[str] = None
+
+
+class VehicleAssociationUpdate(BaseModel):
+    is_default: Optional[bool] = None
+    is_active: Optional[bool] = None
+    notes: Optional[str] = None
+
+
+class VehicleAssociationResponse(BaseModel):
+    id: int
+    tractor_id: int
+    trailer_id: int
+    company_id: int
+    is_default: bool
+    is_active: bool
+    notes: Optional[str]
+    # Dénormalisé pour l'affichage
+    tractor_registration: Optional[str] = None
+    trailer_registration: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ════════════════════════════════════════════════════════════════
 # VEHICULES
 # ════════════════════════════════════════════════════════════════
 
 class VehicleBase(BaseModel):
     registration_number: str
+    vehicle_role: str = 'porteur'  # porteur_citerne | porteur | tracteur | remorque | leger
     segment: str
     brand: Optional[str] = None
     model: Optional[str] = None
@@ -38,6 +113,7 @@ class VehicleCreate(VehicleBase):
 
 class VehicleUpdate(BaseModel):
     registration_number: Optional[str] = None
+    vehicle_role: Optional[str] = None
     segment: Optional[str] = None
     brand: Optional[str] = None
     model: Optional[str] = None
@@ -60,6 +136,7 @@ class VehicleResponse(VehicleBase):
     created_at: datetime
     created_by: int
     created_by_name: str
+    compartments: List[CompartmentResponse] = []
 
     class Config:
         from_attributes = True

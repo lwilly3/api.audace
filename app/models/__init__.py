@@ -59,6 +59,7 @@ from .model_inventory_subscription import InventorySubscription
 
 # Module Logistique
 from .model_logistics_vehicle import LogisticsVehicle
+from .model_logistics_vehicle_extras import LogisticsVehicleCompartment, LogisticsVehicleAssociation
 from .model_logistics_driver_team import LogisticsDriver, LogisticsTeam, LogisticsMechanic, LogisticsInvitation
 from .model_logistics_operations import (
     LogisticsMission, LogisticsMissionCheckpoint,
