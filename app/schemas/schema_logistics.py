@@ -88,7 +88,7 @@ class VehicleAssociationResponse(BaseModel):
 # ════════════════════════════════════════════════════════════════
 
 class VehicleBase(BaseModel):
-    registration_number: str
+    registration_number: Optional[str] = None
     vehicle_role: str = 'porteur'  # porteur_citerne | porteur | tracteur | remorque | leger
     segment: str
     brand: Optional[str] = None
@@ -102,10 +102,21 @@ class VehicleBase(BaseModel):
 
 
 class VehicleCreate(VehicleBase):
+    # Champs canoniques du modele
     internal_reference: Optional[str] = None
+    reference: Optional[str] = None          # alias frontend → internal_reference
+    license_plate: Optional[str] = None      # alias frontend → registration_number
     type_id: Optional[int] = None
     fuel_type_id: Optional[int] = None
-    status_id: int
+    fuel_type: Optional[str] = None          # string frontend → lookup fuel_type_id
+    status_id: Optional[int] = None          # direct int si fourni
+    status: Optional[str] = None             # string frontend → lookup status_id
+    mileage: Optional[int] = None            # alias frontend → mileage_counter
+    capacity_kg: Optional[Decimal] = None    # alias frontend → capacity_value (kg)
+    capacity_volume: Optional[Decimal] = None  # alias frontend → capacity_value (litres)
+    name: Optional[str] = None               # ignore (non stocke separement)
+    created_by: Optional[str] = None         # fourni par le frontend
+    created_by_name: Optional[str] = None
     acquisition_date: Optional[date] = None
     acquisition_cost: Optional[Decimal] = None
     base_site_id: Optional[int] = None

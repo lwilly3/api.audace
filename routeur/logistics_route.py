@@ -86,6 +86,7 @@ from app.db.crud.crud_logistics import (
     cancel_maintenance,
 )
 from app.models.model_user import User
+from app.models.model_logistics_settings import LogisticsConfigOption
 from app.schemas.schema_logistics import (
     VehicleCreate,
     VehicleUpdate,
@@ -179,9 +180,54 @@ def create_vehicle_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(oauth2.get_current_user),
 ):
-    """Create a new vehicle."""
+    """Create a new vehicle. Accepts both canonical field names and frontend aliases."""
     if not current_user.permissions.logistics_vehicles_create:
         raise HTTPException(status_code=403, detail="Permission denied")
+
+    # --- Aliases: license_plate → registration_number
+    if not vehicle_data.registration_number and vehicle_data.license_plate:
+        vehicle_data.registration_number = vehicle_data.license_plate
+    if not vehicle_data.registration_number:
+        raise HTTPException(status_code=422, detail="registration_number or license_plate is required")
+
+    # --- Aliases: reference → internal_reference
+    if not vehicle_data.internal_reference and vehicle_data.reference:
+        vehicle_data.internal_reference = vehicle_data.reference
+
+    # --- status string → status_id lookup
+    if not vehicle_data.status_id and vehicle_data.status:
+        option = db.query(LogisticsConfigOption).filter_by(
+            list_type="vehicle_status", name=vehicle_data.status
+        ).first()
+        if option:
+            vehicle_data.status_id = option.id
+        else:
+            # Fallback : prendre le premier statut disponible
+            fallback = db.query(LogisticsConfigOption).filter_by(list_type="vehicle_status").first()
+            if fallback:
+                vehicle_data.status_id = fallback.id
+            else:
+                raise HTTPException(status_code=422, detail=f"Status '{vehicle_data.status}' not found in config options")
+
+    if not vehicle_data.status_id:
+        raise HTTPException(status_code=422, detail="status or status_id is required")
+
+    # --- fuel_type string → fuel_type_id lookup (optionnel)
+    if not vehicle_data.fuel_type_id and vehicle_data.fuel_type:
+        fuel_option = db.query(LogisticsConfigOption).filter_by(
+            list_type="vehicle_fuel_type", name=vehicle_data.fuel_type
+        ).first()
+        if fuel_option:
+            vehicle_data.fuel_type_id = fuel_option.id
+
+    # --- capacity aliases (prend kg en priorite, sinon volume)
+    if not vehicle_data.capacity_value:
+        if vehicle_data.capacity_kg:
+            vehicle_data.capacity_value = vehicle_data.capacity_kg
+            vehicle_data.capacity_unit = "kg"
+        elif vehicle_data.capacity_volume:
+            vehicle_data.capacity_value = vehicle_data.capacity_volume
+            vehicle_data.capacity_unit = "litres"
 
     vehicle = create_vehicle(db, vehicle_data, current_user.id, current_user.username)
     return VehicleResponse.from_orm(vehicle)
