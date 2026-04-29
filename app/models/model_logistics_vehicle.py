@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, Date, Boolean, Float, JSON,
     ForeignKey, Index, func, DECIMAL,
@@ -103,6 +104,11 @@ class LogisticsVehicle(BaseModel):
     # Associations où ce véhicule est le tracteur ou la remorque
     tractor_associations = relationship('LogisticsVehicleAssociation', foreign_keys='LogisticsVehicleAssociation.tractor_id', back_populates='tractor', cascade='all, delete-orphan')
     trailer_associations = relationship('LogisticsVehicleAssociation', foreign_keys='LogisticsVehicleAssociation.trailer_id', back_populates='trailer', cascade='all, delete-orphan')
+
+    @property
+    def status_name(self) -> Optional[str]:
+        """Nom du statut depuis la relation status_option."""
+        return self.status_option.name if self.status_option else None
 
     __table_args__ = (
         Index('ix_vehicle_company_status', 'company_id', 'status_id'),
