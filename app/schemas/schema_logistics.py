@@ -146,7 +146,12 @@ class VehicleResponse(VehicleBase):
     fuel_type: Optional[str] = None
     status_id: int
     status_name: Optional[str] = None
+    mileage: int = 0
     mileage_counter: int = 0
+    capacity_kg: Optional[float] = None
+    capacity_volume: Optional[float] = None
+    assigned_driver_id: Optional[int] = None
+    assigned_driver_name: Optional[str] = None
     is_archived: bool = False
     updated_at: Optional[datetime] = None
     updated_by: Optional[int] = None

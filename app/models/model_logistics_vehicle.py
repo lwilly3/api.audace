@@ -130,6 +130,41 @@ class LogisticsVehicle(BaseModel):
         """Alias de internal_reference pour compatibilite frontend."""
         return self.internal_reference
 
+    @property
+    def mileage(self) -> int:
+        """Alias de mileage_counter pour compatibilite frontend."""
+        return self.mileage_counter or 0
+
+    @property
+    def capacity_kg(self) -> Optional[float]:
+        """Capacite en kg si capacity_unit est 'kg' ou 'tonnes'."""
+        if self.capacity_value is None:
+            return None
+        if self.capacity_unit in ('kg', 'tonnes'):
+            return float(self.capacity_value)
+        return None
+
+    @property
+    def capacity_volume(self) -> Optional[float]:
+        """Capacite en litres si capacity_unit est 'litres', 'L', 'm3'."""
+        if self.capacity_value is None:
+            return None
+        if self.capacity_unit in ('litres', 'L', 'm3', 'conteneurs'):
+            return float(self.capacity_value)
+        return None
+
+    @property
+    def assigned_driver_id(self) -> Optional[int]:
+        """ID du chauffeur assigne (current_driver_id)."""
+        return self.current_driver_id
+
+    @property
+    def assigned_driver_name(self) -> Optional[str]:
+        """Nom du chauffeur assigne depuis la relation current_driver."""
+        if self.current_driver:
+            return f"{self.current_driver.first_name} {self.current_driver.last_name}".strip()
+        return None
+
     __table_args__ = (
         Index('ix_vehicle_company_status', 'company_id', 'status_id'),
         Index('ix_vehicle_segment', 'segment'),
