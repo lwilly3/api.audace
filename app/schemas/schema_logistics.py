@@ -140,10 +140,16 @@ class VehicleUpdate(BaseModel):
 class VehicleResponse(VehicleBase):
     id: int
     internal_reference: Optional[str] = None
+    reference: Optional[str] = None
+    license_plate: Optional[str] = None
+    company_name: Optional[str] = None
+    fuel_type: Optional[str] = None
     status_id: int
     status_name: Optional[str] = None
     mileage_counter: int = 0
     is_archived: bool = False
+    updated_at: Optional[datetime] = None
+    updated_by: Optional[int] = None
     created_at: datetime
     created_by: int
     created_by_name: str

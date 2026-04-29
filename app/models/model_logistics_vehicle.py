@@ -110,6 +110,26 @@ class LogisticsVehicle(BaseModel):
         """Nom du statut depuis la relation status_option."""
         return self.status_option.name if self.status_option else None
 
+    @property
+    def company_name(self) -> Optional[str]:
+        """Nom de l'entreprise depuis la relation company."""
+        return self.company.name if self.company else None
+
+    @property
+    def fuel_type(self) -> Optional[str]:
+        """Type de carburant (string) depuis la relation fuel_type_option."""
+        return self.fuel_type_option.name if self.fuel_type_option else None
+
+    @property
+    def license_plate(self) -> Optional[str]:
+        """Alias de registration_number pour compatibilite frontend."""
+        return self.registration_number
+
+    @property
+    def reference(self) -> Optional[str]:
+        """Alias de internal_reference pour compatibilite frontend."""
+        return self.internal_reference
+
     __table_args__ = (
         Index('ix_vehicle_company_status', 'company_id', 'status_id'),
         Index('ix_vehicle_segment', 'segment'),
