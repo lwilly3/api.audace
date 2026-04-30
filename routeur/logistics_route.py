@@ -477,7 +477,7 @@ def create_association_endpoint(
     if not current_user.permissions.logistics_vehicles_edit:
         raise HTTPException(status_code=403, detail="Permission denied")
     try:
-        return create_vehicle_association(db, data)
+        return create_vehicle_association(db, data, current_user.id)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
