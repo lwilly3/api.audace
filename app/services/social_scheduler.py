@@ -17,10 +17,14 @@ Usage :
 import threading
 import time
 import logging
+import json
+import os
+import fcntl
 from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger("social-scheduler")
+STATE_FILE = os.getenv("SOCIAL_SCHEDULER_STATE_FILE", "/app/data/social_scheduler_state.json")
 
 
 # ────────────────────────────────────────────────────────────────
@@ -49,25 +53,59 @@ DEFAULT_SETTINGS = {
 }
 
 
+def _read_state() -> dict:
+    """Lire l'etat persistant du scheduler."""
+    if not os.path.exists(STATE_FILE):
+        return {}
+    try:
+        with open(STATE_FILE, "r") as f:
+            fcntl.flock(f, fcntl.LOCK_SH)
+            content = f.read()
+            fcntl.flock(f, fcntl.LOCK_UN)
+        if not content.strip():
+            return {}
+        return json.loads(content)
+    except (OSError, json.JSONDecodeError):
+        logger.warning("Impossible de lire l'etat scheduler social", exc_info=True)
+        return {}
+
+
+def _write_state(state: dict) -> None:
+    """Ecrire l'etat persistant du scheduler."""
+    try:
+        directory = os.path.dirname(STATE_FILE)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        with open(STATE_FILE, "w") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            json.dump(state, f)
+            f.flush()
+            fcntl.flock(f, fcntl.LOCK_UN)
+    except OSError:
+        logger.warning("Impossible d'ecrire l'etat scheduler social", exc_info=True)
+
+
 class SocialScheduler:
     """Planificateur de tâches périodiques pour le module Social."""
 
     def __init__(self):
-        self._settings: dict = {**DEFAULT_SETTINGS}
+        saved_state = _read_state()
+        saved_settings = saved_state.get("settings", {}) if isinstance(saved_state, dict) else {}
+        self._settings: dict = {**DEFAULT_SETTINGS, **saved_settings}
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._lock = threading.Lock()
 
         # Timestamps de dernière exécution
-        self._last_sync: Optional[str] = None
-        self._last_optimize: Optional[str] = None
-        self._last_sync_result: Optional[dict] = None
-        self._last_optimize_result: Optional[dict] = None
-        self._last_auto_publish: Optional[str] = None
-        self._last_auto_publish_result: Optional[dict] = None
-        self._last_rss_refresh: Optional[str] = None
-        self._last_rss_refresh_result: Optional[dict] = None
+        self._last_sync: Optional[str] = saved_state.get("last_sync_at")
+        self._last_optimize: Optional[str] = saved_state.get("last_optimize_at")
+        self._last_sync_result: Optional[dict] = saved_state.get("last_sync_result")
+        self._last_optimize_result: Optional[dict] = saved_state.get("last_optimize_result")
+        self._last_auto_publish: Optional[str] = saved_state.get("last_auto_publish_at")
+        self._last_auto_publish_result: Optional[dict] = saved_state.get("last_auto_publish_result")
+        self._last_rss_refresh: Optional[str] = saved_state.get("last_rss_refresh_at")
+        self._last_rss_refresh_result: Optional[dict] = saved_state.get("last_rss_refresh_result")
 
     # ── Settings ────────────────────────
 
@@ -95,10 +133,27 @@ class SocialScheduler:
                     self._settings[key] = value
 
         # Redémarrer le scheduler si actif pour prendre en compte les nouveaux intervalles
+        self._persist_state()
         if self._running:
             self._restart()
 
         return self.get_settings()
+
+    def _persist_state(self):
+        """Persister les reglages et les derniers resultats."""
+        with self._lock:
+            state = {
+                "settings": self._settings,
+                "last_sync_at": self._last_sync,
+                "last_optimize_at": self._last_optimize,
+                "last_sync_result": self._last_sync_result,
+                "last_optimize_result": self._last_optimize_result,
+                "last_auto_publish_at": self._last_auto_publish,
+                "last_auto_publish_result": self._last_auto_publish_result,
+                "last_rss_refresh_at": self._last_rss_refresh,
+                "last_rss_refresh_result": self._last_rss_refresh_result,
+            }
+        _write_state(state)
 
     # ── Lifecycle ───────────────────────
 
@@ -171,24 +226,22 @@ class SocialScheduler:
 
     def _run_sync(self, force: bool):
         """Exécuter la synchronisation de tous les comptes Facebook."""
-        from app.db.database import SessionLocal
-        from app.db.crud.crud_social import sync_all_facebook_accounts
+        from app.services.social_sync_orchestrator import social_sync_orchestrator
 
         logger.info("⏰ Auto-sync démarrée...")
-        session = SessionLocal()
         try:
-            result = sync_all_facebook_accounts(session, force=force)
+            result = social_sync_orchestrator.run_scheduler_sync_blocking(force=force)
             with self._lock:
                 self._last_sync = datetime.now(timezone.utc).isoformat()
                 self._last_sync_result = result
+            self._persist_state()
             logger.info(f"✅ Auto-sync terminée: {result}")
         except Exception as e:
             logger.error(f"❌ Auto-sync échouée: {e}")
             with self._lock:
                 self._last_sync = datetime.now(timezone.utc).isoformat()
                 self._last_sync_result = {"error": str(e)}
-        finally:
-            session.close()
+            self._persist_state()
 
     def _run_optimize(self, purge_days: int):
         """Exécuter le nettoyage/optimisation de la BDD."""
@@ -202,12 +255,14 @@ class SocialScheduler:
             with self._lock:
                 self._last_optimize = datetime.now(timezone.utc).isoformat()
                 self._last_optimize_result = result
+            self._persist_state()
             logger.info(f"✅ Auto-optimize terminée: {result}")
         except Exception as e:
             logger.error(f"❌ Auto-optimize échouée: {e}")
             with self._lock:
                 self._last_optimize = datetime.now(timezone.utc).isoformat()
                 self._last_optimize_result = {"error": str(e)}
+            self._persist_state()
         finally:
             session.close()
 
@@ -247,12 +302,14 @@ class SocialScheduler:
             with self._lock:
                 self._last_auto_publish = datetime.now(timezone.utc).isoformat()
                 self._last_auto_publish_result = result
+            self._persist_state()
             logger.info(f"✅ Auto-publish termine: {result}")
         except Exception as e:
             logger.error(f"❌ Auto-publish echoue: {e}")
             with self._lock:
                 self._last_auto_publish = datetime.now(timezone.utc).isoformat()
                 self._last_auto_publish_result = {"error": str(e)}
+            self._persist_state()
         finally:
             session.close()
 
@@ -270,6 +327,7 @@ class SocialScheduler:
             with self._lock:
                 self._last_rss_refresh = datetime.now(timezone.utc).isoformat()
                 self._last_rss_refresh_result = result
+            self._persist_state()
             if total_new > 0 or errors > 0:
                 logger.info(f"RSS refresh: {total_new} new articles, {errors} errors across {len(results)} feeds")
         except Exception as e:
@@ -277,6 +335,7 @@ class SocialScheduler:
             with self._lock:
                 self._last_rss_refresh = datetime.now(timezone.utc).isoformat()
                 self._last_rss_refresh_result = {"error": str(e)}
+            self._persist_state()
         finally:
             session.close()
 

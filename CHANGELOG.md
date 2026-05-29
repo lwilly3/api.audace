@@ -68,6 +68,18 @@ python scripts/show_migrations_history.py --changelog
 
 ## [Non publié]
 
+### Ajoute — Orchestration des synchronisations Social
+- Service `social_sync_orchestrator.py` avec orchestrateur, agents de synchronisation (`account`, `all`, `scheduler`) et verificateur centralise
+- Endpoint `GET /social/sync/current` pour retrouver la tache de synchronisation en cours
+- Protection anti-doublon : une sync deja active est reutilisee au lieu de lancer un second thread concurrent
+- Persistance configurable des taches de sync via `SYNC_TASKS_FILE` et recuperation de la tache `running` la plus recente
+
+### Modifie — Synchronisation Facebook
+- Les endpoints `/social/accounts/{account_id}/sync` et `/social/sync` exigent maintenant la permission `social_manage_accounts`
+- Le scheduler Social passe par l'orchestrateur et persiste ses reglages/derniers resultats via `SOCIAL_SCHEDULER_STATE_FILE`
+- Le parametre `force` applique maintenant le plafond API Facebook maximal pour la synchronisation des posts
+- Le statut d'une tache inconnue retourne un etat d'erreur normalise au lieu d'un 404 brutal cote polling
+
 ### Securite — Authentification a deux facteurs (2FA/TOTP)
 - Systeme 2FA complet base sur TOTP RFC 6238 (Google Authenticator, Authy)
 - Router `two_factor_route.py` : 7 endpoints sous `/auth/2fa/*` (setup, verify-setup, verify, verify-backup, disable, backup-codes/regenerate, admin/reset)

@@ -20,8 +20,9 @@ import fcntl
 import os
 from typing import Optional
 
-# Fichier partage entre tous les workers du meme container
-_TASKS_FILE = "/tmp/sync_tasks.json"
+# Fichier partage entre tous les workers du meme container.
+# /app/data est deja utilise par les schedulers pour les locks/etats persistants.
+_TASKS_FILE = os.getenv("SYNC_TASKS_FILE", "/app/data/social_sync_tasks.json")
 
 # Durée de vie d'une tâche terminée (10 min)
 _TTL = 600
@@ -46,6 +47,9 @@ def _read_tasks() -> dict[str, dict]:
 def _write_tasks(tasks: dict[str, dict]):
     """Écrire toutes les tâches dans le fichier JSON avec verrou exclusif."""
     try:
+        directory = os.path.dirname(_TASKS_FILE)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
         with open(_TASKS_FILE, "w") as f:
             fcntl.flock(f, fcntl.LOCK_EX)
             json.dump(tasks, f)
@@ -114,6 +118,19 @@ def get(task_id: str) -> Optional[dict]:
     if task:
         return {**task}  # Copie
     return None
+
+
+def get_running() -> Optional[dict]:
+    """Retourner la tache running la plus recente, si elle existe."""
+    tasks = _read_tasks()
+    running = [
+        task for task in tasks.values()
+        if task.get("status") == "running"
+    ]
+    if not running:
+        return None
+    running.sort(key=lambda task: task.get("updated_at") or task.get("created_at") or 0, reverse=True)
+    return {**running[0]}
 
 
 def cleanup():

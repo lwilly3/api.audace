@@ -31,9 +31,6 @@ from app.db.crud.crud_social import (
     disconnect_social_account,
     check_account_token_status,
     upsert_social_account_from_oauth,
-    # Sync Facebook
-    sync_facebook_account,
-    sync_all_facebook_accounts,
     # Posts
     get_social_posts,
     get_social_post_by_id,
@@ -295,31 +292,15 @@ def sync_account(
     Retourne immédiatement un task_id pour suivre la progression
     via GET /social/sync/status/{task_id}.
     """
-    from app.services import sync_tasks
-    from app.db.database import SessionLocal
+    from app.services.social_sync_orchestrator import (
+        SocialSyncVerifier,
+        social_sync_orchestrator,
+    )
 
-    sync_tasks.cleanup()
-
-    task_id = sync_tasks.create(label=f"sync-account-{account_id}")
-
-    def _run():
-        session = SessionLocal()
-        try:
-            def progress(msg, pct):
-                sync_tasks.update(task_id, progress=msg, percent=pct)
-
-            result = sync_facebook_account(session, account_id, force=force, on_progress=progress)
-            sync_tasks.complete(task_id, result)
-        except Exception as e:
-            sync_tasks.fail(task_id, str(e))
-        finally:
-            session.close()
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
-
+    SocialSyncVerifier.require_manage_accounts(db, current_user.id)
+    launch = social_sync_orchestrator.start_account_sync(account_id, force=force)
     log_action(db, current_user.id, "sync", "social_accounts", account_id)
-    return {"task_id": task_id, "status": "running", "message": "Synchronisation lancée en arrière-plan"}
+    return launch.as_dict()
 
 
 @router.post("/sync")
@@ -333,31 +314,31 @@ def sync_all(
 
     Retourne immédiatement un task_id pour suivre la progression.
     """
-    from app.services import sync_tasks
-    from app.db.database import SessionLocal
+    from app.services.social_sync_orchestrator import (
+        SocialSyncVerifier,
+        social_sync_orchestrator,
+    )
 
-    sync_tasks.cleanup()
-
-    task_id = sync_tasks.create(label="sync-all")
-
-    def _run():
-        session = SessionLocal()
-        try:
-            def progress(msg, pct):
-                sync_tasks.update(task_id, progress=msg, percent=pct)
-
-            result = sync_all_facebook_accounts(session, force=force, on_progress=progress)
-            sync_tasks.complete(task_id, result)
-        except Exception as e:
-            sync_tasks.fail(task_id, str(e))
-        finally:
-            session.close()
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
-
+    SocialSyncVerifier.require_manage_accounts(db, current_user.id)
+    launch = social_sync_orchestrator.start_all_sync(force=force)
     log_action(db, current_user.id, "sync_all", "social_accounts", 0)
-    return {"task_id": task_id, "status": "running", "message": "Synchronisation lancée en arrière-plan"}
+    return launch.as_dict()
+
+
+@router.get("/sync/current")
+def sync_current(
+    current_user: int = Depends(oauth2.get_current_user),
+):
+    """
+    Recuperer la synchronisation en cours, si elle existe.
+
+    Permet au frontend de reprendre l'affichage apres un reload ou un
+    changement de page.
+    """
+    from app.services.social_sync_orchestrator import social_sync_orchestrator
+
+    task = social_sync_orchestrator.get_current()
+    return {"task": task}
 
 
 @router.get("/sync/status/{task_id}")
@@ -371,12 +352,9 @@ def sync_status(
     Retourne le pourcentage de progression, le message courant,
     et le résultat final quand la tâche est terminée.
     """
-    from app.services import sync_tasks
+    from app.services.social_sync_orchestrator import social_sync_orchestrator
 
-    task = sync_tasks.get(task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Tâche introuvable")
-    return task
+    return social_sync_orchestrator.get_status(task_id)
 
 
 # ════════════════════════════════════════════════════════════════

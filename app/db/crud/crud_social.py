@@ -1527,7 +1527,7 @@ def sync_facebook_account(db: Session, account_id: int, force: bool = False, on_
 
         # Syncer les posts de cette page
         _cfg = _get_sync_settings()
-        sync_limit = min(_cfg.get("sync_posts_limit", 100), 100)  # plafond API FB = 100
+        sync_limit = 100 if force else min(_cfg.get("sync_posts_limit", 100), 100)  # plafond API FB = 100
 
         def _page_progress(msg: str, pct: int):
             if on_progress:
